@@ -11,15 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-Schema::create('users', function (Blueprint $table) {
+Schema::create('products', function (Blueprint $table) {
     $table->id();
+    $table->foreignId('category_id')->constrained('categories')->onDelete('cascade');
     $table->string('name');
-    $table->string('username')->unique();
-    $table->string('email')->unique();
-    $table->string('password');
+    $table->text('description')->nullable();
+    $table->decimal('price', 10, 2);
+    $table->enum('status', ['available', 'unavailable'])->default('available');
     $table->timestamps();
 });
-
 
     }
 
@@ -28,6 +28,6 @@ Schema::create('users', function (Blueprint $table) {
      */
     public function down(): void
     {
-        Schema::dropIfExists('users');
+        Schema::dropIfExists('products');
     }
 };

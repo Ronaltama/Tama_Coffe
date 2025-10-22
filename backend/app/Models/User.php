@@ -19,6 +19,7 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'username',
         'email',
         'password',
     ];
@@ -44,5 +45,22 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    // Relations
+    public function role()
+    {
+        return $this->hasOne(Role::class);
+    }
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+
+    // Helper method to check if user is superadmin
+    public function isSuperAdmin()
+    {
+        return $this->role && $this->role->name === 'superadmin';
     }
 }

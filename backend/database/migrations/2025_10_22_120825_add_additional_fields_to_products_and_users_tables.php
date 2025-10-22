@@ -11,16 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-Schema::create('users', function (Blueprint $table) {
-    $table->id();
-    $table->string('name');
-    $table->string('username')->unique();
-    $table->string('email')->unique();
-    $table->string('password');
-    $table->timestamps();
-});
-
-
+        // Add image field to products table only
+        Schema::table('products', function (Blueprint $table) {
+            $table->string('image')->nullable()->after('description');
+        });
     }
 
     /**
@@ -28,6 +22,8 @@ Schema::create('users', function (Blueprint $table) {
      */
     public function down(): void
     {
-        Schema::dropIfExists('users');
+        Schema::table('products', function (Blueprint $table) {
+            $table->dropColumn('image');
+        });
     }
 };
