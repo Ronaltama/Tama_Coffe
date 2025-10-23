@@ -1,135 +1,80 @@
 <script setup>
-import { ref } from 'vue';
+import { RouterLink, RouterView } from 'vue-router'
 
-// Terima prop 'role' untuk menentukan menu mana yang ditampilkan
-// Nilainya bisa 'admin' atau 'superadmin'
 const props = defineProps({
   role: {
     type: String,
-    default: 'admin' // Default ke admin jika tidak ada role
+    required: true
   }
-});
+})
 
-// Anda bisa ganti ini dengan rute Vue Router nanti
-const activeMenu = ref('dashboard');
-
-// Fungsi logout (ganti dengan logika auth Anda)
-const logout = () => {
-  alert('Logging out...');
-  // Contoh: window.location.href = '/logout';
-};
+const handleLogout = () => {
+  console.log('Logout initiated...')
+  // implement real logout: remove token, call API, router.push('/login'), dll.
+}
 </script>
 
 <template>
-  <div class="flex min-h-screen">
-    <aside class="w-64 flex-shrink-0 bg-[#FBE8D9] flex flex-col">
-      <div class="p-6 border-b border-orange-200">
-        <h2 class="text-xl font-bold text-gray-800 text-center">
-          Tama Coffee
-        </h2>
-      </div>
+  <div class="admin-layout flex">
+    <aside class="w-64 bg-white border-r p-4">
+      <div class="mb-6 font-semibold text-lg">Tama Coffe</div>
 
-      <nav class="flex-1 p-4 space-y-2">
-        <template v-if="role === 'superadmin'">
-          <a
-            href="#"
-            @click="activeMenu = 'dashboard'"
-            :class="activeMenu === 'dashboard' ? 'sidebar-active' : 'text-gray-700'"
-            class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-orange-100 transition"
-          >
-            <span class="fa-fw">📊</span>
-            <span>Dashboard</span>
-          </a>
-          <a
-            href="#"
-            @click="activeMenu = 'users'"
-            :class="activeMenu === 'users' ? 'sidebar-active' : 'text-gray-700'"
-            class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-orange-100 transition"
-          >
-            <span class="fa-fw">👥</span>
-            <span>Users</span>
-          </a>
-          <a
-            href="#"
-            @click="activeMenu = 'products'"
-            :class="activeMenu === 'products' ? 'sidebar-active' : 'text-gray-700'"
-            class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-orange-100 transition"
-          >
-            <span class="fa-fw">📦</span>
-            <span>Products</span>
-          </a>
-          <a
-            href="#"
-            @click="activeMenu = 'history'"
-            :class="activeMenu === 'history' ? 'sidebar-active' : 'text-gray-700'"
-            class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-orange-100 transition"
-          >
-            <span class="fa-fw">📜</span>
-            <span>Order History</span>
-          </a>
+      <nav class="space-y-2">
+        <template v-if="props.role === 'superadmin'">
+          <RouterLink to="/super-admin/dashboard" class="nav-link" active-class="sidebar-active">
+            <span class="fa-fw">📊</span><span>Dashboard</span>
+          </RouterLink>
+
+          <RouterLink to="/super-admin/users" class="nav-link" active-class="sidebar-active">
+            <span class="fa-fw">👥</span><span>Users</span>
+          </RouterLink>
+
+          <RouterLink to="/super-admin/products" class="nav-link" active-class="sidebar-active">
+            <span class="fa-fw">📦</span><span>Products</span>
+          </RouterLink>
+
+          <RouterLink to="/super-admin/history" class="nav-link" active-class="sidebar-active">
+            <span class="fa-fw">📜</span><span>Order History</span>
+          </RouterLink>
         </template>
 
-        <template v-if="role === 'admin'">
-          <a
-            href="#"
-            @click="activeMenu = 'dashboard'"
-            :class="activeMenu === 'dashboard' ? 'sidebar-active' : 'text-gray-700'"
-            class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-orange-100 transition"
-          >
-            <span class="fa-fw">📊</span>
-            <span>Dashboard</span>
-          </a>
-          <a
-            href="#"
-            @click="activeMenu = 'add-order'"
-            :class="activeMenu === 'add-order' ? 'sidebar-active' : 'text-gray-700'"
-            class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-orange-100 transition"
-          >
-            <span class="fa-fw">➕</span>
-            <span>Add Order</span>
-          </a>
-          <a
-            href="#"
-            @click="activeMenu = 'confirm-order'"
-            :class="activeMenu === 'confirm-order' ? 'sidebar-active' : 'text-gray-700'"
-            class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-orange-100 transition"
-          >
-            <span class="fa-fw">✔️</span>
-            <span>Confirm Order</span>
-          </a>
-          <a
-            href="#"
-            @click="activeMenu = 'history'"
-            :class="activeMenu === 'history' ? 'sidebar-active' : 'text-gray-700'"
-            class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-orange-100 transition"
-          >
-            <span class="fa-fw">📜</span>
-            <span>Order History</span>
-          </a>
+        <template v-else-if="props.role === 'admin'">
+          <RouterLink to="/admin/dashboard" class="nav-link" active-class="sidebar-active">
+            <span class="fa-fw">📊</span><span>Dashboard</span>
+          </RouterLink>
+
+          <RouterLink to="/admin/add-order" class="nav-link" active-class="sidebar-active">
+            <span class="fa-fw">➕</span><span>Add Order</span>
+          </RouterLink>
+
+          <RouterLink to="/admin/history" class="nav-link" active-class="sidebar-active">
+            <span class="fa-fw">📜</span><span>Order History</span>
+          </RouterLink>
         </template>
       </nav>
 
-      <div class="p-4 mt-auto border-t border-orange-200">
-        <button
-          @click="logout"
-          class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
-        >
-          <span>➔</span>
-          <span>Logout</span>
-        </button>
+      <div class="mt-100">
+        <button @click="handleLogout" class="nav-link" style="width:100%;">🔒 Logout</button>
       </div>
     </aside>
 
-    <main class="flex-1 p-8 overflow-y-auto bg-[#FFF5EE]">
-      <slot></slot>
+    <main class="flex-1 p-6">
+      <RouterView />
     </main>
   </div>
 </template>
 
 <style scoped>
-/* Anda bisa tambahkan style global di src/style.css */
-.sidebar-active {
-  background-color: #8B4513; /* Warna coklat tua sesuai gambar */
-  color: white;
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.9rem;
+  border-radius: 0.5rem;
+  color: #374151;
+  text-decoration: none;
 }
+.nav-link:hover { background-color: #FED7AA; }
+.sidebar-active { background-color: #8B4513; color: white; }
+.fa-fw { width: 1.25em; text-align: center; }
 </style>
