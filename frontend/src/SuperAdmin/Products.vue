@@ -1,5 +1,8 @@
 <script setup>
 import { ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
 
 // --- DATA CONTOH ---
 const products = ref([
@@ -10,17 +13,15 @@ const products = ref([
   { id: 5, name: 'Nasi Goreng Special', category: 'Food', subCategory: null, price: 45000, status: 'Available' },
   { id: 6, name: 'French Fries', category: 'Food', subCategory: null, price: 25000, status: 'Available' },
 ]);
-// --- AKHIR DATA CONTOH ---
 
 // State untuk tabs
-const activeTab = ref('Drink'); // 'Drink' atau 'Food'
-const activeSubTab = ref('Kopi'); // 'Kopi' atau 'Non-Kopi' (hanya untuk Drink)
+const activeTab = ref('Drink');
+const activeSubTab = ref('Kopi');
 
 // Filter produk berdasarkan tab aktif
 const filteredProducts = computed(() => {
   let filtered = products.value.filter(p => p.category === activeTab.value);
   
-  // Jika tab Drink dan ada sub-tab, filter lagi
   if (activeTab.value === 'Drink' && activeSubTab.value) {
     filtered = filtered.filter(p => p.subCategory === activeSubTab.value);
   }
@@ -51,7 +52,6 @@ const getStatusClasses = (status) => {
 // Fungsi untuk mengganti tab
 const setActiveTab = (tab) => {
   activeTab.value = tab;
-  // Jika pindah ke Drink, default ke sub-tab Kopi
   if (tab === 'Drink') {
     activeSubTab.value = 'Kopi';
   }
@@ -59,21 +59,26 @@ const setActiveTab = (tab) => {
 
 // Fungsi untuk tombol
 const addProduct = () => {
-  alert('Membuka halaman tambah produk...');
+  router.push('/superadmin/products/AddProducts');
 };
 
 const editProduct = (id) => {
-  alert(`Mengedit produk dengan ID: ${id}`);
+  console.log(`Editing product ${id}`);
+  // Implement edit functionality
+  // router.push(`/superadmin/products/edit/${id}`);
 };
 
 const deleteProduct = (id) => {
-  if (confirm(`Apakah Anda yakin ingin menghapus produk ID: ${id}?`)) {
-    alert(`Menghapus produk dengan ID: ${id}`);
+  if (confirm('Are you sure you want to delete this product?')) {
+    console.log(`Deleting product ${id}`);
+    // Implement delete functionality
+    // products.value = products.value.filter(p => p.id !== id);
   }
 };
 </script>
 
 <template>
+  <!-- Your existing template code stays the same -->
   <div class="space-y-8">
     <!-- Header -->
     <div class="flex items-center justify-between">
@@ -159,15 +164,12 @@ const deleteProduct = (id) => {
                 <td class="py-3 px-4 text-sm text-gray-900 font-medium">
                   {{ product.name }}
                 </td>
-
                 <td class="py-3 px-4 text-sm text-gray-700">
                   {{ product.subCategory || product.category }}
                 </td>
-                
                 <td class="py-3 px-4 text-sm text-gray-700">
                   {{ formatCurrency(product.price) }}
                 </td>
-
                 <td class="py-3 px-4">
                   <span
                     class="inline-block px-3 py-1 text-xs rounded-full font-medium"
@@ -176,7 +178,6 @@ const deleteProduct = (id) => {
                     {{ product.status }}
                   </span>
                 </td>
-                
                 <td class="py-3 px-4 text-sm">
                   <button
                     @click="editProduct(product.id)"
@@ -193,7 +194,6 @@ const deleteProduct = (id) => {
                 </td>
               </tr>
             </template>
-            
             <template v-else>
               <tr>
                 <td colspan="5" class="py-8 text-center text-sm text-gray-500">

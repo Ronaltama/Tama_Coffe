@@ -1,102 +1,209 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 
-// --- DATA CONTOH ---
-// Ganti ini dengan data dari API Anda (fetch products)
-const allProducts = ref([
-  { id: 1, name: 'Artisan Coffee Beans', category: 'Drink', price: 150000, image: 'https://via.placeholder.com/150/8B4513/FFFFFF?text=Coffee' },
-  { id: 2, name: 'Gourmet Chocolate Bar', category: 'Food', price: 80000, image: 'https://via.placeholder.com/150/D2691E/FFFFFF?text=Snack' },
-  { id: 3, name: 'Organic Tea Selection', category: 'Drink', price: 150000, image: 'https://via.placeholder.com/150/2E8B57/FFFFFF?text=Tea' },
-  { id: 4, name: 'Croissant', category: 'Food', price: 25000, image: 'https://via.placeholder.com/150/DEB887/000000?text=Food' },
-  { id: 5, name: 'Espresso', category: 'Drink', price: 18000, image: 'https://via.placeholder.com/150/8B4513/FFFFFF?text=Coffee' },
-  { id: 6, name: 'Chicken Katsu', category: 'Food', price: 45000, image: 'https://via.placeholder.com/150/D2691E/FFFFFF?text=Food' },
-  { id: 7, name: 'Matcha Latte', category: 'Drink', price: 30000, image: 'https://via.placeholder.com/150/2E8B57/FFFFFF?text=Tea' },
-]);
-// --- AKHIR DATA CONTOH ---
+const router = useRouter();
 
-// Menyimpan kategori yang sedang aktif
-const activeCategory = ref('All'); // 'All', 'Drink', atau 'Food'
+// Form data
+const productName = ref('');
+const description = ref('');
+const price = ref('');
+const status = ref('');
+const category = ref('');
+const productImage = ref(null);
+const imagePreview = ref('');
 
-// Mengubah daftar produk yang tampil berdasarkan kategori
-const filteredProducts = computed(() => {
-  if (activeCategory.value === 'All') {
-    return allProducts.value;
+// Handle image upload
+const handleImageUpload = (event) => {
+  const file = event.target.files[0];
+  if (file) {
+    productImage.value = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      imagePreview.value = e.target.result;
+    };
+    reader.readAsDataURL(file);
   }
-  return allProducts.value.filter(product => product.category === activeCategory.value);
-});
-
-// Helper untuk format mata uang
-const formatCurrency = (value) => {
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    minimumFractionDigits: 0
-  }).format(value);
 };
 
-// Fungsi untuk memilih produk (ganti dengan logika Anda)
-const selectProduct = (product) => {
-  alert(`Menambahkan ${product.name} ke pesanan.`);
-  // Logika untuk menambahkan ke keranjang/order
+// Trigger file input
+const triggerFileInput = () => {
+  document.getElementById('fileInput').click();
+};
+
+// Handle drag and drop
+const handleDrop = (event) => {
+  event.preventDefault();
+  const file = event.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) {
+    productImage.value = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      imagePreview.value = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+};
+
+const handleDragOver = (event) => {
+  event.preventDefault();
+};
+
+// Save product
+const saveProduct = () => {
+  const newProduct = {
+    name: productName.value,
+    description: description.value,
+    price: price.value,
+    status: status.value,
+    category: category.value,
+    image: imagePreview.value
+  };
+  console.log('Saving product:', newProduct);
+  alert('Product saved successfully!');
+  router.push('/superadmin/products');
+};
+
+// Cancel
+const cancel = () => {
+  router.push('/superadmin/products');
+};
+
+// Navigate back
+const goBack = () => {
+  router.push('/superadmin/products');
 };
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="min-h-screen">
+    <div class="max-w-4xl mx-auto py-8 px-4">
+      <!-- Header -->
+      <div class="flex items-center space-x-3 mb-6">
+        <button @click="goBack" class="text-gray-600 hover:text-gray-900">
+          ← Back
+        </button>
+        <h1 class="text-xl font-semibold text-gray-900">Add Product</h1>
+      </div>
 
-    <div>
-      <h1 class="text-3xl font-bold text-gray-900">Add Order</h1>
-    </div>
+      <!-- Form -->
+      <div class="bg-white p-6 rounded-lg shadow-sm">
+        <div class="space-y-6">
+          <!-- Product Name -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
+            <input
+              v-model="productName"
+              type="text"
+              placeholder="e.g., Es Kopi Susu"
+              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
+            />
+          </div>
 
-    <div class="flex items-center space-x-2 border-b border-gray-300">
-      <button
-        @click="activeCategory = 'All'"
-        :class="activeCategory === 'All' ? 'border-amber-700 text-amber-700' : 'border-transparent text-gray-600'"
-        class="px-4 py-3 font-medium border-b-2 hover:text-amber-700 transition"
-      >
-        All
-      </button>
-      <button
-        @click="activeCategory = 'Drink'"
-        :class="activeCategory === 'Drink' ? 'border-amber-700 text-amber-700' : 'border-transparent text-gray-600'"
-        class="px-4 py-3 font-medium border-b-2 hover:text-amber-700 transition"
-      >
-        Drink
-      </button>
-      <button
-        @click="activeCategory = 'Food'"
-        :class="activeCategory === 'Food' ? 'border-amber-700 text-amber-700' : 'border-transparent text-gray-600'"
-        class="px-4 py-3 font-medium border-b-2 hover:text-amber-700 transition"
-      >
-        Food
-      </button>
-    </div>
+          <!-- Description -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <textarea
+              v-model="description"
+              rows="3"
+              placeholder="A short description of the product"
+              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none resize-none"
+            ></textarea>
+          </div>
 
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
-      
-      <template v-if="filteredProducts.length > 0">
-        <div
-          v-for="product in filteredProducts"
-          :key="product.id"
-          @click="selectProduct(product)"
-          class="bg-white border border-gray-200 rounded-xl shadow-sm cursor-pointer hover:shadow-lg transition overflow-hidden"
-        >
-          <img :src="product.image" alt="product.name" class="w-full h-36 object-cover">
-          
-          <div class="p-4">
-            <h3 class="font-semibold text-gray-900 truncate">{{ product.name }}</h3>
-            <p class="text-sm text-gray-700 mt-1">{{ formatCurrency(product.price) }}</p>
+          <div class="grid grid-cols-2 gap-6">
+            <!-- Price -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Price</label>
+              <div class="relative">
+                <span class="absolute left-3 top-2 text-gray-500">Rp</span>
+                <input
+                  v-model="price"
+                  type="number"
+                  placeholder="25000"
+                  class="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
+                />
+              </div>
+            </div>
+
+            <!-- Status -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+              <select
+                v-model="status"
+                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
+              >
+                <option value="" disabled selected>Select Status</option>
+                <option value="Available">Available</option>
+                <option value="Out of Stock">Out of Stock</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Product Image -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Product Image</label>
+            <div
+              @click="triggerFileInput"
+              @drop="handleDrop"
+              @dragover="handleDragOver"
+              class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-amber-500 transition-colors"
+            >
+              <input
+                id="fileInput"
+                type="file"
+                accept="image/*"
+                @change="handleImageUpload"
+                class="hidden"
+              />
+              
+              <div v-if="!imagePreview">
+                <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                  <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                <p class="mt-2 text-sm text-gray-600">
+                  <span class="text-amber-700 font-medium">Upload a file</span> or drag and drop
+                </p>
+                <p class="mt-1 text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+              </div>
+              
+              <div v-else class="relative">
+                <img :src="imagePreview" alt="Preview" class="mx-auto max-h-32 rounded" />
+                <p class="mt-2 text-xs text-gray-500">Click to change image</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Category -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+            <select
+              v-model="category"
+              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
+            >
+              <option value="" disabled selected>Select category</option>
+              <option value="Drink">Drink</option>
+              <option value="Food">Food</option>
+            </select>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex justify-end space-x-3 pt-4">
+            <button
+              @click="cancel"
+              class="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              @click="saveProduct"
+              class="px-4 py-2 text-sm font-medium text-white bg-amber-700 hover:bg-amber-800 rounded-lg transition-colors"
+            >
+              Save Product
+            </button>
           </div>
         </div>
-      </template>
-      
-      <template v-else>
-        <p class="text-gray-500 col-span-full text-center py-10">
-          No products found in this category.
-        </p>
-      </template>
-
+      </div>
     </div>
-
   </div>
 </template>
