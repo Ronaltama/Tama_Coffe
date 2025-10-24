@@ -7,6 +7,9 @@ import AdminLayout from '../components/AdminLayout.vue';
 
 // Impor Halaman (Pages)
 import DashboardAdmin from '../Admin/Dashboard.vue';
+import AddOrder from "../Admin/AddOrder.vue";
+
+//impor superadmin pages
 import DashboardSuperAdmin from '../SuperAdmin/DashboardSuper.vue';
 import Users from '../SuperAdmin/Users.vue'; // (Asumsi dari langkah sebelumnya)
 import Products from '../SuperAdmin/Products.vue';
@@ -61,20 +64,16 @@ const routes = [
         component: DashboardAdmin,
       },
       {
-        path: "users",
-        component: Users,
-      },
-      {
-        path: "products",
-        component: Products,
-      },
-      {
-        path: "products/AddProducts", // Halaman form tambah produk
-        component: AddProducts,
-      },
-      {
         path: "history",
         component: History,
+      },
+      {
+        path: "AddOrder",
+        component: AddOrder,
+      },
+      {
+        path: "ConfirmOrder",
+        component: ConfirmOrder,
       },
     ],
   },

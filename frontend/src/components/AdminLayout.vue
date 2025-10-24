@@ -74,7 +74,7 @@ const handleLogout = () => {
             <span>Dashboard</span>
           </RouterLink>
           <RouterLink
-            to="/admin/add-order"
+            to="/admin/history"
             class="nav-link"
             active-class="sidebar-active"
           >
@@ -95,7 +95,7 @@ const handleLogout = () => {
             active-class="sidebar-active"
           >
             <span class="fa-fw">✔️</span>
-            <span>confirm-order</span>
+            <span>confirm order</span>
           </RouterLink>
         </template>
       </nav>
