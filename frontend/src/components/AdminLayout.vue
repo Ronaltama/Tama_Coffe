@@ -78,8 +78,16 @@ const handleLogout = () => {
             class="nav-link"
             active-class="sidebar-active"
           >
+            <span class="fa-fw">📜</span>
+            <span>Order History</span>
+          </RouterLink>
+          <RouterLink
+            to="/admin/add-order"
+            class="nav-link"
+            active-class="sidebar-active"
+          >
             <span class="fa-fw">➕</span>
-            <span>Add Order</span>
+            <span>add order</span>
           </RouterLink>
           <RouterLink
             to="/admin/confirm-order"
@@ -87,15 +95,7 @@ const handleLogout = () => {
             active-class="sidebar-active"
           >
             <span class="fa-fw">✔️</span>
-            <span>Confirm Order</span>
-          </RouterLink>
-          <RouterLink
-            to="/admin/history"
-            class="nav-link"
-            active-class="sidebar-active"
-          >
-            <span class="fa-fw">📜</span>
-            <span>Order History</span>
+            <span>confirm-order</span>
           </RouterLink>
         </template>
       </nav>

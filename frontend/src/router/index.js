@@ -18,37 +18,59 @@ const ConfirmOrder = { template: '<h1 class="text-2xl">Halaman Konfirmasi Order<
 
 const routes = [
   {
-    path: '/',
-    redirect: '/superadmin/dashboard',
+    path: "/",
+    redirect: "/admin/dashboard",
   },
-  
+
   // Rute untuk SuperAdmin
   {
-    path: '/superadmin',
+    path: "/superadmin",
     component: AdminLayout,
-    props: { role: 'superadmin' },
+    props: { role: "superadmin" },
     children: [
       {
-        path: 'dashboard',
+        path: "dashboard",
         component: DashboardSuperAdmin,
       },
       {
-        path: 'users',
-        component: Users, 
+        path: "users",
+        component: Users,
       },
       {
-        path: 'products',
+        path: "products",
         component: Products, // <-- Ini sekarang sudah benar
       },
       {
-        path: 'history',
+        path: "history",
         component: History,
       },
     ],
   },
 
-  // Rute untuk Admin Biasa (sisanya)
-  // ... (kode router admin Anda) ...
+  // Rute untuk Admin
+  {
+    path: "/admin",
+    component: AdminLayout,
+    props: { role: "admin" },
+    children: [
+      {
+        path: "dashboard",
+        component: DashboardAdmin,
+      },
+      {
+        path: "users",
+        component: Users,
+      },
+      {
+        path: "products",
+        component: Products, // <-- Ini sekarang sudah benar
+      },
+      {
+        path: "history",
+        component: History,
+      },
+    ],
+  },
 ];
 
 const router = createRouter({
