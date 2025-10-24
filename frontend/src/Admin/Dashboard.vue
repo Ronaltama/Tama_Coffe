@@ -118,5 +118,4 @@ const getStatusClasses = (status) => {
 </template>
 
 <style scoped>
-/* Gaya khusus komponen bisa ditambahkan di sini jika perlu */
 </style>

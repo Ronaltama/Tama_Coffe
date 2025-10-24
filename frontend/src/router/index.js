@@ -18,23 +18,23 @@ const ConfirmOrder = { template: '<h1 class="text-2xl">Halaman Konfirmasi Order<
 
 const routes = [
   {
-    path: '/',
-    redirect: '/superadmin/dashboard',
+    path: "/",
+    redirect: "/admin/dashboard",
   },
-  
+
   // Rute untuk SuperAdmin
   {
-    path: '/superadmin',
+    path: "/superadmin",
     component: AdminLayout,
-    props: { role: 'superadmin' },
+    props: { role: "superadmin" },
     children: [
       {
-        path: 'dashboard',
+        path: "dashboard",
         component: DashboardSuperAdmin,
       },
       {
-        path: 'users',
-        component: Users, 
+        path: "users",
+        component: Users,
       },
       {
         path: 'products',
@@ -45,12 +45,11 @@ const routes = [
         component: AddProducts,
       },
       {
-        path: 'history',
+        path: "history",
         component: History,
       },
     ],
   },
-
   {
     path: '/admin',
     component: AdminLayout,
