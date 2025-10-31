@@ -11,16 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-Schema::create('tables', function (Blueprint $table) {
-    $table->id();
-    $table->string('table_number');
-    $table->integer('capacity');
-    $table->string('type')->nullable();
-    $table->string('qr_code_url')->nullable();
-    $table->enum('status', ['available', 'occupied', 'reserved'])->default('available');
-    $table->timestamps();
-});
-
+        Schema::create('tables', function (Blueprint $table) {
+            $table->string('id')->primary();
+            $table->string('table_number');
+            $table->integer('capacity');
+            $table->string('type')->nullable();
+            $table->string('qr_code_url')->nullable();
+            $table->enum('status', ['available', 'occupied', 'reserved'])->default('available');
+            $table->timestamps();
+        });
     }
 
     /**

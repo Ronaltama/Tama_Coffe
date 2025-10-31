@@ -11,17 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-Schema::create('payments', function (Blueprint $table) {
-    $table->id();
-    $table->foreignId('order_id')->constrained('orders')->onDelete('cascade');
-    $table->decimal('amount', 10, 2);
-    $table->string('method');
-    $table->string('proof')->nullable();
-    $table->enum('status', ['pending', 'paid', 'failed'])->default('pending');
-    $table->date('date');
-    $table->timestamps();
-});
-
+        Schema::create('payments', function (Blueprint $table) {
+            $table->string('id')->primary();
+            $table->string('order_id');
+            $table->foreign('order_id')->references('id')->on('orders')->onDelete('cascade');
+            $table->decimal('amount', 10, 2);
+            $table->string('method');
+            $table->string('proof')->nullable();
+            $table->enum('status', ['pending', 'paid', 'failed'])->default('pending');
+            $table->date('date');
+            $table->timestamps();
+        });
     }
 
     /**

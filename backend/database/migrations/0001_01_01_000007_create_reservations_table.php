@@ -11,19 +11,20 @@ return new class extends Migration
      */
     public function up(): void
     {
-Schema::create('reservations', function (Blueprint $table) {
-    $table->id();
-    $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-    $table->foreignId('table_id')->nullable()->constrained('tables')->onDelete('set null');
-    $table->string('name');
-    $table->string('phone');
-    $table->integer('people_count');
-    $table->date('date');
-    $table->time('time');
-    $table->enum('status', ['pending', 'confirmed', 'completed', 'cancelled'])->default('pending');
-    $table->timestamps();
-});
-
+        Schema::create('reservations', function (Blueprint $table) {
+            $table->string('id')->primary();
+            $table->string('user_id');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->string('table_id')->nullable();
+            $table->foreign('table_id')->references('id')->on('tables')->onDelete('set null');
+            $table->string('name');
+            $table->string('phone');
+            $table->integer('people_count');
+            $table->date('date');
+            $table->time('time');
+            $table->enum('status', ['pending', 'confirmed', 'completed', 'cancelled'])->default('pending');
+            $table->timestamps();
+        });
     }
 
     /**

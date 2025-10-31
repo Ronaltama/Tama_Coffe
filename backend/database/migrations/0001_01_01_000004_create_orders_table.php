@@ -11,18 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-Schema::create('orders', function (Blueprint $table) {
-    $table->id();
-    $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-    $table->foreignId('table_id')->nullable()->constrained('tables')->onDelete('set null');
-    $table->string('customer_name');
-    $table->string('customer_phone');
-    $table->decimal('total_price', 10, 2)->default(0);
-    $table->text('note')->nullable();
-    $table->enum('status', ['pending', 'processing', 'completed', 'cancelled'])->default('pending');
-    $table->timestamps();
-});
-
+        Schema::create('orders', function (Blueprint $table) {
+            $table->string('id')->primary();
+            $table->string('user_id');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->string('table_id')->nullable();
+            $table->foreign('table_id')->references('id')->on('tables')->onDelete('set null');
+            $table->string('customer_name');
+            $table->string('customer_phone');
+            $table->decimal('total_price', 10, 2)->default(0);
+            $table->text('note')->nullable();
+            $table->enum('status', ['pending', 'processing', 'completed', 'cancelled'])->default('pending');
+            $table->timestamps();
+        });
     }
 
     /**

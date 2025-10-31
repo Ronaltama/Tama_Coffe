@@ -9,24 +9,19 @@ class Product extends Model
 {
     use HasFactory;
 
+    public $incrementing = false;
+    protected $keyType = 'string';
     protected $fillable = [
-        'category_id',
-        'name',
-        'description',
-        'image',
-        'price',
-        'status'
+        'id', 'category_id', 'name', 'description', 'image', 'price', 'status'
     ];
 
-    protected $casts = [
-        'price' => 'decimal:2',
-    ];
-
-    public function category() {
-        return $this->belongsTo(Category::class);
+    public function category()
+    {
+        return $this->belongsTo(Category::class, 'category_id');
     }
 
-    public function orderDetails() {
-        return $this->hasMany(OrderDetail::class);
+    public function orderDetails()
+    {
+        return $this->hasMany(OrderDetail::class, 'product_id');
     }
 }

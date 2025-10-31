@@ -9,24 +9,30 @@ class Order extends Model
 {
     use HasFactory;
 
+    public $incrementing = false;
+    protected $keyType = 'string';
     protected $fillable = [
-        'user_id', 'table_id', 'customer_name', 'customer_phone',
+        'id', 'user_id', 'table_id', 'customer_name', 'customer_phone',
         'total_price', 'note', 'status'
     ];
 
-    public function user() {
-        return $this->belongsTo(User::class);
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function table() {
-        return $this->belongsTo(Table::class);
+    public function table()
+    {
+        return $this->belongsTo(Table::class, 'table_id');
     }
 
-    public function orderDetails() {
-        return $this->hasMany(OrderDetail::class);
+    public function orderDetails()
+    {
+        return $this->hasMany(OrderDetail::class, 'order_id');
     }
 
-    public function payment() {
-        return $this->hasOne(Payment::class);
+    public function payments()
+    {
+        return $this->hasMany(Payment::class, 'order_id');
     }
 }
