@@ -27,7 +27,7 @@ const ConfirmOrder = { template: '<h1 class="text-2xl">Halaman Konfirmasi Order<
 const routes = [
   {
     path: "/",
-    redirect: "/superadmin/dashboard",
+    redirect: "/user/menu",
   },
 
   {
