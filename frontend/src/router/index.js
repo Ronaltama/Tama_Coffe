@@ -15,11 +15,9 @@ import Users from '../SuperAdmin/Users.vue'; // (Asumsi dari langkah sebelumnya)
 import Products from '../SuperAdmin/Products.vue';
 import AddProducts from '../SuperAdmin/AddProducts.vue';
 
-// --- TAMBAHAN ---
-// Impor halaman User Menu
-// (Sesuaikan path ini jika Anda menyimpannya di tempat lain)
-import UserMenu from '../views/UserMenu.vue'; 
-// --- AKHIR TAMBAHAN ---
+// import halaman user
+import UserMenu from '../views/UserMenu.vue';
+import ProductDetail from '../views/ProductDetail.vue';
 
 
 // Buat halaman placeholder untuk testing
@@ -37,6 +35,13 @@ const routes = [
     name: "UserMenu",
     component: UserMenu,
   },
+  {
+    path: "/user/product/:id", // <-- RUTE DINAMIS BARU
+    name: "ProductDetail",
+    component: ProductDetail,
+    props: true // Ini agar ':id' bisa diterima sebagai props di komponen
+  },
+  // --- AKHIR RUTE USER ---
 
   // Rute untuk SuperAdmin
   {
