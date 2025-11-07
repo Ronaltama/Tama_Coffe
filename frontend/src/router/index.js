@@ -14,6 +14,14 @@ import DashboardSuperAdmin from '../SuperAdmin/DashboardSuper.vue';
 import Users from '../SuperAdmin/Users.vue'; // (Asumsi dari langkah sebelumnya)
 import Products from '../SuperAdmin/Products.vue';
 import AddProducts from '../SuperAdmin/AddProducts.vue';
+
+// --- TAMBAHAN ---
+// Impor halaman User Menu
+// (Sesuaikan path ini jika Anda menyimpannya di tempat lain)
+import UserMenu from '../views/UserMenu.vue'; 
+// --- AKHIR TAMBAHAN ---
+
+
 // Buat halaman placeholder untuk testing
 const History = { template: '<h1 class="text-2xl">Halaman Riwayat Order</h1>' };
 const ConfirmOrder = { template: '<h1 class="text-2xl">Halaman Konfirmasi Order</h1>' };
@@ -22,6 +30,12 @@ const routes = [
   {
     path: "/",
     redirect: "/superadmin/dashboard",
+  },
+
+  {
+    path: "/user/menu",
+    name: "UserMenu",
+    component: UserMenu,
   },
 
   // Rute untuk SuperAdmin
