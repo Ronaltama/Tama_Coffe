@@ -67,7 +67,7 @@ class TableController extends Controller
         // 3) make the URL that will be encoded in QR
         // $frontendUrl = url("/scan/{$id}"); // url sudah diterdefinisi di .env
         $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173');
-        $qrUrl = "{$frontendUrl}/order/{$id}";
+        $qrUrl = "{$frontendUrl}/scanOrder/{$id}";
 
         // 4) generate QR image (minimal, compatible with endroid/qr-code v6)
         try {
