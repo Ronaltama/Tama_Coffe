@@ -16,17 +16,40 @@ import Users from "../SuperAdmin/Users.vue"; // (Asumsi dari langkah sebelumnya)
 import Products from "../SuperAdmin/Products.vue";
 import AddProducts from "../SuperAdmin/AddProducts.vue";
 import History from "../SuperAdmin/History.vue";
-// Buat halaman placeholder untuk testing
-//const History = { template: '<h1 class="text-2xl">Halaman Riwayat Order</h1>' };
-// const ConfirmOrder = { template: '<h1 class="text-2xl">Halaman Konfirmasi Order</h1>' };
+
+// import halaman user
+import UserMenu from "../views/UserMenu.vue";
+import ProductDetail from "../views/ProductDetail.vue";
+
+// Buat halaman placeholder untuk testing (dari versi pertama)
+const HistoryPlaceholder = {
+  template: '<h1 class="text-2xl">Halaman Riwayat Order</h1>',
+};
+const ConfirmOrderPlaceholder = {
+  template: '<h1 class="text-2xl">Halaman Konfirmasi Order</h1>',
+};
 
 const routes = [
   {
     path: "/",
-    redirect: "/superadmin/dashboard",
+    redirect: "/user/menu", // dari versi pertama (user)
   },
 
-  // Rute untuk SuperAdmin
+  // --- RUTE USER ---
+  {
+    path: "/user/menu",
+    name: "UserMenu",
+    component: UserMenu,
+  },
+  {
+    path: "/user/product/:id",
+    name: "ProductDetail",
+    component: ProductDetail,
+    props: true,
+  },
+  // --- AKHIR RUTE USER ---
+
+  // --- RUTE SUPERADMIN ---
   {
     path: "/superadmin",
     component: AdminLayout,
@@ -45,17 +68,22 @@ const routes = [
         component: Products,
       },
       {
-        path: "products/AddProducts", // Halaman form tambah produk
+        path: "products/AddProducts",
         component: AddProducts,
       },
+      // Dua versi history (real + placeholder)
       {
         path: "history",
         component: History,
       },
+      {
+        path: "history-test",
+        component: HistoryPlaceholder,
+      },
     ],
   },
 
-  // Rute untuk Admin
+  // --- RUTE ADMIN ---
   {
     path: "/admin",
     component: AdminLayout,
@@ -65,9 +93,14 @@ const routes = [
         path: "dashboard",
         component: DashboardAdmin,
       },
+      // Dua versi history (real + placeholder)
       {
         path: "history",
         component: History,
+      },
+      {
+        path: "history-test",
+        component: HistoryPlaceholder,
       },
       {
         path: "add-order",
@@ -76,6 +109,10 @@ const routes = [
       {
         path: "confirm-order",
         component: ConfirmOrder,
+      },
+      {
+        path: "confirm-order-test",
+        component: ConfirmOrderPlaceholder,
       },
     ],
   },
