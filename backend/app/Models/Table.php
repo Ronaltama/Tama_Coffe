@@ -9,13 +9,19 @@ class Table extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['table_number', 'capacity', 'type', 'qr_code_url', 'status'];
+    public $incrementing = false;
+    protected $keyType = 'string';
+    protected $fillable = [
+        'id', 'table_number', 'capacity', 'type', 'qr_code_url', 'status'
+    ];
 
-    public function orders() {
-        return $this->hasMany(Order::class);
+    public function orders()
+    {
+        return $this->hasMany(Order::class, 'table_id');
     }
 
-    public function reservations() {
-        return $this->hasMany(Reservation::class);
+    public function reservations()
+    {
+        return $this->hasMany(Reservation::class, 'table_id');
     }
 }

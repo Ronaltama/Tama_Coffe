@@ -9,15 +9,20 @@ class Reservation extends Model
 {
     use HasFactory;
 
+    public $incrementing = false;
+    protected $keyType = 'string';
     protected $fillable = [
-        'user_id', 'table_id', 'name', 'phone', 'people_count', 'date', 'time', 'status'
+        'id', 'user_id', 'table_id', 'name', 'phone',
+        'people_count', 'date', 'time', 'status'
     ];
 
-    public function user() {
-        return $this->belongsTo(User::class);
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function table() {
-        return $this->belongsTo(Table::class);
+    public function table()
+    {
+        return $this->belongsTo(Table::class, 'table_id');
     }
 }

@@ -116,6 +116,13 @@ const routes = [
       },
     ],
   },
+
+  // Rute untuk User (scan order)
+  {
+    path: '/order/:id',
+    name: 'orderUser',
+    component: () => import('../Order/Order.vue')
+  },
 ];
 
 const router = createRouter({
