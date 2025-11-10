@@ -34,7 +34,7 @@
             : 'text-gray-500 hover:text-gray-700'
         ]"
       >
-        PAKET
+        ALL
       </button>
       <button 
         @click="activeTab = 'coffee'"
@@ -45,7 +45,7 @@
             : 'text-gray-500 hover:text-gray-700'
         ]"
       >
-        COFFEE
+        DRINKS
       </button>
       <button 
         @click="activeTab = 'pastry'"
@@ -56,7 +56,7 @@
             : 'text-gray-500 hover:text-gray-700'
         ]"
       >
-        PASTRY
+        FOOD
       </button>
     </div>
 
@@ -80,15 +80,15 @@
 
           <div class="p-3 flex flex-col flex-grow">
             <h3 class="font-bold text-base text-gray-900">{{ product.name }}</h3>
-            <p class="text-sm text-gray-600 mb-3">Rp {{ product.price }}</p>
+            <p class="text-sm text-gray-600 mb-3">Rp{{ product.price }}</p>
             
             <router-link 
               :to="`/user/product/${product.id}`"
-              class="w-full py-2 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-md transition-colors text-center mt-auto"
+              class="w-full py-2 bg-white hover:bg-amber-600 text-amber-600 hover:text-white border border-amber-600 font-medium rounded-md transition-colors text-center mt-auto"
             >
               Add
             </router-link>
-            </div>
+          </div>
         </div>
       </div>
     </main>
@@ -98,7 +98,6 @@
 
 <script setup>
 import { ref } from 'vue';
-// import { useRouter } from 'vue-router'; // Tidak perlu jika pakai <router-link>
 
 // Tab aktif
 const activeTab = ref('coffee');
@@ -106,33 +105,32 @@ const activeTab = ref('coffee');
 // --- DATA DUMMY ---
 const otherProducts = ref([
   {
-    id: 1, // Pastikan ID ini unik
-    name: 'Iced Coffee Latte',
+    id: 1,
+    name: 'Coffee Latte',
     price: '25.000',
     imageUrl: 'https://images.unsplash.com/photo-1517487881594-2787fef5ebf7?w=400&q=80'
   },
   {
-    id: 2, // Pastikan ID ini unik
+    id: 2,
     name: 'Caramel Macchiato',
     price: '28.000',
     imageUrl: 'https://images.unsplash.com/photo-1599639957043-f3aa5c986398?w=400&q=80'
   },
   {
-    id: 3, // Pastikan ID ini unik
+    id: 3,
     name: 'Americano',
     price: '22.000',
     imageUrl: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&q=80'
   },
   {
-    id: 4, // Pastikan ID ini unik
+    id: 4,
     name: 'Cappuccino',
     price: '26.000',
     imageUrl: 'https://images.unsplash.com/photo-1572442388796-11668a67e53d?w=400&q=80'
   }
 ]);
-
 </script>
 
 <style scoped>
-/* (Tidak perlu style tambahan) */
+/* Styling sudah menggunakan Tailwind CSS */
 </style>
