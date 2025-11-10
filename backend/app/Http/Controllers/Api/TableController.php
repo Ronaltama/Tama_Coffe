@@ -65,9 +65,9 @@ class TableController extends Controller
         ]);
 
         // 3) make the URL that will be encoded in QR
-        // $frontendUrl = url("/scan/{$id}"); // url sudah diterdefinisi di .env
+        // $frontendUrl = url("/order/{$id}"); // url sudah diterdefinisi di .env
         $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173');
-        $qrUrl = "{$frontendUrl}/scanOrder/{$id}";
+        $qrUrl = "{$frontendUrl}/order/{$id}";
 
         // 4) generate QR image (minimal, compatible with endroid/qr-code v6)
         try {
@@ -154,6 +154,16 @@ class TableController extends Controller
                 'success' => false,
                 'message' => 'Table not found',
             ], 404);
+        }
+    }
+
+    public function scanOrder($id)
+    {
+        try {
+            $table = Table::where('id', $id)->firstOrFail();
+            return response()->json($table);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['message' => 'Meja tidak ditemukan'], 404);
         }
     }
 }

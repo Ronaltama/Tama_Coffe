@@ -1,4 +1,5 @@
 <?php
+
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\OrderController;
@@ -15,7 +16,7 @@ Route::patch('products/{id}/toggle-status', [ProductController::class, 'toggleSt
 //crud table
 Route::apiResource('tables', TableController::class);
 
-//scan qrcode untuk mulai order
-Route::get('/scanOrder/{id}', [OrderController::class, 'scanOrder']);
+// Endpoint untuk menampilkan data meja (ketika QR di-scan)
+Route::get('order/{id}', [TableController::class, 'scanOrder']);
 
 
