@@ -20,6 +20,7 @@ import History from "../SuperAdmin/History.vue";
 // import halaman user
 import UserMenu from "../views/UserMenu.vue";
 import ProductDetail from "../views/ProductDetail.vue";
+import Cart from '../views/Cart.vue';
 
 // Buat halaman placeholder untuk testing (dari versi pertama)
 const HistoryPlaceholder = {
@@ -46,6 +47,11 @@ const routes = [
     name: "ProductDetail",
     component: ProductDetail,
     props: true,
+  },
+  {
+    path: "/user/cart", // <-- TAMBAHKAN RUTE BARU INI
+    name: "UserCart",
+    component: Cart,
   },
   // --- AKHIR RUTE USER ---
 
