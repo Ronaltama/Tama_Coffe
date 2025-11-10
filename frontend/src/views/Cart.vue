@@ -79,7 +79,7 @@
             placeholder="Ex: No onions, extra spicy..."
           ></textarea>
         </div>
-        </main>
+      </main>
 
       <footer 
         v-if="cartItems.length > 0"
@@ -90,7 +90,11 @@
             <span class="text-lg font-medium text-gray-600">Total Price</span>
             <span class="text-2xl font-bold text-gray-900">Rp{{ totalPrice }}</span>
           </div>
-          <button class="w-full py-4 bg-orange-600 hover:bg-orange-700 text-white text-lg font-bold rounded-xl transition-colors shadow-lg">
+    	
+          <button 
+            @click="goToPayment"
+            class="w-full py-4 bg-orange-600 hover:bg-orange-700 text-white text-lg font-bold rounded-xl transition-colors shadow-lg"
+          >
             Payment
           </button>
         </div>
@@ -102,6 +106,8 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue';
+import { useRouter } from 'vue-router';
+const router = useRouter();
 
 // ------------------------------------
 // SINKRONISASI LOCALSTORAGE (Items)
@@ -113,7 +119,7 @@ watch(cartItems, (newCart) => {
 }, { deep: true });
 
 // ------------------------------------
-// *** PENAMBAHAN BARU: SINKRONISASI NOTES ***
+// SINKRONISASI NOTES
 // ------------------------------------
 const notes = ref(localStorage.getItem('cartNotes') || '');
 
@@ -146,6 +152,10 @@ const decrementCart = (id) => {
   }
 };
 
+const goToPayment = () => {
+  router.push('/user/payment');
+};
+
 // ------------------------------------
 // COMPUTED PROPERTIES
 // ------------------------------------
@@ -159,7 +169,6 @@ const totalPrice = computed(() => {
 </script>
 
 <style scoped>
-/* Pastikan scrolling mulus */
 main {
   overflow-y: auto;
 }
