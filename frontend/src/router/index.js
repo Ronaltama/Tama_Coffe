@@ -1,47 +1,30 @@
 // frontend/src/router/index.js
 
-import { createRouter, createWebHistory } from 'vue-router';
+import { createRouter, createWebHistory } from "vue-router";
 
 // Impor Layout
-import AdminLayout from '../components/AdminLayout.vue';
+import AdminLayout from "../components/AdminLayout.vue";
 
 // Impor Halaman (Pages)
-import DashboardAdmin from '../Admin/Dashboard.vue';
+import DashboardAdmin from "../Admin/Dashboard.vue";
 import AddOrder from "../Admin/AddOrder.vue";
+import ConfirmOrder from "../Admin/ConfirmOrder.vue";
 
 //impor superadmin pages
-import DashboardSuperAdmin from '../SuperAdmin/DashboardSuper.vue';
-import Users from '../SuperAdmin/Users.vue'; // (Asumsi dari langkah sebelumnya)
-import Products from '../SuperAdmin/Products.vue';
-import AddProducts from '../SuperAdmin/AddProducts.vue';
-
-// import halaman user
-import UserMenu from '../views/UserMenu.vue';
-import ProductDetail from '../views/ProductDetail.vue';
-
-
+import DashboardSuperAdmin from "../SuperAdmin/DashboardSuper.vue";
+import Users from "../SuperAdmin/Users.vue"; // (Asumsi dari langkah sebelumnya)
+import Products from "../SuperAdmin/Products.vue";
+import AddProducts from "../SuperAdmin/AddProducts.vue";
+import History from "../SuperAdmin/History.vue";
 // Buat halaman placeholder untuk testing
-const History = { template: '<h1 class="text-2xl">Halaman Riwayat Order</h1>' };
-const ConfirmOrder = { template: '<h1 class="text-2xl">Halaman Konfirmasi Order</h1>' };
+//const History = { template: '<h1 class="text-2xl">Halaman Riwayat Order</h1>' };
+// const ConfirmOrder = { template: '<h1 class="text-2xl">Halaman Konfirmasi Order</h1>' };
 
 const routes = [
   {
     path: "/",
-    redirect: "/user/menu",
+    redirect: "/superadmin/dashboard",
   },
-
-  {
-    path: "/user/menu",
-    name: "UserMenu",
-    component: UserMenu,
-  },
-  {
-    path: "/user/product/:id", // <-- RUTE DINAMIS BARU
-    name: "ProductDetail",
-    component: ProductDetail,
-    props: true // Ini agar ':id' bisa diterima sebagai props di komponen
-  },
-  // --- AKHIR RUTE USER ---
 
   // Rute untuk SuperAdmin
   {
@@ -87,11 +70,11 @@ const routes = [
         component: History,
       },
       {
-        path: "AddOrder",
+        path: "add-order",
         component: AddOrder,
       },
       {
-        path: "ConfirmOrder",
+        path: "confirm-order",
         component: ConfirmOrder,
       },
     ],
