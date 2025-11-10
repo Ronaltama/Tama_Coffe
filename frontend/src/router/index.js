@@ -1,30 +1,55 @@
 // frontend/src/router/index.js
 
-import { createRouter, createWebHistory } from 'vue-router';
+import { createRouter, createWebHistory } from "vue-router";
 
 // Impor Layout
-import AdminLayout from '../components/AdminLayout.vue';
+import AdminLayout from "../components/AdminLayout.vue";
 
 // Impor Halaman (Pages)
-import DashboardAdmin from '../Admin/Dashboard.vue';
+import DashboardAdmin from "../Admin/Dashboard.vue";
 import AddOrder from "../Admin/AddOrder.vue";
+import ConfirmOrder from "../Admin/ConfirmOrder.vue";
 
 //impor superadmin pages
-import DashboardSuperAdmin from '../SuperAdmin/DashboardSuper.vue';
-import Users from '../SuperAdmin/Users.vue'; // (Asumsi dari langkah sebelumnya)
-import Products from '../SuperAdmin/Products.vue';
-import AddProducts from '../SuperAdmin/AddProducts.vue';
-// Buat halaman placeholder untuk testing
-const History = { template: '<h1 class="text-2xl">Halaman Riwayat Order</h1>' };
-const ConfirmOrder = { template: '<h1 class="text-2xl">Halaman Konfirmasi Order</h1>' };
+import DashboardSuperAdmin from "../SuperAdmin/DashboardSuper.vue";
+import Users from "../SuperAdmin/Users.vue"; // (Asumsi dari langkah sebelumnya)
+import Products from "../SuperAdmin/Products.vue";
+import AddProducts from "../SuperAdmin/AddProducts.vue";
+import History from "../SuperAdmin/History.vue";
+
+// import halaman user
+import UserMenu from "../views/UserMenu.vue";
+import ProductDetail from "../views/ProductDetail.vue";
+
+// Buat halaman placeholder untuk testing (dari versi pertama)
+const HistoryPlaceholder = {
+  template: '<h1 class="text-2xl">Halaman Riwayat Order</h1>',
+};
+const ConfirmOrderPlaceholder = {
+  template: '<h1 class="text-2xl">Halaman Konfirmasi Order</h1>',
+};
 
 const routes = [
   {
     path: "/",
-    redirect: "/superadmin/dashboard",
+    redirect: "/user/menu", // dari versi pertama (user)
   },
 
-  // Rute untuk SuperAdmin
+  // --- RUTE USER ---
+  {
+    path: "/user/menu",
+    name: "UserMenu",
+    component: UserMenu,
+  },
+  {
+    path: "/user/product/:id",
+    name: "ProductDetail",
+    component: ProductDetail,
+    props: true,
+  },
+  // --- AKHIR RUTE USER ---
+
+  // --- RUTE SUPERADMIN ---
   {
     path: "/superadmin",
     component: AdminLayout,
@@ -43,17 +68,22 @@ const routes = [
         component: Products,
       },
       {
-        path: "products/AddProducts", // Halaman form tambah produk
+        path: "products/AddProducts",
         component: AddProducts,
       },
+      // Dua versi history (real + placeholder)
       {
         path: "history",
         component: History,
       },
+      {
+        path: "history-test",
+        component: HistoryPlaceholder,
+      },
     ],
   },
 
-  // Rute untuk Admin
+  // --- RUTE ADMIN ---
   {
     path: "/admin",
     component: AdminLayout,
@@ -63,17 +93,26 @@ const routes = [
         path: "dashboard",
         component: DashboardAdmin,
       },
+      // Dua versi history (real + placeholder)
       {
         path: "history",
         component: History,
       },
       {
-        path: "AddOrder",
+        path: "history-test",
+        component: HistoryPlaceholder,
+      },
+      {
+        path: "add-order",
         component: AddOrder,
       },
       {
-        path: "ConfirmOrder",
+        path: "confirm-order",
         component: ConfirmOrder,
+      },
+      {
+        path: "confirm-order-test",
+        component: ConfirmOrderPlaceholder,
       },
     ],
   },
