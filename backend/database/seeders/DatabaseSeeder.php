@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use App\Models\Category;
+use App\Models\Role;
 use App\Models\SubCategory;
 
 class DatabaseSeeder extends Seeder
@@ -16,6 +17,23 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+
+        // === Seed data untuk role ===
+        $roles = [
+            [
+                'id' => 'RL001',
+                'name' => 'superdmin',
+            ],
+            [
+                'id' => 'RL002',
+                'name' => 'admin',
+            ],
+        ];
+
+        foreach ($roles as $role) {
+            Role::updateOrCreate(['id' => $role['id']], $role);
+        }
+
         // === Seed data untuk categories ===
         $categories = [
             [

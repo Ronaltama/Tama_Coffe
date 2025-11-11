@@ -1,22 +1,34 @@
 <script setup>
-import { RouterLink, RouterView } from 'vue-router';
-import { ref } from 'vue';
-import logo from '../assets/img/logo.png';
+import { RouterLink, RouterView, useRouter } from 'vue-router'
+import { ref } from 'vue'
+import logo from '../assets/img/logo.png'
 
-// Menerima 'role' sebagai prop dari router
+// router instance
+const router = useRouter()
+
+// menerima prop role
 defineProps({
   role: {
     type: String,
     required: true
   }
-});
+})
 
-// Fungsi untuk logout
+// Fungsi Logout
 const handleLogout = () => {
-  console.log('Logout initiated...');
-  // Contoh: router.push('/login');
-};
+  console.log('Logout initiated...')
+
+  // 1️⃣ Hapus data user dari localStorage
+  localStorage.removeItem('user')
+
+  // 2️⃣ Redirect ke halaman login
+  router.push('/login')
+
+  // (opsional) tampilkan notifikasi
+  alert('Anda telah logout.')
+}
 </script>
+
 
 
 <template>
@@ -85,7 +97,7 @@ const handleLogout = () => {
         <button @click="handleLogout"
           class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition">
           <i class="fas fa-sign-out-alt fa-fw"></i>
-          <span>Logout</span>
+          <span>Log out</span>
         </button>
       </div>
     </aside>

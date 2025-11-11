@@ -1,10 +1,12 @@
 <?php
 
+use App\Http\Controllers\Api\AuthController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\TableController;
+use App\Http\Controllers\Api\UserController;
 
 Route::apiResource('categories', CategoryController::class);
 Route::apiResource('products', ProductController::class);
@@ -19,4 +21,7 @@ Route::apiResource('tables', TableController::class);
 // Endpoint untuk menampilkan data meja (ketika QR di-scan)
 Route::get('order/{id}', [TableController::class, 'scanOrder']);
 
+// Endpoint untuk mengelola users(Admin)
+Route::apiResource('users', UserController::class);
 
+Route::post('login', [AuthController::class, 'login']);

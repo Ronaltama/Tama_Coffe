@@ -32,10 +32,20 @@ const ConfirmOrderPlaceholder = {
 };
 
 const routes = [
+
+
   {
     path: "/",
     redirect: "/user/menu", // dari versi pertama (user)
   },
+
+  // Rute untuk halaman login
+  {
+    path: "/login",
+    name: "Login",
+    component: () => import("../Auth/Login.vue"),
+  },
+
 
   // --- RUTE USER ---
   {
@@ -57,7 +67,7 @@ const routes = [
   {
     path: "/user/payment",
     name: "UserPayment",
-    component: Payment, 
+    component: Payment,
   },
   // --- AKHIR RUTE USER ---
 
@@ -137,9 +147,12 @@ const routes = [
   },
 ];
 
+
 const router = createRouter({
   history: createWebHistory(),
   routes,
 });
+
+
 
 export default router;
