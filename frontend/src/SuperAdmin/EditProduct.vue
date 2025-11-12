@@ -1,11 +1,13 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import axios from 'axios'
 
 const router = useRouter()
+const route = useRoute()
 
 // === STATE ===
+const productId = ref(route.params.id)
 const productName = ref('')
 const categoryId = ref('')
 const subCategoryId = ref('')
@@ -14,9 +16,11 @@ const price = ref('')
 const status = ref('available')
 const imageFile = ref(null)
 const imagePreview = ref(null)
+const existingImage = ref(null)
 
 const categories = ref([])
 const loading = ref(false)
+const loadingData = ref(true)
 const error = ref(null)
 
 // === API BASE URL ===
@@ -33,8 +37,34 @@ const fetchCategories = async () => {
   }
 }
 
-onMounted(() => {
-  fetchCategories()
+// === FETCH PRODUCT DATA ===
+const fetchProduct = async () => {
+  try {
+    const res = await axios.get(`${API_BASE}/products/${productId.value}`)
+    const product = res.data.data
+    
+    productName.value = product.name
+    categoryId.value = product.category_id
+    subCategoryId.value = product.sub_category_id || ''
+    description.value = product.description || ''
+    price.value = product.price
+    status.value = product.status
+    
+    if (product.image) {
+      existingImage.value = `http://localhost:8000/storage/${product.image}`
+      imagePreview.value = existingImage.value
+    }
+  } catch (err) {
+    console.error(err)
+    error.value = 'Failed to fetch product data'
+    alert('Gagal mengambil data produk')
+  } finally {
+    loadingData.value = false
+  }
+}
+
+onMounted(async () => {
+  await Promise.all([fetchCategories(), fetchProduct()])
 })
 
 // === COMPUTED ===
@@ -81,7 +111,7 @@ const handleImageChange = (event) => {
 
 const removeImage = () => {
   imageFile.value = null
-  imagePreview.value = null
+  imagePreview.value = existingImage.value
   const fileInput = document.getElementById('image')
   if (fileInput) fileInput.value = ''
 }
@@ -108,6 +138,7 @@ const handleSubmit = async () => {
   try {
     // Buat FormData untuk upload file
     const formData = new FormData()
+    formData.append('_method', 'PUT') // Laravel method spoofing
     formData.append('name', productName.value)
     formData.append('category_id', categoryId.value)
     if (subCategoryId.value) {
@@ -122,19 +153,19 @@ const handleSubmit = async () => {
       formData.append('image', imageFile.value)
     }
 
-    const response = await axios.post(`${API_BASE}/products`, formData, {
+    const response = await axios.post(`${API_BASE}/products/${productId.value}`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
     })
 
     if (response.data.success) {
-      alert('Produk berhasil ditambahkan!')
+      alert('Produk berhasil diupdate!')
       router.push('/superadmin/products')
     }
   } catch (err) {
     console.error(err)
-    error.value = err.response?.data?.message || 'Gagal menambahkan produk'
+    error.value = err.response?.data?.message || 'Gagal mengupdate produk'
     alert(error.value)
   } finally {
     loading.value = false
@@ -150,12 +181,23 @@ const handleCancel = () => {
   <div class="p-6 bg-gray-50 min-h-screen">
     <!-- Header -->
     <div class="mb-6">
-      <h1 class="text-2xl font-bold text-gray-900">Add New Product</h1>
-      <p class="text-gray-600 mt-1">Fill in the form below to add a new product</p>
+      <h1 class="text-2xl font-bold text-gray-900">Edit Product</h1>
+      <p class="text-gray-600 mt-1">Update product information</p>
+    </div>
+
+    <!-- Loading State -->
+    <div v-if="loadingData" class="bg-white rounded-xl shadow-sm max-w-3xl p-12 text-center">
+      <div class="flex items-center justify-center">
+        <svg class="animate-spin h-8 w-8 text-amber-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <span class="ml-3 text-gray-600">Loading product data...</span>
+      </div>
     </div>
 
     <!-- Form -->
-    <form @submit.prevent="handleSubmit" class="bg-white rounded-xl shadow-sm max-w-3xl">
+    <form v-else @submit.prevent="handleSubmit" class="bg-white rounded-xl shadow-sm max-w-3xl">
       <div class="p-6 space-y-6">
         
         <!-- Product Name -->
@@ -268,7 +310,7 @@ const handleCancel = () => {
             Product Image
           </label>
           
-          <!-- Upload Area -->
+          <!-- Current Image or Upload Area -->
           <div v-if="!imagePreview" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-amber-500 transition">
             <input
               type="file"
@@ -291,15 +333,30 @@ const handleCancel = () => {
           <!-- Image Preview -->
           <div v-else class="relative">
             <img :src="imagePreview" alt="Preview" class="w-full h-64 object-cover rounded-lg border border-gray-300">
-            <button
-              type="button"
-              @click="removeImage"
-              class="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white rounded-full p-2 shadow-lg transition"
-            >
-              <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-              </svg>
-            </button>
+            <div class="absolute top-2 right-2 flex gap-2">
+              <button
+                type="button"
+                @click="removeImage"
+                class="bg-red-600 hover:bg-red-700 text-white rounded-full p-2 shadow-lg transition"
+                title="Remove image"
+              >
+                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+              </button>
+              <label for="image" class="bg-amber-600 hover:bg-amber-700 text-white rounded-full p-2 shadow-lg transition cursor-pointer" title="Change image">
+                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                </svg>
+                <input
+                  type="file"
+                  id="image"
+                  accept="image/jpeg,image/jpg,image/png"
+                  @change="handleImageChange"
+                  class="hidden"
+                >
+              </label>
+            </div>
           </div>
         </div>
 
@@ -324,7 +381,7 @@ const handleCancel = () => {
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
-          {{ loading ? 'Saving...' : 'Save Product' }}
+          {{ loading ? 'Updating...' : 'Update Product' }}
         </button>
       </div>
     </form>

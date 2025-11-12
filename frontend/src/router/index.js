@@ -93,6 +93,13 @@ const routes = [
         path: "products/AddProducts",
         component: AddProducts,
       },
+      {
+        path: "products/edit/:id",
+        name: "EditProduct",
+        component: () => import("../SuperAdmin/EditProduct.vue"),
+        props: true,
+      },
+
       // Dua versi history (real + placeholder)
       {
         path: "history",
