@@ -1,4 +1,5 @@
 <script setup>
+import axios from 'axios'
 import { RouterLink, RouterView, useRouter } from 'vue-router'
 import { ref } from 'vue'
 import logo from '../assets/img/logo.png'
@@ -14,19 +15,26 @@ defineProps({
   }
 })
 
-// Fungsi Logout
-const handleLogout = () => {
-  console.log('Logout initiated...')
+const handleLogout = async () => {
+  try {
+    const token = localStorage.getItem('token');
+    if (token) {
+      await axios.post('http://127.0.0.1:8000/api/logout', {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+    }
 
-  // 1️⃣ Hapus data user dari localStorage
-  localStorage.removeItem('user')
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
 
-  // 2️⃣ Redirect ke halaman login
-  router.push('/login')
+    router.push('/login');
+    alert('Anda telah logout.');
+  } catch (err) {
+    console.error(err);
+    alert('Gagal logout, silakan coba lagi.');
+  }
+};
 
-  // (opsional) tampilkan notifikasi
-  alert('Anda telah logout.')
-}
 </script>
 
 

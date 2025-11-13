@@ -1,29 +1,30 @@
 // frontend/src/router/index.js
 
 import { createRouter, createWebHistory } from "vue-router";
+import axios from "axios";
 
-// Impor Layout
+// --- Layout ---
 import AdminLayout from "../components/AdminLayout.vue";
 
-// Impor Halaman (Pages)
+// --- Admin Pages ---
 import DashboardAdmin from "../Admin/Dashboard.vue";
 import AddOrder from "../Admin/AddOrder.vue";
 import ConfirmOrder from "../Admin/ConfirmOrder.vue";
 
-//impor superadmin pages
+// --- SuperAdmin Pages ---
 import DashboardSuperAdmin from "../SuperAdmin/DashboardSuper.vue";
-import Users from "../SuperAdmin/Users.vue"; // (Asumsi dari langkah sebelumnya)
+import Users from "../SuperAdmin/Users.vue";
 import Products from "../SuperAdmin/Products.vue";
 import AddProducts from "../SuperAdmin/AddProducts.vue";
 import History from "../SuperAdmin/History.vue";
 
-// import halaman user
+// --- User Pages ---
 import UserMenu from "../views/UserMenu.vue";
 import ProductDetail from "../views/ProductDetail.vue";
-import Cart from '../views/Cart.vue';
-import Payment from '../views/Payment.vue';
+import Cart from "../views/Cart.vue";
+import Payment from "../views/Payment.vue";
 
-// Buat halaman placeholder untuk testing (dari versi pertama)
+// --- Placeholder Pages (opsional testing) ---
 const HistoryPlaceholder = {
   template: '<h1 class="text-2xl">Halaman Riwayat Order</h1>',
 };
@@ -32,22 +33,19 @@ const ConfirmOrderPlaceholder = {
 };
 
 const routes = [
-
-
   {
     path: "/",
-    redirect: "/user/menu", // dari versi pertama (user)
+    redirect: "/user/menu", // default ke halaman user
   },
 
-  // Rute untuk halaman login
+  // --- LOGIN ---
   {
     path: "/login",
     name: "Login",
     component: () => import("../Auth/Login.vue"),
   },
 
-
-  // --- RUTE USER ---
+  // --- USER ---
   {
     path: "/user/menu",
     name: "UserMenu",
@@ -69,97 +67,92 @@ const routes = [
     name: "UserPayment",
     component: Payment,
   },
-  // --- AKHIR RUTE USER ---
 
-  // --- RUTE SUPERADMIN ---
+  // --- SUPERADMIN ---
   {
     path: "/superadmin",
     component: AdminLayout,
     props: { role: "superadmin" },
     children: [
-      {
-        path: "dashboard",
-        component: DashboardSuperAdmin,
-      },
-      {
-        path: "users",
-        component: Users,
-      },
-      {
-        path: "products",
-        component: Products,
-      },
-      {
-        path: "products/AddProducts",
-        component: AddProducts,
-      },
+      { path: "dashboard", component: DashboardSuperAdmin },
+      { path: "users", component: Users },
+      { path: "products", component: Products },
+      { path: "products/AddProducts", component: AddProducts },
       {
         path: "products/edit/:id",
         name: "EditProduct",
         component: () => import("../SuperAdmin/EditProduct.vue"),
         props: true,
       },
-
-      // Dua versi history (real + placeholder)
-      {
-        path: "history",
-        component: History,
-      },
-      {
-        path: "history-test",
-        component: HistoryPlaceholder,
-      },
+      { path: "history", component: History },
+      { path: "history-test", component: HistoryPlaceholder },
     ],
   },
 
-  // --- RUTE ADMIN ---
+  // --- ADMIN ---
   {
     path: "/admin",
     component: AdminLayout,
     props: { role: "admin" },
     children: [
-      {
-        path: "dashboard",
-        component: DashboardAdmin,
-      },
-      // Dua versi history (real + placeholder)
-      {
-        path: "history",
-        component: History,
-      },
-      {
-        path: "history-test",
-        component: HistoryPlaceholder,
-      },
-      {
-        path: "add-order",
-        component: AddOrder,
-      },
-      {
-        path: "confirm-order",
-        component: ConfirmOrder,
-      },
-      {
-        path: "confirm-order-test",
-        component: ConfirmOrderPlaceholder,
-      },
+      { path: "dashboard", component: DashboardAdmin },
+      { path: "history", component: History },
+      { path: "history-test", component: HistoryPlaceholder },
+      { path: "add-order", component: AddOrder },
+      { path: "confirm-order", component: ConfirmOrder },
+      { path: "confirm-order-test", component: ConfirmOrderPlaceholder },
     ],
   },
 
-  // Rute untuk User (scan order)
+  // --- ORDER (User Scan) ---
   {
-    path: '/order/:id',
-    name: 'orderUser',
-    component: () => import('../Order/Order.vue')
+    path: "/order/:id",
+    name: "orderUser",
+    component: () => import("../Order/Order.vue"),
   },
 ];
-
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
 });
 
+// ==============================
+// 🚧 ROUTE GUARD UNTUK LOGIN + ROLE
+// ==============================
+router.beforeEach(async (to, from, next) => {
+  const token = localStorage.getItem("token");
+  const user = JSON.parse(localStorage.getItem("user"));
 
+  // 1️⃣ Jika belum login dan bukan halaman login → arahkan ke login
+  if (!token && !to.path.startsWith("/user") && to.path !== "/login") {
+    return next("/login");
+  }
+
+  // 2️⃣ Jika sudah login, set Authorization header
+  if (token) {
+    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+  }
+
+  // 3️⃣ Cegah user yang sudah login masuk ke halaman login lagi
+  if (token && to.path === "/login") {
+    if (user?.role === "superadmin") return next("/superadmin/dashboard");
+    if (user?.role === "admin") return next("/admin/dashboard");
+  }
+
+  // 4️⃣ Cek role user berdasarkan path
+  if (to.path.startsWith("/superadmin") && user?.role !== "superadmin") {
+    alert("Akses ditolak: Anda bukan superadmin!");
+    return next("/login");
+  }
+
+  if (to.path.startsWith("/admin") && user?.role !== "admin") {
+    alert("Akses ditolak: Anda bukan admin!");
+    return next("/login");
+  }
+
+  // 5️⃣ Semua OK → lanjut
+  next();
+});
 
 export default router;
