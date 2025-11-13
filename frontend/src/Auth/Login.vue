@@ -52,26 +52,22 @@ const form = ref({
 const error = ref("");
 
 const loginUser = async () => {
-  error.value = "";
-
   try {
     const res = await axios.post("http://127.0.0.1:8000/api/login", form.value);
     const user = res.data.data;
 
-    // Simpan ke localStorage biar bisa dipakai di dashboard
     localStorage.setItem("user", JSON.stringify(user));
+    localStorage.setItem("token", user.token);
 
-    if (user.role === "superadmin") {
-      router.push("/superadmin/dashboard");
-    } else if (user.role === "admin") {
-      router.push("/admin/dashboard");
-    } else {
-      error.value = "Role tidak dikenali";
-    }
+    axios.defaults.headers.common["Authorization"] = `Bearer ${user.token}`;
+
+    if (user.role === "superadmin") router.push("/superadmin/dashboard");
+    else if (user.role === "admin") router.push("/admin/dashboard");
   } catch (err) {
     error.value = err.response?.data?.message || "Terjadi kesalahan server";
   }
 };
+
 </script>
 
 <style scoped>
