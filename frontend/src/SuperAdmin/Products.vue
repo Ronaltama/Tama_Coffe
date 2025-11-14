@@ -14,6 +14,7 @@ const loading = ref(true)
 const error = ref(null)
 const searchQuery = ref('')
 const selectedCategory = ref('all')
+const togglingStatus = ref({})
 
 // === API BASE URL ===
 const API_BASE = 'http://localhost:8000/api' // ganti jika port backend berbeda
@@ -108,8 +109,8 @@ const getStatusClasses = (status) => {
 }
 
 const getStatusText = (status) => {
-  if (status === 'available') return 'Availabel'
-  if (status === 'unavailable') return 'Unavailabel'
+  if (status === 'available') return 'Available'
+  if (status === 'unavailable') return 'Unavailable'
   return status
 }
 
@@ -140,6 +141,25 @@ const deleteProduct = async (id) => {
   } catch (err) {
     console.error(err)
     alert('Gagal menghapus produk.')
+  }
+}
+
+const toggleProductStatus = async (product) => {
+  togglingStatus.value[product.id] = true
+  try {
+    const response = await axios.patch(`${API_BASE}/products/${product.id}/toggle-status`)
+    if (response.data.success) {
+      // Update status di local state
+      const index = products.value.findIndex(p => p.id === product.id)
+      if (index !== -1) {
+        products.value[index].status = response.data.data.status
+      }
+    }
+  } catch (err) {
+    console.error(err)
+    alert('Gagal mengubah status produk.')
+  } finally {
+    togglingStatus.value[product.id] = false
   }
 }
 </script>
@@ -237,99 +257,132 @@ const deleteProduct = async (id) => {
 
       <!-- Products Table -->
       <div class="bg-white rounded-lg shadow overflow-hidden">
-        <!-- Table Header -->
-        <div class="grid grid-cols-12 gap-4 px-6 py-4 bg-gray-50 border-b border-gray-200">
-          <div class="col-span-1 text-sm font-medium text-gray-700">Image</div>
-          <div class="col-span-3 text-sm font-medium text-gray-700">Products Name</div>
-          <div class="col-span-2 text-sm font-medium text-gray-700">Category</div>
-          <div class="col-span-2 text-sm font-medium text-gray-700">Status</div>
-          <div class="col-span-2 text-sm font-medium text-gray-700">Price</div>
-          <div class="col-span-2 text-sm font-medium text-gray-700 text-right">Actions</div>
-        </div>
+        <table class="min-w-full divide-y divide-gray-200">
+          <!-- Table Header -->
+          <thead class="bg-gray-50">
+            <tr>
+              <th scope="col" class="px-6 py-4 text-left text-sm font-medium text-gray-700 w-30">Image</th>
+              <th scope="col" class="px-6 py-4 text-left text-sm font-medium text-gray-700 w-30">Products Name</th>
+              <th scope="col" class="px-6 py-4 text-left text-sm font-medium text-gray-700 w-20">Category</th>
+              <th scope="col" class="px-6 py-4 text-left text-sm font-medium text-gray-700 w-32">Status</th>
+              <th scope="col" class="px-6 py-4 text-left text-sm font-medium text-gray-700 w-20">Price</th>
+              <th scope="col" class="px-6 py-4 text-center text-sm font-medium text-gray-700 w-24">Toggle Status</th>
+              <th scope="col" class="px-6 py-4 text-right text-sm font-medium text-gray-700 w-28">Actions</th>
+            </tr>
+          </thead>
 
-        <!-- Table Body -->
-        <div v-if="filteredProducts.length === 0" class="px-6 py-12 text-center">
-          <div class="flex flex-col items-center justify-center">
-            <svg class="h-16 w-16 text-gray-400 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-            </svg>
-            <p class="text-gray-500 text-lg font-medium">No products found</p>
-            <p class="text-gray-400 text-sm mt-1">Try adjusting your search or filter to find what you're looking for.</p>
-          </div>
-        </div>
+          <!-- Table Body -->
+          <tbody class="bg-white divide-y divide-gray-200">
+            <!-- Empty State -->
+            <tr v-if="filteredProducts.length === 0">
+              <td colspan="7" class="px-6 py-12 text-center">
+                <div class="flex flex-col items-center justify-center">
+                  <svg class="h-16 w-16 text-gray-400 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                  </svg>
+                  <p class="text-gray-500 text-lg font-medium">No products found</p>
+                  <p class="text-gray-400 text-sm mt-1">Try adjusting your search or filter to find what you're looking for.</p>
+                </div>
+              </td>
+            </tr>
 
-        <div v-else>
-          <div 
-            v-for="product in filteredProducts" 
-            :key="product.id"
-            class="grid grid-cols-12 gap-4 px-6 py-4 border-b border-gray-200 hover:bg-gray-50 transition-colors items-center"
-          >
-            <!-- Product Image -->
-            <div class="col-span-1">
-              <img 
-                :src="getImageUrl(product.image)" 
-                :alt="product.name"
-                class="w-14 h-14 object-cover rounded-lg border border-gray-200"
-                @error="$event.target.src='https://via.placeholder.com/60x60?text=No+Image'"
-              >
-            </div>
+            <!-- Product Rows -->
+            <tr 
+              v-else
+              v-for="product in filteredProducts" 
+              :key="product.id"
+              class="hover:bg-gray-50 transition-colors"
+            >
+              <!-- Product Image -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <img 
+                  :src="getImageUrl(product.image)" 
+                  :alt="product.name"
+                  class="w-25 h-25 object-cover rounded-lg border border-gray-200"
+                  @error="$event.target.src='https://via.placeholder.com/60x60?text=No+Image'"
+                >
+              </td>
 
-            <!-- Product Name -->
-            <div class="col-span-3 text-sm font-medium text-gray-900">
-              {{ product.name }}
-            </div>
+              <!-- Product Name -->
+              <td class="px-6 py-4 text-sm font-medium text-gray-900">
+                {{ product.name }}
+              </td>
 
-            <!-- Category -->
-            <div class="col-span-2 text-sm text-gray-600">
-              {{ product.sub_category?.name || product.category?.name || '-' }}
-            </div>
+              <!-- Category -->
+              <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">
+                {{ product.sub_category?.name || product.category?.name || '-' }}
+              </td>
 
-            <!-- Status -->
-            <div class="col-span-2">
-              <span 
-                :class="[
-                  'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium',
-                  getStatusClasses(product.status)
-                ]"
-              >
+              <!-- Status -->
+              <td class="px-6 py-4 whitespace-nowrap">
                 <span 
                   :class="[
-                    'w-1.5 h-1.5 rounded-full mr-2',
-                    product.status === 'available' ? 'bg-green-600' : 'bg-red-600'
+                    'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium',
+                    getStatusClasses(product.status)
                   ]"
-                ></span>
-                {{ getStatusText(product.status) }}
-              </span>
-            </div>
+                >
+                  <span 
+                    :class="[
+                      'w-1.5 h-1.5 rounded-full mr-1.5',
+                      product.status === 'available' ? 'bg-green-600' : 'bg-red-600'
+                    ]"
+                  ></span>
+                  {{ getStatusText(product.status) }}
+                </span>
+              </td>
 
-            <!-- Price -->
-            <div class="col-span-2 text-sm font-medium text-gray-900">
-              {{ formatCurrency(product.price) }}
-            </div>
+              <!-- Price -->
+              <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
+                {{ formatCurrency(product.price) }}
+              </td>
 
-            <!-- Actions -->
-            <div class="col-span-2 flex justify-end gap-2">
-              <button 
-                @click="editProduct(product.id)"
-                class="p-2 text-gray-600 hover:text-amber-700 hover:bg-amber-50 rounded transition-colors"
-                title="Edit"
-              >
-                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                </svg>
-              </button>
-              <button 
-                @click="deleteProduct(product.id)"
-                class="p-2 text-gray-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
-                title="Delete"
-              >
-                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
+              <!-- Toggle Status -->
+              <td class="px-6 py-4 whitespace-nowrap text-center">
+                <button
+                  @click="toggleProductStatus(product)"
+                  :disabled="togglingStatus[product.id]"
+                  :class="[
+                    'relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2',
+                    product.status === 'available' ? 'bg-green-600' : 'bg-gray-300',
+                    togglingStatus[product.id] ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                  ]"
+                  :title="product.status === 'available' ? 'Set to Unavailable' : 'Set to Available'"
+                >
+                  <span
+                    :class="[
+                      'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
+                      product.status === 'available' ? 'translate-x-6' : 'translate-x-1'
+                    ]"
+                  />
+                </button>
+              </td>
+
+              <!-- Actions -->
+              <td class="px-6 py-4 whitespace-nowrap text-right">
+                <div class="flex justify-end gap-2">
+                  <button 
+                    @click="editProduct(product.id)"
+                    class="p-2 text-gray-600 hover:text-amber-700 hover:bg-amber-50 rounded transition-colors"
+                    title="Edit"
+                  >
+                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                    </svg>
+                  </button>
+                  <button 
+                    @click="deleteProduct(product.id)"
+                    class="p-2 text-gray-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
+                    title="Delete"
+                  >
+                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>

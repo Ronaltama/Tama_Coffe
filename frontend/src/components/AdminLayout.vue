@@ -17,23 +17,26 @@ defineProps({
 
 const handleLogout = async () => {
   try {
-    const token = localStorage.getItem('token');
-    if (token) {
-      await axios.post('http://127.0.0.1:8000/api/logout', {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-    }
+    await axios.post('http://localhost:8000/api/logout', {}, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`
+      }
+    });
 
-    localStorage.removeItem('user');
+    // Hapus token dari browser
     localStorage.removeItem('token');
 
+    // Redirect ke login
     router.push('/login');
-    alert('Anda telah logout.');
-  } catch (err) {
-    console.error(err);
-    alert('Gagal logout, silakan coba lagi.');
+  } catch (error) {
+    console.error(error);
+
+    // Pastikan token dihapus walaupun backend 401
+    localStorage.removeItem('token');
+    router.push('/login');
   }
 };
+
 
 </script>
 

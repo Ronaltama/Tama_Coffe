@@ -17,6 +17,8 @@ import Users from "../SuperAdmin/Users.vue";
 import Products from "../SuperAdmin/Products.vue";
 import AddProducts from "../SuperAdmin/AddProducts.vue";
 import History from "../SuperAdmin/History.vue";
+import AddAdmin from "../SuperAdmin/AddAdmin.vue";
+import EditUser from "../SuperAdmin/EditUser.vue";
 
 // --- User Pages ---
 import UserMenu from "../views/UserMenu.vue";
@@ -76,6 +78,13 @@ const routes = [
     children: [
       { path: "dashboard", component: DashboardSuperAdmin },
       { path: "users", component: Users },
+      { path: "users/add", component: AddAdmin },
+      {
+        path: "users/edit/:id",
+        name: "EditUser",
+        component: EditUser,
+        props: true, // supaya :id masuk sebagai props
+      },
       { path: "products", component: Products },
       { path: "products/AddProducts", component: AddProducts },
       {
