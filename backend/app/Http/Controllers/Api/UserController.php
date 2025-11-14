@@ -10,17 +10,20 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    // 🔹 GET /api/users -> list semua admin
+    // GET /api/users
     public function index()
     {
-        $users = User::whereHas('role', function ($q) {
-            $q->where('name', 'admin');
-        })->get();
+        // 🔥 Ambil user + role
+        $users = User::with('role')
+            ->whereHas('role', function ($q) {
+                $q->where('name', 'admin');
+            })
+            ->get();
 
         return response()->json($users);
     }
 
-    // 🔹 POST /api/users -> tambah admin baru
+    // POST /api/users
     public function store(Request $request)
     {
         $request->validate([
@@ -44,18 +47,18 @@ class UserController extends Controller
 
         return response()->json([
             'message' => 'Admin user created successfully',
-            'data' => $user
+            'data' => $user->load('role')
         ], 201);
     }
 
-    // 🔹 GET /api/users/{id}
+    // GET /api/users/{id}
     public function show($id)
     {
-        $user = User::findOrFail($id);
+        $user = User::with('role')->findOrFail($id);
         return response()->json($user);
     }
 
-    // 🔹 PUT /api/users/{id}
+    // PUT /api/users/{id}
     public function update(Request $request, $id)
     {
         $user = User::findOrFail($id);
@@ -76,11 +79,11 @@ class UserController extends Controller
 
         return response()->json([
             'message' => 'Admin user updated successfully',
-            'data' => $user
+            'data' => $user->load('role')
         ]);
     }
 
-    // 🔹 DELETE /api/users/{id}
+    // DELETE /api/users/{id}
     public function destroy($id)
     {
         $user = User::findOrFail($id);

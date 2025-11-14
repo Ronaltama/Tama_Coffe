@@ -22,9 +22,12 @@ class AuthController extends Controller
             return response()->json(['message' => 'Username atau password salah'], 401);
         }
 
-        // Hapus token lama, buat token baru
-        $user->tokens()->delete();
-        $token = $user->createToken('api_token')->plainTextToken;
+        /**
+         * ♻️ PENTING!
+         * Jangan hapus semua token user → bikin Postman & browser saling “tendang”.
+         * Buat token baru per device berdasarkan userAgent.
+         */
+        $token = $user->createToken($request->userAgent())->plainTextToken;
 
         return response()->json([
             'message' => 'Login berhasil',
@@ -32,7 +35,7 @@ class AuthController extends Controller
                 'id' => $user->id,
                 'name' => $user->name,
                 'role_id' => $user->role_id,
-                'role' => $user->role_id == 'RL001' ? 'superadmin' : 'admin',
+                'role' => $user->role_id === 'RL001' ? 'superadmin' : 'admin',
                 'token' => $token,
             ]
         ]);
@@ -40,8 +43,12 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        $user = $request->user();
-        $user->tokens()->delete(); // hapus semua token aktif
+        /**
+         * Hapus hanya token device saat ini (Chrome atau Postman)
+         * → ini yang benar untuk API Sanctum
+         */
+        $request->user()->currentAccessToken()->delete();
+
         return response()->json(['message' => 'Logout berhasil']);
     }
 
