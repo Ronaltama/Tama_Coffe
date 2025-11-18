@@ -95,8 +95,7 @@
                   </svg>
                 </div>
                 <input 
-                  value="12"  
-                  readonly
+                  v-model="tableNumber"
                   type="text" 
                   class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                 />
@@ -111,9 +110,9 @@
           <div class="space-y-3">
             <div class="flex gap-3">
               <button 
-                @click="paymentMethod = 'qris'" :class="[
+                @click="paymentMethod = 'qris'" 
+                :class="[
                   'flex-1 py-3 px-4 rounded-lg border-2 font-semibold transition-colors',
-                  // Styling sekarang aktif jika metode spesifiknya adalah 'qris'
                   paymentMethod === 'qris' 
                     ? 'border-orange-500 bg-orange-50 text-orange-700' 
                     : 'border-gray-200 bg-white text-gray-700'
@@ -139,7 +138,6 @@
               @click="paymentMethod = 'qris'"
               :class="[
                 'w-full py-3 px-4 rounded-lg border-2 font-semibold transition-colors flex items-center justify-between',
-                // Styling QRIS (selalu aktif di sini karena v-if-nya sudah 'qris')
                 paymentMethod === 'qris' 
                   ? 'border-orange-500 bg-orange-50 text-orange-700' 
                   : 'border-gray-200 bg-white text-gray-700'
@@ -194,26 +192,19 @@ import { useRouter } from 'vue-router';
 
 const router = useRouter();
 
-// ------------------------------------
-// FORM DATA
-// ------------------------------------
+// Form Data
 const customerName = ref('');
 const phoneNumber = ref('');
 const email = ref('');
-const tableNumber = ref(12);
-// PERUBAHAN: Set default paymentMethod ke 'qris' (bukan 'online')
+const tableNumber = ref('12');
 const paymentMethod = ref('qris'); 
 
-// ------------------------------------
-// CART DATA
-// ------------------------------------
+// Cart Data
 const cartItems = ref(JSON.parse(localStorage.getItem('cart') || '[]'));
 const notes = ref(localStorage.getItem('cartNotes') || '');
 const TAX_RATE = 0.10;
 
-// ------------------------------------
-// METHODS
-// ------------------------------------
+// Methods
 const formatPrice = (price) => {
   if (price === undefined || price === null) return '0';
   return price.toLocaleString('id-ID');
@@ -222,10 +213,11 @@ const formatPrice = (price) => {
 const handlePlaceOrder = () => {
   // Validasi form
   if (!customerName.value.trim()) {
-    alert('Please enter your name');
+    alert('Silakan masukkan nama Anda');
     return;
   }
 
+  // Siapkan data order
   const orderData = {
     customer: {
       name: customerName.value,
@@ -235,27 +227,23 @@ const handlePlaceOrder = () => {
     table: tableNumber.value,
     items: cartItems.value,
     notes: notes.value,
-    subTotal: subTotalPrice.value,
-    tax: taxPrice.value,
-    total: totalPaymentPrice.value,
-    // Menggunakan paymentMethod yang sudah diset ('qris' atau 'cash')
-    paymentMethod: paymentMethod.value 
+    totals: {
+      subTotal: subTotalPrice.value,
+      tax: taxPrice.value,
+      total: totalPaymentPrice.value
+    },
+    payment: paymentMethod.value,
+    orderType: 'Dine In'
   };
 
-  console.log('--- ORDER PLACED ---', orderData);
+  // Simpan ke localStorage untuk dibawa ke halaman konfirmasi
+  localStorage.setItem('pendingOrder', JSON.stringify(orderData));
 
-  // Clear cart
-  localStorage.removeItem('cart');
-  localStorage.removeItem('cartNotes');
-
-  alert('Order placed successfully!');
-  // Pastikan rute ini benar dalam aplikasi Anda
-  router.push('/user/menu'); 
+  // Redirect ke halaman konfirmasi
+  router.push('/user/payment/confirm');
 };
 
-// ------------------------------------
-// COMPUTED
-// ------------------------------------
+// Computed
 const subTotalPrice = computed(() => {
   return cartItems.value.reduce((sum, item) => {
     return sum + (item.price * item.quantity);

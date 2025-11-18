@@ -25,6 +25,8 @@ import UserMenu from "../views/UserMenu.vue";
 import ProductDetail from "../views/ProductDetail.vue";
 import Cart from "../views/Cart.vue";
 import Payment from "../views/Payment.vue";
+import PaymentConfirmation from "../views/PaymentConfirmation.vue";
+import PaymentSuccess from "../views/PaymentSuccess.vue";
 
 // --- Placeholder Pages (opsional testing) ---
 const HistoryPlaceholder = {
@@ -73,6 +75,11 @@ const routes = [
     path: "/user/payment/confirm",
     name: "PaymentConfirmation",
     component: PaymentConfirmation,
+  },
+  {
+    path: "/user/payment/success",
+    name: "PaymentSuccess",
+    component: PaymentSuccess,
   },
 
   // --- SUPERADMIN ---
