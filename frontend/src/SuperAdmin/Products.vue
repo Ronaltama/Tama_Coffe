@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
+import Swal from 'sweetalert2' // Import SweetAlert2
 
 const router = useRouter()
 
@@ -22,7 +23,11 @@ const API_BASE = 'http://localhost:8000/api' // ganti jika port backend berbeda
 // === FETCH DATA CATEGORY DAN PRODUK ===
 const fetchCategories = async () => {
   try {
-    const res = await axios.get(`${API_BASE}/categories`)
+    // 💡 Tambahkan header Authorization jika belum diatur secara global
+    const token = localStorage.getItem('token');
+    const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+    
+    const res = await axios.get(`${API_BASE}/categories`, config)
     categories.value = res.data.data
     if (categories.value.length > 0) {
       activeTab.value = categories.value[0].name
@@ -37,7 +42,10 @@ const fetchCategories = async () => {
 
 const fetchProducts = async () => {
   try {
-    const res = await axios.get(`${API_BASE}/products`)
+    const token = localStorage.getItem('token');
+    const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+
+    const res = await axios.get(`${API_BASE}/products`, config)
     products.value = res.data.data
   } catch (err) {
     console.error(err)
@@ -87,7 +95,7 @@ const subCategoriesForDropdown = computed(() => {
 
 // === HELPER === 
 const getImageUrl = (imagePath) => {
-  if (!imagePath) return 'https://via.placeholder.com/60x60?text=No+Image'
+  if (!imagePath) return 'https://placehold.co/100x100/FBE8D9/8B4113?text=No+Image'
   // Jika imagePath sudah full URL, return as is
   if (imagePath.startsWith('http')) return imagePath
   // Jika imagePath relatif (misal: products/xxx.jpg), gabungkan dengan base URL
@@ -132,32 +140,89 @@ const editProduct = (id) => {
   router.push(`/superadmin/products/edit/${id}`)
 }
 
-const deleteProduct = async (id) => {
-  if (!confirm('Yakin ingin menghapus produk ini?')) return
-  try {
-    await axios.delete(`${API_BASE}/products/${id}`)
-    products.value = products.value.filter(p => p.id !== id)
-    alert('Produk berhasil dihapus!')
-  } catch (err) {
-    console.error(err)
-    alert('Gagal menghapus produk.')
+// 💡 Menggunakan SweetAlert2 untuk konfirmasi dan notifikasi delete
+const deleteProduct = async (product) => {
+  const result = await Swal.fire({
+    title: `Hapus ${product.name}?`,
+    text: "Tindakan ini tidak bisa dibatalkan.",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#3085d6",
+    confirmButtonText: "Ya, Hapus!",
+    cancelButtonText: "Batal"
+  });
+
+  if (result.isConfirmed) {
+    try {
+      // Panggil API delete
+      const token = localStorage.getItem('token');
+      const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+      await axios.delete(`${API_BASE}/products/${product.id}`, config)
+      
+      // Update state lokal
+      products.value = products.value.filter(p => p.id !== product.id)
+      
+      // Notifikasi sukses
+      Swal.fire({
+        icon: "success",
+        title: "Dihapus!",
+        text: `Produk ${product.name} berhasil dihapus.`,
+        showConfirmButton: false,
+        timer: 1500
+      });
+
+    } catch (err) {
+      console.error(err)
+      // Notifikasi gagal
+      Swal.fire({
+        icon: "error",
+        title: "Gagal!",
+        text: "Gagal menghapus produk. Silakan coba lagi.",
+      });
+    }
   }
 }
 
+// 💡 Menggunakan SweetAlert2 untuk notifikasi toggle status
 const toggleProductStatus = async (product) => {
   togglingStatus.value[product.id] = true
+  let newStatusText = '';
   try {
-    const response = await axios.patch(`${API_BASE}/products/${product.id}/toggle-status`)
+    const token = localStorage.getItem('token');
+    const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+
+    const response = await axios.patch(`${API_BASE}/products/${product.id}/toggle-status`, {}, config)
+
     if (response.data.success) {
       // Update status di local state
       const index = products.value.findIndex(p => p.id === product.id)
       if (index !== -1) {
         products.value[index].status = response.data.data.status
+        newStatusText = getStatusText(response.data.data.status);
       }
+
+      // Notifikasi sukses
+      Swal.fire({
+        icon: "info",
+        title: "Status Diubah!",
+        text: `${product.name} sekarang: ${newStatusText}.`,
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+      });
+
     }
   } catch (err) {
     console.error(err)
-    alert('Gagal mengubah status produk.')
+    // Notifikasi gagal
+    Swal.fire({
+      icon: "error",
+      title: "Gagal!",
+      text: "Gagal mengubah status produk.",
+    });
   } finally {
     togglingStatus.value[product.id] = false
   }
@@ -257,132 +322,134 @@ const toggleProductStatus = async (product) => {
 
       <!-- Products Table -->
       <div class="bg-white rounded-lg shadow overflow-hidden">
-        <table class="min-w-full divide-y divide-gray-200">
-          <!-- Table Header -->
-          <thead class="bg-gray-50">
-            <tr>
-              <th scope="col" class="px-6 py-4 text-left text-sm font-medium text-gray-700 w-30">Image</th>
-              <th scope="col" class="px-6 py-4 text-left text-sm font-medium text-gray-700 w-30">Products Name</th>
-              <th scope="col" class="px-6 py-4 text-left text-sm font-medium text-gray-700 w-20">Category</th>
-              <th scope="col" class="px-6 py-4 text-left text-sm font-medium text-gray-700 w-32">Status</th>
-              <th scope="col" class="px-6 py-4 text-left text-sm font-medium text-gray-700 w-20">Price</th>
-              <th scope="col" class="px-6 py-4 text-center text-sm font-medium text-gray-700 w-24">Toggle Status</th>
-              <th scope="col" class="px-6 py-4 text-right text-sm font-medium text-gray-700 w-28">Actions</th>
-            </tr>
-          </thead>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <!-- Table Header -->
+            <thead class="bg-gray-50">
+              <tr>
+                <th scope="col" class="px-6 py-4 text-left text-sm font-medium text-gray-700 w-[120px]">Image</th>
+                <th scope="col" class="px-6 py-4 text-left text-sm font-medium text-gray-700 w-[200px]">Products Name</th>
+                <th scope="col" class="px-6 py-4 text-left text-sm font-medium text-gray-700 w-[150px]">Category</th>
+                <th scope="col" class="px-6 py-4 text-left text-sm font-medium text-gray-700 w-[120px]">Status</th>
+                <th scope="col" class="px-6 py-4 text-left text-sm font-medium text-gray-700 w-[150px]">Price</th>
+                <th scope="col" class="px-6 py-4 text-center text-sm font-medium text-gray-700 w-[120px]">Toggle Status</th>
+                <th scope="col" class="px-6 py-4 text-right text-sm font-medium text-gray-700 w-[100px]">Actions</th>
+              </tr>
+            </thead>
 
-          <!-- Table Body -->
-          <tbody class="bg-white divide-y divide-gray-200">
-            <!-- Empty State -->
-            <tr v-if="filteredProducts.length === 0">
-              <td colspan="7" class="px-6 py-12 text-center">
-                <div class="flex flex-col items-center justify-center">
-                  <svg class="h-16 w-16 text-gray-400 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                  </svg>
-                  <p class="text-gray-500 text-lg font-medium">No products found</p>
-                  <p class="text-gray-400 text-sm mt-1">Try adjusting your search or filter to find what you're looking for.</p>
-                </div>
-              </td>
-            </tr>
+            <!-- Table Body -->
+            <tbody class="bg-white divide-y divide-gray-200">
+              <!-- Empty State -->
+              <tr v-if="filteredProducts.length === 0">
+                <td colspan="7" class="px-6 py-12 text-center">
+                  <div class="flex flex-col items-center justify-center">
+                    <svg class="h-16 w-16 text-gray-400 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                    </svg>
+                    <p class="text-gray-500 text-lg font-medium">No products found</p>
+                    <p class="text-gray-400 text-sm mt-1">Try adjusting your search or filter to find what you're looking for.</p>
+                  </div>
+                </td>
+              </tr>
 
-            <!-- Product Rows -->
-            <tr 
-              v-else
-              v-for="product in filteredProducts" 
-              :key="product.id"
-              class="hover:bg-gray-50 transition-colors"
-            >
-              <!-- Product Image -->
-              <td class="px-6 py-4 whitespace-nowrap">
-                <img 
-                  :src="getImageUrl(product.image)" 
-                  :alt="product.name"
-                  class="w-25 h-25 object-cover rounded-lg border border-gray-200"
-                  @error="$event.target.src='https://via.placeholder.com/60x60?text=No+Image'"
-                >
-              </td>
+              <!-- Product Rows -->
+              <tr 
+                v-else
+                v-for="product in filteredProducts" 
+                :key="product.id"
+                class="hover:bg-gray-50 transition-colors"
+              >
+                <!-- Product Image -->
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <img 
+                    :src="getImageUrl(product.image)" 
+                    :alt="product.name"
+                    class="w-16 h-16 object-cover rounded-lg border border-gray-200"
+                    @error="$event.target.src='https://placehold.co/60x60/FBE8D9/8B4113?text=No+Image'"
+                  >
+                </td>
 
-              <!-- Product Name -->
-              <td class="px-6 py-4 text-sm font-medium text-gray-900">
-                {{ product.name }}
-              </td>
+                <!-- Product Name -->
+                <td class="px-6 py-4 text-sm font-medium text-gray-900">
+                  {{ product.name }}
+                </td>
 
-              <!-- Category -->
-              <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">
-                {{ product.sub_category?.name || product.category?.name || '-' }}
-              </td>
+                <!-- Category -->
+                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">
+                  {{ product.sub_category?.name || product.category?.name || '-' }}
+                </td>
 
-              <!-- Status -->
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span 
-                  :class="[
-                    'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium',
-                    getStatusClasses(product.status)
-                  ]"
-                >
+                <!-- Status -->
+                <td class="px-6 py-4 whitespace-nowrap">
                   <span 
                     :class="[
-                      'w-1.5 h-1.5 rounded-full mr-1.5',
-                      product.status === 'available' ? 'bg-green-600' : 'bg-red-600'
+                      'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium',
+                      getStatusClasses(product.status)
                     ]"
-                  ></span>
-                  {{ getStatusText(product.status) }}
-                </span>
-              </td>
+                  >
+                    <span 
+                      :class="[
+                        'w-1.5 h-1.5 rounded-full mr-1.5',
+                        product.status === 'available' ? 'bg-green-600' : 'bg-red-600'
+                      ]"
+                    ></span>
+                    {{ getStatusText(product.status) }}
+                  </span>
+                </td>
 
-              <!-- Price -->
-              <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
-                {{ formatCurrency(product.price) }}
-              </td>
+                <!-- Price -->
+                <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
+                  {{ formatCurrency(product.price) }}
+                </td>
 
-              <!-- Toggle Status -->
-              <td class="px-6 py-4 whitespace-nowrap text-center">
-                <button
-                  @click="toggleProductStatus(product)"
-                  :disabled="togglingStatus[product.id]"
-                  :class="[
-                    'relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2',
-                    product.status === 'available' ? 'bg-green-600' : 'bg-gray-300',
-                    togglingStatus[product.id] ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-                  ]"
-                  :title="product.status === 'available' ? 'Set to Unavailable' : 'Set to Available'"
-                >
-                  <span
+                <!-- Toggle Status -->
+                <td class="px-6 py-4 whitespace-nowrap text-center">
+                  <button
+                    @click="toggleProductStatus(product)"
+                    :disabled="togglingStatus[product.id]"
                     :class="[
-                      'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
-                      product.status === 'available' ? 'translate-x-6' : 'translate-x-1'
+                      'relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2',
+                      product.status === 'available' ? 'bg-green-600' : 'bg-gray-300',
+                      togglingStatus[product.id] ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
                     ]"
-                  />
-                </button>
-              </td>
+                    :title="product.status === 'available' ? 'Set to Unavailable' : 'Set to Available'"
+                  >
+                    <span
+                      :class="[
+                        'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
+                        product.status === 'available' ? 'translate-x-6' : 'translate-x-1'
+                      ]"
+                    />
+                  </button>
+                </td>
 
-              <!-- Actions -->
-              <td class="px-6 py-4 whitespace-nowrap text-right">
-                <div class="flex justify-end gap-2">
-                  <button 
-                    @click="editProduct(product.id)"
-                    class="p-2 text-gray-600 hover:text-amber-700 hover:bg-amber-50 rounded transition-colors"
-                    title="Edit"
-                  >
-                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                      <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                    </svg>
-                  </button>
-                  <button 
-                    @click="deleteProduct(product.id)"
-                    class="p-2 text-gray-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
-                    title="Delete"
-                  >
-                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                      <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
-                    </svg>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+                <!-- Actions -->
+                <td class="px-6 py-4 whitespace-nowrap text-right">
+                  <div class="flex justify-end gap-2">
+                    <button 
+                      @click="editProduct(product.id)"
+                      class="p-2 text-gray-600 hover:text-amber-700 hover:bg-amber-50 rounded transition-colors"
+                      title="Edit"
+                    >
+                      <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                      </svg>
+                    </button>
+                    <button 
+                      @click="deleteProduct(product)"
+                      class="p-2 text-gray-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
+                      title="Delete"
+                    >
+                      <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
@@ -406,4 +473,11 @@ const toggleProductStatus = async (product) => {
 .overflow-x-auto::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
+
+/* Penyesuaian lebar kolom agar tabel lebih rapi */
+.w-30 { width: 120px; }
+.w-20 { width: 80px; }
+.w-32 { width: 130px; }
+.w-24 { width: 100px; }
+.w-28 { width: 110px; }
 </style>

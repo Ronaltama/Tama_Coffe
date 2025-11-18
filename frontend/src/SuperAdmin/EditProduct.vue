@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import axios from 'axios'
+import Swal from 'sweetalert2'
 
 const router = useRouter()
 const route = useRoute()
@@ -57,7 +58,11 @@ const fetchProduct = async () => {
   } catch (err) {
     console.error(err)
     error.value = 'Failed to fetch product data'
-    alert('Gagal mengambil data produk')
+    Swal.fire({
+      icon: 'error',
+      title: 'Gagal mengambil data produk',
+      text: error.value
+    })
   } finally {
     loadingData.value = false
   }
@@ -83,24 +88,29 @@ const handleCategoryChange = () => {
 const handleImageChange = (event) => {
   const file = event.target.files[0]
   if (file) {
-    // Validasi ukuran file (max 2MB)
     if (file.size > 2048 * 1024) {
-      alert('Ukuran file terlalu besar! Maksimal 2MB')
+      Swal.fire({
+        icon: 'error',
+        title: 'Ukuran file terlalu besar',
+        text: 'Maksimal 2MB'
+      })
       event.target.value = ''
       return
     }
 
-    // Validasi tipe file
     const validTypes = ['image/jpeg', 'image/jpg', 'image/png']
     if (!validTypes.includes(file.type)) {
-      alert('Format file tidak valid! Gunakan JPG, JPEG, atau PNG')
+      Swal.fire({
+        icon: 'error',
+        title: 'Format file tidak valid',
+        text: 'Gunakan JPG, JPEG, atau PNG'
+      })
       event.target.value = ''
       return
     }
 
     imageFile.value = file
 
-    // Create preview
     const reader = new FileReader()
     reader.onload = (e) => {
       imagePreview.value = e.target.result
@@ -118,55 +128,54 @@ const removeImage = () => {
 
 // === FORM SUBMIT ===
 const handleSubmit = async () => {
-  // Validasi
   if (!productName.value.trim()) {
-    alert('Nama produk harus diisi!')
-    return
+    return Swal.fire({ icon: 'warning', title: 'Nama produk harus diisi!' })
   }
   if (!categoryId.value) {
-    alert('Kategori harus dipilih!')
-    return
+    return Swal.fire({ icon: 'warning', title: 'Kategori harus dipilih!' })
   }
   if (!price.value || price.value <= 0) {
-    alert('Harga harus lebih dari 0!')
-    return
+    return Swal.fire({ icon: 'warning', title: 'Harga harus lebih dari 0!' })
   }
 
   loading.value = true
   error.value = null
 
   try {
-    // Buat FormData untuk upload file
     const formData = new FormData()
-    formData.append('_method', 'PUT') // Laravel method spoofing
+    formData.append('_method', 'PUT')
     formData.append('name', productName.value)
     formData.append('category_id', categoryId.value)
-    if (subCategoryId.value) {
-      formData.append('sub_category_id', subCategoryId.value)
-    }
-    if (description.value) {
-      formData.append('description', description.value)
-    }
+    if (subCategoryId.value) formData.append('sub_category_id', subCategoryId.value)
+    if (description.value) formData.append('description', description.value)
     formData.append('price', price.value)
     formData.append('status', status.value)
-    if (imageFile.value) {
-      formData.append('image', imageFile.value)
-    }
+    if (imageFile.value) formData.append('image', imageFile.value)
 
     const response = await axios.post(`${API_BASE}/products/${productId.value}`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
+      headers: { 'Content-Type': 'multipart/form-data' }
     })
 
     if (response.data.success) {
-      alert('Produk berhasil diupdate!')
-      router.push('/superadmin/products')
+      Swal.fire({
+        icon: 'success',
+        title: 'Produk berhasil diupdate!',
+        showConfirmButton: false,
+        timer: 1500
+      })
+      setTimeout(() => {
+        router.push('/superadmin/products')
+      }, 1500)
     }
   } catch (err) {
     console.error(err)
     error.value = err.response?.data?.message || 'Gagal mengupdate produk'
-    alert(error.value)
+
+    Swal.fire({
+      icon: 'error',
+      title: 'Gagal mengupdate produk',
+      text: error.value
+    })
   } finally {
     loading.value = false
   }
@@ -176,6 +185,7 @@ const handleCancel = () => {
   router.push('/superadmin/products')
 }
 </script>
+
 
 <template>
   <div class="p-6 bg-gray-50 min-h-screen">
