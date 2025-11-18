@@ -2,7 +2,9 @@
 import axios from 'axios'
 import { RouterLink, RouterView, useRouter } from 'vue-router'
 import { ref } from 'vue'
-import logo from '../assets/img/logo.png'
+import Swal from 'sweetalert2' // 💡 Import SweetAlert2
+// Ganti path logo sesuai dengan struktur proyek Anda
+import logo from '../assets/img/logo.png' 
 
 // router instance
 const router = useRouter()
@@ -15,31 +17,56 @@ defineProps({
   }
 })
 
+// 💡 Fungsi handleLogout yang diupdate dengan SweetAlert2
 const handleLogout = async () => {
-  try {
-    await axios.post('http://localhost:8000/api/logout', {}, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`
-      }
-    });
+  const result = await Swal.fire({
+    title: "Yakin Ingin Keluar?",
+    text: "Anda akan mengakhiri sesi dan diarahkan kembali ke halaman login.",
+    icon: "question",
+    showCancelButton: true,
+    confirmButtonColor: "#3085d6",
+    cancelButtonColor: "#d33",
+    confirmButtonText: "Ya, Logout!",
+    cancelButtonText: "Batal",
+  });
 
-    // Hapus token dari browser
-    localStorage.removeItem('token');
+  if (result.isConfirmed) {
+    try {
+      // Panggil API Logout (menggunakan try-catch untuk memastikan data lokal terhapus)
+      await axios.post('http://127.0.0.1:8000/api/logout');
 
-    // Redirect ke login
-    router.push('/login');
-  } catch (error) {
-    console.error(error);
+      // 🟢 Notifikasi Sukses
+      await Swal.fire({
+        icon: "success",
+        title: "Berhasil Logout!",
+        text: "Sesi Anda telah berakhir. Sampai jumpa kembali.",
+        showConfirmButton: false,
+        timer: 1500,
+      });
 
-    // Pastikan token dihapus walaupun backend 401
-    localStorage.removeItem('token');
-    router.push('/login');
+    } catch (error) {
+      // Tangani error, tapi tetap paksa logout di sisi klien
+      console.error("Error saat mencoba logout dari API:", error);
+
+      // ⚠️ Tampilkan peringatan jika terjadi masalah API (misalnya token sudah kadaluarsa)
+      await Swal.fire({
+        icon: "warning",
+        title: "Sesi Habis!",
+        text: "Terjadi masalah koneksi atau sesi sudah kadaluarsa. Anda akan dipaksa logout.",
+        confirmButtonText: "OK",
+      });
+    } finally {
+      // Blok finally wajib untuk memastikan penghapusan token di klien
+      localStorage.removeItem('user'); // Hapus data user juga
+      localStorage.removeItem('token');
+      delete axios.defaults.headers.common["Authorization"];
+
+      // Redirect ke login
+      router.push('/login');
+    }
   }
 };
-
-
 </script>
-
 
 
 <template>

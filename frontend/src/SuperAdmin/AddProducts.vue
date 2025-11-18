@@ -2,6 +2,8 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
+import Swal from 'sweetalert2'
+import 'sweetalert2/dist/sweetalert2.min.css'
 
 const router = useRouter()
 
@@ -19,7 +21,6 @@ const categories = ref([])
 const loading = ref(false)
 const error = ref(null)
 
-// === API BASE URL ===
 const API_BASE = 'http://localhost:8000/api'
 
 // === FETCH CATEGORIES ===
@@ -32,10 +33,7 @@ const fetchCategories = async () => {
     error.value = 'Failed to fetch categories'
   }
 }
-
-onMounted(() => {
-  fetchCategories()
-})
+onMounted(fetchCategories)
 
 // === COMPUTED ===
 const subCategories = computed(() => {
@@ -44,7 +42,6 @@ const subCategories = computed(() => {
   return category?.sub_categories || []
 })
 
-// Reset subcategory saat category berubah
 const handleCategoryChange = () => {
   subCategoryId.value = ''
 }
@@ -53,28 +50,23 @@ const handleCategoryChange = () => {
 const handleImageChange = (event) => {
   const file = event.target.files[0]
   if (file) {
-    // Validasi ukuran file (max 2MB)
     if (file.size > 2048 * 1024) {
-      alert('Ukuran file terlalu besar! Maksimal 2MB')
+      Swal.fire('File terlalu besar!', 'Max 2MB', 'error')
       event.target.value = ''
       return
     }
 
-    // Validasi tipe file
     const validTypes = ['image/jpeg', 'image/jpg', 'image/png']
     if (!validTypes.includes(file.type)) {
-      alert('Format file tidak valid! Gunakan JPG, JPEG, atau PNG')
+      Swal.fire('Format tidak valid!', 'Gunakan JPG, JPEG, atau PNG', 'error')
       event.target.value = ''
       return
     }
 
     imageFile.value = file
 
-    // Create preview
     const reader = new FileReader()
-    reader.onload = (e) => {
-      imagePreview.value = e.target.result
-    }
+    reader.onload = (e) => (imagePreview.value = e.target.result)
     reader.readAsDataURL(file)
   }
 }
@@ -86,19 +78,18 @@ const removeImage = () => {
   if (fileInput) fileInput.value = ''
 }
 
-// === FORM SUBMIT ===
+// === SUBMIT FORM ===
 const handleSubmit = async () => {
-  // Validasi
   if (!productName.value.trim()) {
-    alert('Nama produk harus diisi!')
+    Swal.fire('Nama produk kosong!', 'Harus diisi.', 'warning')
     return
   }
   if (!categoryId.value) {
-    alert('Kategori harus dipilih!')
+    Swal.fire('Kategori belum dipilih!', '', 'warning')
     return
   }
   if (!price.value || price.value <= 0) {
-    alert('Harga harus lebih dari 0!')
+    Swal.fire('Harga tidak valid!', 'Harus lebih dari 0.', 'warning')
     return
   }
 
@@ -106,7 +97,6 @@ const handleSubmit = async () => {
   error.value = null
 
   try {
-    // Buat FormData untuk upload file
     const formData = new FormData()
     formData.append('name', productName.value)
     formData.append('category_id', categoryId.value)
@@ -123,28 +113,52 @@ const handleSubmit = async () => {
     }
 
     const response = await axios.post(`${API_BASE}/products`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
+      headers: { 'Content-Type': 'multipart/form-data' }
     })
 
     if (response.data.success) {
-      alert('Produk berhasil ditambahkan!')
+      await Swal.fire({
+        title: 'Berhasil!',
+        text: 'Produk berhasil ditambahkan',
+        icon: 'success',
+        confirmButtonColor: '#d97706'
+      })
+
       router.push('/superadmin/products')
     }
   } catch (err) {
     console.error(err)
-    error.value = err.response?.data?.message || 'Gagal menambahkan produk'
-    alert(error.value)
+    const msg = err.response?.data?.message || 'Gagal menambahkan produk'
+
+    Swal.fire({
+      title: 'Gagal!',
+      text: msg,
+      icon: 'error',
+      confirmButtonColor: '#b91c1c'
+    })
   } finally {
     loading.value = false
   }
 }
 
+// === CANCEL ===
 const handleCancel = () => {
-  router.push('/superadmin/products')
+  Swal.fire({
+    title: 'Batalkan?',
+    text: 'Perubahan tidak akan disimpan',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d97706',
+    cancelButtonColor: '#6b7280',
+    confirmButtonText: 'Ya, Batalkan'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      router.push('/superadmin/products')
+    }
+  })
 }
 </script>
+
 
 <template>
   <div class="p-6 bg-gray-50 min-h-screen">
