@@ -163,7 +163,6 @@ const deleteUser = async (id, userName) => {
                 <th class="py-4 px-6">Email</th>
                 <th class="py-4 px-6">Username</th>
                 <th class="py-4 px-6">Role</th>
-                <th class="py-4 px-6">Status</th>
                 <th class="py-4 px-6 text-right">Actions</th>
               </tr>
             </thead>
@@ -205,16 +204,6 @@ const deleteUser = async (id, userName) => {
                       :class="getRoleClasses(user.role)"
                     >
                       {{ getRoleName(user.role) }}
-                    </span>
-                  </td>
-
-                  <td class="py-4 px-6">
-                    <span
-                      class="inline-flex items-center px-3 py-1 text-xs rounded-full font-medium"
-                      :class="getStatusClasses('Active')"
-                    >
-                      <span class="w-1.5 h-1.5 rounded-full bg-green-600 mr-1.5"></span>
-                      Active
                     </span>
                   </td>
                   
