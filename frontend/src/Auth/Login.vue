@@ -28,6 +28,7 @@
           />
         </div>
 
+        <!-- Tombol login -->
         <button
           type="submit"
           class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg font-bold shadow-lg transform transition duration-150 ease-in-out hover:scale-[1.01]"
@@ -46,6 +47,7 @@ import { useRouter } from "vue-router";
 import Swal from "sweetalert2"; // 💡 Import SweetAlert2
 
 const router = useRouter();
+const showPassword = ref(false);
 
 const form = ref({
   username: "",
@@ -57,9 +59,9 @@ const loginUser = async () => {
     const res = await axios.post("http://127.0.0.1:8000/api/login", form.value);
     const user = res.data.data;
 
+    // Simpan token & user ke localStorage
     localStorage.setItem("user", JSON.stringify(user));
     localStorage.setItem("token", user.token);
-
     axios.defaults.headers.common["Authorization"] = `Bearer ${user.token}`;
 
     // 🟢 SweetAlert2 for Success
@@ -73,6 +75,7 @@ const loginUser = async () => {
 
     if (user.role === "superadmin") router.push("/superadmin/dashboard");
     else if (user.role === "admin") router.push("/admin/dashboard");
+    else router.push("/");
   } catch (err) {
     // 🔴 SweetAlert2 for Failure
     const errorMessage =
