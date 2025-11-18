@@ -1,7 +1,6 @@
-// frontend/src/router/index.js
-
 import { createRouter, createWebHistory } from "vue-router";
 import axios from "axios";
+import Swal from "sweetalert2"; // 💡 Import SweetAlert2
 
 // --- Layout ---
 import AdminLayout from "../components/AdminLayout.vue";
@@ -133,7 +132,7 @@ router.beforeEach(async (to, from, next) => {
   const token = localStorage.getItem("token");
   const user = JSON.parse(localStorage.getItem("user"));
 
-  // 1️⃣ Jika belum login dan bukan halaman login → arahkan ke login
+  // 1️⃣ Jika belum login dan bukan halaman login/user → arahkan ke login
   if (!token && !to.path.startsWith("/user") && to.path !== "/login") {
     return next("/login");
   }
@@ -151,12 +150,24 @@ router.beforeEach(async (to, from, next) => {
 
   // 4️⃣ Cek role user berdasarkan path
   if (to.path.startsWith("/superadmin") && user?.role !== "superadmin") {
-    alert("Akses ditolak: Anda bukan superadmin!");
+    // ⚠️ Ganti alert() dengan SweetAlert2
+    await Swal.fire({
+      icon: "warning",
+      title: "Akses Ditolak!",
+      text: "Anda tidak memiliki hak akses Superadmin.",
+      confirmButtonText: "Kembali",
+    });
     return next("/login");
   }
 
   if (to.path.startsWith("/admin") && user?.role !== "admin") {
-    alert("Akses ditolak: Anda bukan admin!");
+    // ⚠️ Ganti alert() dengan SweetAlert2
+    await Swal.fire({
+      icon: "warning",
+      title: "Akses Ditolak!",
+      text: "Anda tidak memiliki hak akses Admin.",
+      confirmButtonText: "Kembali",
+    });
     return next("/login");
   }
 
