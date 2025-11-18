@@ -69,6 +69,11 @@ const routes = [
     name: "UserPayment",
     component: Payment,
   },
+  {
+    path: "/user/payment/confirm",
+    name: "PaymentConfirmation",
+    component: PaymentConfirmation,
+  },
 
   // --- SUPERADMIN ---
   {
