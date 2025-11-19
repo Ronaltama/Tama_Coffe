@@ -18,7 +18,9 @@ import AddProducts from "../SuperAdmin/AddProducts.vue";
 import History from "../SuperAdmin/History.vue";
 import AddAdmin from "../SuperAdmin/AddAdmin.vue";
 import EditUser from "../SuperAdmin/EditUser.vue";
+import Tables from "../SuperAdmin/Tables.vue";
 import AddTable from "../SuperAdmin/AddTable.vue";
+import EditTable from "../SuperAdmin/EditTable.vue";
 
 // --- User Pages ---
 import UserMenu from "../views/UserMenu.vue";
@@ -112,7 +114,15 @@ const routes = [
         component: () => import("../SuperAdmin/EditProduct.vue"),
         props: true,
       },
+      { path: "tables", component: Tables },
       { path: "tables/add", component: AddTable },
+      {
+        path: "/superadmin/tables/edit/:id",
+        name: "EditTable",
+        component: EditTable,
+        props: true, // penting supaya param id dikirim ke component
+      },
+
       { path: "history", component: History },
       { path: "history-test", component: HistoryPlaceholder },
     ],

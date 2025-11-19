@@ -49,7 +49,7 @@ class TableController extends Controller
         $validated = $request->validate([
             'table_number' => 'required|string|max:50|unique:tables,table_number',
             'capacity' => 'required|integer|min:1',
-            'type' => 'nullable|string|max:100',
+            'type' => 'nullable|in:Indoor,Outdoor,VIP',
         ]);
 
         // 1) generate id
@@ -65,27 +65,24 @@ class TableController extends Controller
         ]);
 
         // 3) make the URL that will be encoded in QR
-        // $frontendUrl = url("/order/{$id}"); // url sudah diterdefinisi di .env
         $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173');
         $qrUrl = "{$frontendUrl}/order/{$id}";
 
         // 4) generate QR image (minimal, compatible with endroid/qr-code v6)
         try {
             $qr = new QrCode($qrUrl);
-            // optional: $qr->setSize(300); // you can set size if you want
             $writer = new PngWriter();
             $result = $writer->write($qr);
 
-            // 5) store QR image to public storage
+            // 5) store QR image
             $qrImagePath = "qrcodes/{$id}.png";
             Storage::disk('public')->put($qrImagePath, $result->getString());
 
-            // 6) update DB with accessible URL to QR
+            // 6) update DB with public URL
             $table->update([
                 'qr_code_url' => asset("storage/{$qrImagePath}"),
             ]);
         } catch (\Throwable $ex) {
-            // In case QR generation fails, still return created table but include error info
             return response()->json([
                 'success' => false,
                 'message' => 'Table created but failed to generate QR code: ' . $ex->getMessage(),
@@ -108,7 +105,7 @@ class TableController extends Controller
             $validated = $request->validate([
                 'table_number' => 'sometimes|string|max:50|unique:tables,table_number,' . $id . ',id',
                 'capacity' => 'sometimes|integer|min:1',
-                'type' => 'nullable|string|max:100',
+                'type' => 'nullable|in:Indoor,Outdoor,VIP',
                 'status' => 'in:available,occupied,reserved',
             ]);
 
@@ -133,11 +130,11 @@ class TableController extends Controller
         try {
             $table = Table::findOrFail($id);
 
-            // delete QR file if exists in storage/qrcodes
+            // delete QR file if exists
             if ($table->qr_code_url && str_contains($table->qr_code_url, 'storage/qrcodes/')) {
-                // derive storage path from asset URL
                 $storagePrefix = asset('storage/') . '/';
                 $path = str_replace($storagePrefix, '', $table->qr_code_url);
+
                 if (Storage::disk('public')->exists($path)) {
                     Storage::disk('public')->delete($path);
                 }

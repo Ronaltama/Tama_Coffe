@@ -4,7 +4,7 @@ import { RouterLink, RouterView, useRouter } from 'vue-router'
 import { ref } from 'vue'
 import Swal from 'sweetalert2' // 💡 Import SweetAlert2
 // Ganti path logo sesuai dengan struktur proyek Anda
-import logo from '../assets/img/logo.png' 
+import logo from '../assets/img/logo.png'
 
 // router instance
 const router = useRouter()
@@ -100,6 +100,12 @@ const handleLogout = async () => {
             <span>Products</span>
           </RouterLink>
 
+          <!-- ✅ MENU TABLES BARU -->
+          <RouterLink to="/superadmin/tables" class="nav-link" active-class="sidebar-active">
+            <i class="fas fa-table fa-fw"></i>
+            <span>Tables</span>
+          </RouterLink>
+
           <RouterLink to="/superadmin/history" class="nav-link" active-class="sidebar-active">
             <i class="fas fa-receipt fa-fw"></i>
             <span>Order History</span>
@@ -111,6 +117,12 @@ const handleLogout = async () => {
           <RouterLink to="/admin/dashboard" class="nav-link" active-class="sidebar-active">
             <i class="fas fa-chart-line fa-fw"></i>
             <span>Dashboard</span>
+          </RouterLink>
+
+          <!-- ✅ MENU TABLES BARU -->
+          <RouterLink to="/admin/tables" class="nav-link" active-class="sidebar-active">
+            <i class="fas fa-table fa-fw"></i>
+            <span>Tables</span>
           </RouterLink>
 
           <RouterLink to="/admin/history" class="nav-link" active-class="sidebar-active">
@@ -129,6 +141,7 @@ const handleLogout = async () => {
           </RouterLink>
         </template>
       </nav>
+
 
       <!-- LOGOUT -->
       <div class="p-4 mt-auto border-t border-orange-200">
