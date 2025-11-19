@@ -27,6 +27,7 @@ import Cart from "../views/Cart.vue";
 import Payment from "../views/Payment.vue";
 import PaymentConfirmation from "../views/PaymentConfirmation.vue";
 import PaymentSuccess from "../views/PaymentSuccess.vue";
+import Reservation from "../views/Reservation.vue"; // 🆕 Import Reservation
 
 // --- Placeholder Pages (opsional testing) ---
 const HistoryPlaceholder = {
@@ -80,6 +81,12 @@ const routes = [
     path: "/user/payment/success",
     name: "PaymentSuccess",
     component: PaymentSuccess,
+  },
+  // 🆕 Route Reservation
+  {
+    path: "/user/reservation",
+    name: "Reservation",
+    component: Reservation,
   },
 
   // --- SUPERADMIN ---

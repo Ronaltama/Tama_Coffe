@@ -61,7 +61,7 @@
                             ]"
                             :aria-pressed="selectedTemperature === 'iced'"
                         >
-                            ❄️ Iced
+                            Iced
                         </button>
                         <button 
                             @click="selectedTemperature = 'hot'"
@@ -73,7 +73,7 @@
                             ]"
                             :aria-pressed="selectedTemperature === 'hot'"
                         >
-                            🔥 Hot
+                            Hot
                         </button>
                     </div>
                 </div>

@@ -20,8 +20,13 @@
       <p class="text-sm text-gray-500">Open today, 07:00-22:00</p>
     </div>
 
-    <div class="bg-amber-50 py-4 text-center">
-      <p class="text-amber-800 font-semibold">Table Number: 12</p>
+    <!-- Status Reservasi / Table Number -->
+    <div v-if="orderType === 'Reservasi'" class="bg-blue-50 py-4 text-center border-b border-blue-100">
+      <p class="text-blue-800 font-semibold">Status: Reservasi</p>
+      <p class="text-xs text-blue-600 mt-1">{{ reservationInfo }}</p>
+    </div>
+    <div v-else class="bg-amber-50 py-4 text-center">
+      <p class="text-amber-800 font-semibold">Table Number: {{ tableNumber }}</p>
     </div>
 
     <div class="flex border-b border-gray-200 bg-white sticky top-0 z-10">
@@ -88,7 +93,7 @@
 
           <div class="p-3 flex flex-col flex-grow">
             <h3 class="font-bold text-base text-gray-900">{{ product.name }}</h3>
-                        <p class="text-sm text-gray-600 mb-3">Rp{{ formatPrice(product.price) }}</p>
+            <p class="text-sm text-gray-600 mb-3">Rp{{ formatPrice(product.price) }}</p>
             
             <button
               @click="handleProductClick(product)"
@@ -157,11 +162,11 @@
                   </svg>
                 </button>
               </div>
-                <span class="text-sm font-medium text-gray-900">{{ item.name }} {{ item.variant !== 'food' ? `(${item.variant})` : '' }}</span>
-              </div>
-              <span class="text-sm font-bold text-gray-900">Rp{{ formatPrice(item.price * item.quantity) }}</span>
+              <span class="text-sm font-medium text-gray-900">{{ item.name }} {{ item.variant !== 'food' ? `(${item.variant})` : '' }}</span>
             </div>
+            <span class="text-sm font-bold text-gray-900">Rp{{ formatPrice(item.price * item.quantity) }}</span>
           </div>
+        </div>
         </button>
       </div>
     </footer>
@@ -170,60 +175,64 @@
 </template>
 
 <script setup>
-// PERUBAHAN: Impor 'watch'
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
 const activeTab = ref('all');
-
-// ------------------------------------
-// PERUBAHAN UTAMA: SINKRONISASI LOCALSTORAGE
-// ------------------------------------
-
-// 1. Muat keranjang dari localStorage saat komponen dibuat
 const cartItems = ref(JSON.parse(localStorage.getItem('cart') || '[]'));
+const orderType = ref('Dine In');
+const tableNumber = ref('12');
+const reservationInfo = ref('');
 
-// 2. Gunakan 'watch' untuk menyimpan perubahan ke localStorage secara otomatis
-//    'deep: true' sangat penting untuk mendeteksi perubahan di dalam array/objek
+// Load order type and reservation info
+onMounted(() => {
+  const storedOrderType = localStorage.getItem('orderType');
+  if (storedOrderType) {
+    orderType.value = storedOrderType;
+  }
+  
+  // Jika reservasi, tampilkan info
+  if (orderType.value === 'Reservasi') {
+    const reservationDetails = localStorage.getItem('reservationDetails');
+    if (reservationDetails) {
+      const details = JSON.parse(reservationDetails);
+      reservationInfo.value = `${details.people} orang - ${details.date} ${details.time}`;
+    }
+  }
+});
+
 watch(cartItems, (newCart) => {
   localStorage.setItem('cart', JSON.stringify(newCart));
 }, { deep: true });
 
-// ------------------------------------
-// AKHIR PERUBAHAN UTAMA
-// ------------------------------------
-
-
-// --- DATA DUMMY ---
-// PERUBAHAN: Simpan harga sebagai ANGKA (Number) agar kalkulasi lebih mudah
 const drinkProducts = ref([
   {
     id: 1,
     type: 'drink',
     name: 'Coffee Latte',
-    price: 25000, // Diubah dari '25.000'
+    price: 25000,
     imageUrl: 'https://images.unsplash.com/photo-1517487881594-2787fef5ebf7?w=400&q=80'
   },
   {
     id: 2,
     type: 'drink',
     name: 'Caramel Macchiato',
-    price: 28000, // Diubah dari '28.000'
+    price: 28000,
     imageUrl: 'https://images.unsplash.com/photo-1599639957043-f3aa5c986398?w=400&q=80'
   },
   {
     id: 3,
     type: 'drink',
     name: 'Americano',
-    price: 22000, // Diubah dari '22.000'
+    price: 22000,
     imageUrl: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&q=80'
   },
   {
     id: 4,
     type: 'drink',
     name: 'Cappuccino',
-    price: 26000, // Diubah dari '26.000'
+    price: 26000,
     imageUrl: 'https://images.unsplash.com/photo-1572442388796-11668a67e53d?w=400&q=80'
   }
 ]);
@@ -233,35 +242,30 @@ const foodProducts = ref([
     id: 101,
     type: 'food',
     name: 'Almond Croissant',
-    price: 20000, // Diubah dari '20.000'
+    price: 20000,
     imageUrl: 'https://images.unsplash.com/photo-1509355786693-1e179b5b2911?w=400&q=80'
   },
   {
     id: 102,
     type: 'food',
     name: 'Chicken Sandwich',
-    price: 35000, // Diubah dari '35.000'
+    price: 35000,
     imageUrl: 'https://images.unsplash.com/photo-1553909489-cd47e0901a20?w=400&q=80'
   },
   {
     id: 103,
     type: 'food',
     name: 'Red Velvet Cake',
-    price: 30000, // Diubah dari '30.000'
+    price: 30000,
     imageUrl: 'https://images.unsplash.com/photo-1606890737304-57a16a5d5e0a?w=400&q=80'
   },
 ]);
 
-
-// --- METHODS ---
-
-// PERBAIKAN: Fungsi untuk format harga (karena harga sekarang angka)
 const formatPrice = (price) => {
   if (price === undefined || price === null) return '0';
   return price.toLocaleString('id-ID');
 };
 
-// Logika ini sudah benar
 const handleProductClick = (product) => {
   if (product.type === 'food') {
     addToCart(product);
@@ -270,32 +274,26 @@ const handleProductClick = (product) => {
   }
 };
 
-// PERBAIKAN: Logika addToCart untuk Makanan
 const addToCart = (product) => {
-  // Makanan menggunakan ID produk aslinya sebagai ID unik di keranjang
   const cartItemId = product.id.toString(); 
   
   const existingItem = cartItems.value.find(item => item.id === cartItemId);
   
   if (existingItem) {
-    // Jika sudah ada, tambah jumlahnya
     existingItem.quantity++;
   } else {
-    // Jika belum, tambahkan item baru
     cartItems.value.push({
       id: cartItemId,
       name: product.name,
-      price: product.price, // Harga sudah angka
+      price: product.price,
       quantity: 1,
       imageUrl: product.imageUrl,
       productId: product.id,
-      variant: 'food' // Tandai sebagai 'food'
+      variant: 'food' 
     });
   }
-  // 'watch' akan otomatis menyimpan ke localStorage
 };
 
-// Logika ini sudah benar, 'watch' akan menangani penyimpanan
 const incrementCart = (id) => {
   const item = cartItems.value.find(i => i.id === id);
   if (item) {
@@ -303,24 +301,19 @@ const incrementCart = (id) => {
   }
 };
 
-// Logika ini sudah benar, 'watch' akan menangani penyimpanan
 const decrementCart = (id) => {
   const item = cartItems.value.find(i => i.id === id);
   if (item && item.quantity > 1) {
     item.quantity--;
   } else if (item && item.quantity === 1) {
-    // Hapus item dari keranjang jika jumlahnya jadi 0
     cartItems.value = cartItems.value.filter(i => i.id !== id);
   }
 };
 
 const goToCart = () => {
-  router.push('/user/cart'); // Pastikan rute '/user/cart' ada di router
+  router.push('/user/cart');
 };
 
-// --- COMPUTED ---
-
-// Logika ini sudah benar
 const filteredProducts = computed(() => {
   if (activeTab.value === 'drinks') {
     return drinkProducts.value;
@@ -334,24 +327,19 @@ const filteredProducts = computed(() => {
   return [];
 });
 
-// Logika ini sudah benar
 const totalItems = computed(() => {
   return cartItems.value.reduce((sum, item) => sum + item.quantity, 0);
 });
 
-// PERBAIKAN: Kalkulasi total harga
 const totalPrice = computed(() => {
   const total = cartItems.value.reduce((sum, item) => {
-    // 'item.price' sekarang sudah pasti angka
     return sum + (item.price * item.quantity);
   }, 0);
-  // Format totalnya untuk ditampilkan
   return formatPrice(total);
 });
 </script>
 
 <style scoped>
-/* Styling sudah menggunakan Tailwind CSS */
 .sticky {
   position: -webkit-sticky;
   position: sticky;

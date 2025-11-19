@@ -4,7 +4,7 @@
 
       <!-- Header -->
       <header class="bg-white border-b border-gray-200 px-4 py-4 flex items-center justify-between">
-        <button @click="backToMenu" class="p-1 -ml-2 text-gray-800 hover:text-gray-600 transition-colors">
+        <button @click="closeModal" class="p-1 -ml-2 text-gray-800 hover:text-gray-600 transition-colors">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
@@ -18,20 +18,20 @@
         
         <!-- Success Message -->
         <section class="text-center mb-8">
-          <h2 class="text-2xl font-bold text-gray-900 mb-3">Pesanan Anda telah diterima</h2>
-          <p class="text-sm text-gray-600 leading-relaxed">Pesanan Anda akan segera disiapkan</p>
+          <h2 class="text-2xl font-bold text-gray-900 mb-3">Reservasi Anda telah diterima</h2>
+          <p class="text-sm text-gray-600 leading-relaxed">Reservasi Anda akan disiapkan</p>
         </section>
 
-        <!-- Queue Number -->
+        <!-- Reservation Number -->
         <section class="text-center mb-8">
           <div class="inline-block">
-            <p class="text-5xl font-bold text-gray-900 mb-2">{{ queueNumber }}</p>
-            <p class="text-xs text-gray-500 uppercase tracking-wider font-bold">Nomor Antrian</p>
+            <p class="text-4xl font-bold text-gray-900 mb-1">{{ reservationNumber }}</p>
+            <p class="text-xs text-gray-500">Nomor Reservasi</p>
           </div>
         </section>
 
         <!-- Information Section -->
-        <section class="mb-6" v-if="orderData">
+        <section class="mb-6">
           <h3 class="text-base font-bold text-gray-900 mb-4">Informasi Pesanan</h3>
           
           <!-- Name -->
@@ -41,7 +41,7 @@
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
               </svg>
-              <span class="text-base font-medium">{{ orderData.customer.name }}</span>
+              <span class="text-base">{{ customerName }}</span>
             </div>
           </div>
 
@@ -52,19 +52,18 @@
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
               </svg>
-              <span class="text-base font-medium">{{ orderData.customer.phone || '-' }}</span>
+              <span class="text-base">{{ phoneNumber }}</span>
             </div>
           </div>
 
-          <!-- Table Number (Menggantikan Jumlah Orang) -->
+          <!-- Number of People -->
           <div class="mb-4">
-            <p class="text-sm text-gray-600 mb-2">Nomor Meja</p>
+            <p class="text-sm text-gray-600 mb-2">jumlah Orang</p>
             <div class="flex items-center gap-2 text-gray-900">
-              <!-- Icon Meja/Kursi (Ganti icon user group) -->
-               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                 <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clip-rule="evenodd" />
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
               </svg>
-              <span class="text-base font-medium">Meja {{ orderData.table }}</span>
+              <span class="text-base">{{ numberOfPeople }}</span>
             </div>
           </div>
 
@@ -72,10 +71,7 @@
           <div class="mb-4">
             <p class="text-sm text-gray-600 mb-2">Tanggal / Jam</p>
             <div class="flex items-center gap-2 text-gray-900">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              <span class="text-base font-medium">{{ dateTime }}</span>
+              <span class="text-base">{{ dateTime }}</span>
             </div>
           </div>
 
@@ -89,7 +85,7 @@
           @click="backToMenu"
           class="w-full py-4 bg-orange-600 hover:bg-orange-700 text-white text-base font-bold rounded-xl transition-all shadow-lg active:scale-[0.98]"
         >
-          Kembali ke Menu
+          Kembali
         </button>
       </footer>
 
@@ -104,42 +100,58 @@ import { useRouter } from 'vue-router';
 const router = useRouter();
 
 // Data refs
-const queueNumber = ref('00');
-const orderData = ref(null);
+const reservationNumber = ref('1234567890');
+const customerName = ref('');
+const phoneNumber = ref('');
+const numberOfPeople = ref('');
 const dateTime = ref('');
 
 onMounted(() => {
-  // 1. Ambil data pesanan final yang disimpan dari PaymentConfirmation.vue
-  const finalSummary = localStorage.getItem('finalOrderSummary');
+  // Get data from localStorage (from previous order)
+  const pendingData = localStorage.getItem('pendingOrder');
   
-  if (finalSummary) {
-    orderData.value = JSON.parse(finalSummary);
+  if (pendingData) {
+    const orderData = JSON.parse(pendingData);
     
-    // 2. Generate nomor antrian (Simulasi: 1 - 50)
-    queueNumber.value = Math.floor(1 + Math.random() * 50).toString();
+    // Generate reservation number
+    reservationNumber.value = Math.floor(1000000000 + Math.random() * 9000000000).toString();
     
-    // 3. Set waktu saat ini
-    const now = new Date();
-    const date = now.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-');
-    const time = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB';
-    dateTime.value = `${date} / ${time}`;
-
+    // Set customer data
+    customerName.value = orderData.customer?.name || 'Guest';
+    phoneNumber.value = orderData.customer?.phone || '-';
+    numberOfPeople.value = orderData.numberOfPeople || orderData.table || '-';
+    
+    // Get reservation details if exists
+    const reservationDetails = localStorage.getItem('reservationDetails');
+    if (reservationDetails) {
+      const details = JSON.parse(reservationDetails);
+      dateTime.value = `${details.date} / ${details.time}`;
+    } else {
+      // Generate current date time
+      const now = new Date();
+      const date = now.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-');
+      const time = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+      dateTime.value = `${date} / ${time} WIB`;
+    }
   } else {
-    // Fallback untuk dev/testing jika diakses langsung
-    queueNumber.value = '12';
-    orderData.value = {
-        customer: { name: 'Tamu', phone: '-' },
-        table: '12'
-    };
-    dateTime.value = '-';
+    // Dummy data jika tidak ada
+    customerName.value = 'Rijal Cilacap';
+    phoneNumber.value = '085777733352';
+    numberOfPeople.value = '12';
+    dateTime.value = '16-10-2025 / 12.30 WIB';
   }
 });
 
+const closeModal = () => {
+  router.push('/user/menu');
+};
+
 const backToMenu = () => {
-  // Bersihkan data
-  localStorage.removeItem('finalOrderSummary');
+  // Clear order data
+  localStorage.removeItem('cart');
+  localStorage.removeItem('cartNotes');
+  localStorage.removeItem('pendingOrder');
   
-  // Kembali ke menu
   router.push('/user/menu');
 };
 </script>

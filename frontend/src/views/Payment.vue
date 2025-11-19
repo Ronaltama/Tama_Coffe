@@ -21,7 +21,7 @@
         <section class="mb-4 bg-white rounded-xl border-2 border-orange-500 p-4 flex items-center justify-between">
           <div>
             <p class="text-xs text-gray-500 mb-1">Tipe Pemesanan</p>
-            <p class="font-bold text-gray-900">Makan di tempat</p>
+            <p class="font-bold text-gray-900">{{ orderType }}</p>
           </div>
           <div class="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
@@ -86,7 +86,8 @@
               </div>
             </div>
 
-            <div>
+            <!-- Nomor Meja (hanya untuk Dine In) atau Jumlah Orang (untuk Reservasi) -->
+            <div v-if="orderType !== 'Reservasi'">
               <label class="text-sm text-gray-900 font-medium mb-2 block">Nomor Meja*</label>
               <div class="relative">
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -98,6 +99,22 @@
                   v-model="tableNumber"
                   type="text" 
                   class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                />
+              </div>
+            </div>
+            <div v-else>
+              <label class="text-sm text-gray-900 font-medium mb-2 block">Jumlah Orang*</label>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+                  </svg>
+                </div>
+                <input 
+                  v-model="numberOfPeople"
+                  type="text"
+                  readonly
+                  class="w-full pl-10 pr-4 py-3 bg-gray-100 border border-gray-200 rounded-lg text-gray-700"
                 />
               </div>
             </div>
@@ -187,7 +204,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
@@ -197,12 +214,33 @@ const customerName = ref('');
 const phoneNumber = ref('');
 const email = ref('');
 const tableNumber = ref('12');
-const paymentMethod = ref('qris'); 
+const numberOfPeople = ref('');
+const paymentMethod = ref('qris');
+const orderType = ref('Dine In');
 
 // Cart Data
 const cartItems = ref(JSON.parse(localStorage.getItem('cart') || '[]'));
 const notes = ref(localStorage.getItem('cartNotes') || '');
 const TAX_RATE = 0.10;
+
+// Load data on mount
+onMounted(() => {
+  const storedOrderType = localStorage.getItem('orderType');
+  if (storedOrderType) {
+    orderType.value = storedOrderType;
+  }
+  
+  // Jika reservasi, load data reservasi
+  if (orderType.value === 'Reservasi') {
+    const reservationDetails = localStorage.getItem('reservationDetails');
+    if (reservationDetails) {
+      const details = JSON.parse(reservationDetails);
+      customerName.value = details.name;
+      phoneNumber.value = details.phone;
+      numberOfPeople.value = details.people;
+    }
+  }
+});
 
 // Methods
 const formatPrice = (price) => {
@@ -224,7 +262,8 @@ const handlePlaceOrder = () => {
       phone: phoneNumber.value,
       email: email.value
     },
-    table: tableNumber.value,
+    table: orderType.value === 'Reservasi' ? '-' : tableNumber.value,
+    numberOfPeople: orderType.value === 'Reservasi' ? numberOfPeople.value : '-',
     items: cartItems.value,
     notes: notes.value,
     totals: {
@@ -233,7 +272,7 @@ const handlePlaceOrder = () => {
       total: totalPaymentPrice.value
     },
     payment: paymentMethod.value,
-    orderType: 'Dine In'
+    orderType: orderType.value
   };
 
   // Simpan ke localStorage untuk dibawa ke halaman konfirmasi
