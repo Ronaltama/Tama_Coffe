@@ -2,6 +2,7 @@
   <div class="bg-neutral-100 min-h-screen">
     <div class="max-w-md mx-auto bg-white min-h-screen font-sans flex flex-col">
 
+      <!-- Header -->
       <header class="bg-white border-b border-gray-200 px-4 py-4 flex items-center justify-between">
         <router-link to="/user/payment" class="p-1 -ml-2 text-gray-800 hover:text-orange-600 transition-colors">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -12,13 +13,15 @@
         <div class="w-6"></div>
       </header>
 
+      <!-- Main Content -->
       <main class="flex-1 pb-24 px-4 overflow-y-auto bg-white" v-if="orderData">
         
+        <!-- Order Type -->
         <section class="my-4">
           <div class="border-2 border-orange-500 rounded-xl px-4 py-3 flex items-center justify-between">
             <p class="text-sm text-gray-600">Order Type</p>
             <div class="flex items-center gap-2">
-              <p class="font-bold text-base text-gray-900">Makan di tempat</p>
+              <p class="font-bold text-base text-gray-900">{{ orderData.orderType }}</p>
               <div class="w-7 h-7 rounded-full bg-orange-600 flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
                   <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
@@ -28,6 +31,7 @@
           </div>
         </section>
 
+        <!-- Order Number & QR Code -->
         <section class="mb-6 text-center">
           <h2 class="text-base font-semibold text-gray-900 mb-3">Order Number</h2>
           <div class="flex items-center justify-center gap-3 mb-4">
@@ -39,6 +43,7 @@
             </div>
           </div>
           
+          <!-- QR Code -->
           <div class="flex justify-center mb-4">
             <div class="w-56 h-56 bg-white border-2 border-gray-300 rounded-lg flex items-center justify-center">
               <div class="text-center text-gray-400">
@@ -49,13 +54,35 @@
               </div>
             </div>
           </div>
+
+          <!-- Upload Notice -->
+          <div class="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-3 flex items-start gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-orange-600 mt-0.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+            </svg>
+            <div class="flex-1 text-left">
+              <p class="text-xs text-gray-700 leading-relaxed">After making the payment, please take a screenshot of your phone screen and send it using the button below.</p>
+            </div>
+          </div>
+
+          <!-- Upload Button -->
+          <button 
+            class="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3.5 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+            </svg>
+            Upload Bukti QRIS
+          </button>
         </section>
 
+        <!-- Ordered Items -->
         <section class="mb-6">
           <h2 class="text-base font-bold text-gray-900 mb-4">Ordered Items</h2>
           
           <div class="space-y-3">
             <div v-for="item in orderData.items" :key="item.id">
+              <!-- Item Header -->
               <div class="flex items-start justify-between mb-1">
                 <div class="flex-1">
                   <h3 class="text-sm font-bold text-gray-900">{{ item.quantity }}x {{ item.name }}</h3>
@@ -63,25 +90,23 @@
                 <span class="text-sm font-bold text-gray-900 ml-2">Rp{{ formatPrice(item.price * item.quantity) }}</span>
               </div>
               
+              <!-- Item Details -->
               <div class="ml-4 space-y-0.5">
-                <p class="text-xs text-gray-600" v-if="item.variant !== 'food'">• {{ item.quantity }} x {{ item.variant }}</p>
-                <p class="text-xs text-gray-600" v-else>• {{ item.quantity }} x Porsi Standar</p>
+                <p class="text-xs text-gray-600">• {{ item.quantity }} x {{ item.variant || 'Espresso' }}</p>
               </div>
             </div>
           </div>
         </section>
 
+        <!-- Divider -->
         <div class="border-t border-gray-200 my-4"></div>
 
+        <!-- Price Summary -->
         <section class="mb-6">
           <div class="space-y-2 mb-3">
             <div class="flex justify-between items-center text-sm text-gray-600">
               <span>Subtotal ({{ orderData.items.length }} menu)</span>
               <span>Rp{{ formatPrice(orderData.totals.subTotal) }}</span>
-            </div>
-            <div class="flex justify-between items-center text-sm text-gray-600">
-              <span>Tax (10%)</span>
-              <span>Rp{{ formatPrice(orderData.totals.tax) }}</span>
             </div>
           </div>
           
@@ -97,6 +122,7 @@
         <p class="text-gray-500">Tidak ada data pesanan.</p>
       </main>
 
+      <!-- Footer Submit Button -->
       <footer class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-gray-200 pb-4 pt-3 px-4">
         <button 
           @click="processFinalOrder"
@@ -125,7 +151,7 @@ onMounted(() => {
   if (pendingData) {
     orderData.value = JSON.parse(pendingData);
     
-    // Generate random order number untuk simulasi
+    // Generate random order number
     orderNumber.value = 'APP' + Math.floor(1000 + Math.random() * 9000);
     qrCode.value = 'CNP' + Math.random().toString(36).substring(2, 8).toUpperCase();
   } else {
@@ -139,15 +165,17 @@ const formatPrice = (price) => {
 };
 
 const processFinalOrder = async () => {
-  // TODO: Di sini nanti logika API Call ke Backend Laravel (axios.post)
+  // TODO: API Call ke Backend Laravel (axios.post)
   console.log('FINAL ORDER SENT TO BACKEND:', orderData.value);
 
-  // Bersihkan semua data setelah submit berhasil
+  // Clear all data
   localStorage.removeItem('cart');
   localStorage.removeItem('cartNotes');
   localStorage.removeItem('pendingOrder');
+  localStorage.removeItem('orderType'); // 🆕 Hapus orderType
+  localStorage.removeItem('reservationDetails'); // 🆕 Hapus reservationDetails
   
-  // Arahkan ke halaman sukses (Anda sudah punya PaymentSuccess.vue)
+  // Arahkan ke halaman sukses
   router.push('/user/payment/success');
 };
 </script>

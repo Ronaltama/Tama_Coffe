@@ -188,17 +188,21 @@ const reservationInfo = ref('');
 // Load order type and reservation info
 onMounted(() => {
   const storedOrderType = localStorage.getItem('orderType');
-  if (storedOrderType) {
-    orderType.value = storedOrderType;
-  }
   
-  // Jika reservasi, tampilkan info
-  if (orderType.value === 'Reservasi') {
-    const reservationDetails = localStorage.getItem('reservationDetails');
-    if (reservationDetails) {
-      const details = JSON.parse(reservationDetails);
-      reservationInfo.value = `${details.people} orang - ${details.date} ${details.time}`;
-    }
+  // Cek apakah ada data reservasi
+  const reservationDetails = localStorage.getItem('reservationDetails');
+  
+  if (storedOrderType === 'Reservasi' && reservationDetails) {
+    // Jika memang dari reservasi, set orderType dan info
+    orderType.value = 'Reservasi';
+    const details = JSON.parse(reservationDetails);
+    reservationInfo.value = `${details.people} orang - ${details.date} ${details.time}`;
+  } else {
+    // Jika tidak ada reservasi, default ke Dine In dengan nomor meja
+    orderType.value = 'Dine In';
+    // Bisa ambil dari localStorage atau default
+    const storedTable = localStorage.getItem('tableNumber');
+    tableNumber.value = storedTable || '12';
   }
 });
 
