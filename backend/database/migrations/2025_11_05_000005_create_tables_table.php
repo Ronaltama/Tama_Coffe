@@ -15,7 +15,7 @@ return new class extends Migration
             $table->string('id')->primary();
             $table->string('table_number');
             $table->integer('capacity');
-            $table->string('type')->nullable();
+            $table->enum('type', ['Indoor', 'Outdoor', 'VIP'])->nullable();
             $table->string('qr_code_url')->nullable();
             $table->enum('status', ['available', 'occupied', 'reserved'])->default('available');
             $table->timestamps();

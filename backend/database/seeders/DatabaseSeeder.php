@@ -7,6 +7,8 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use App\Models\Category;
 use App\Models\Role;
 use App\Models\SubCategory;
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -22,7 +24,7 @@ class DatabaseSeeder extends Seeder
         $roles = [
             [
                 'id' => 'RL001',
-                'name' => 'superdmin',
+                'name' => 'superadmin',
             ],
             [
                 'id' => 'RL002',
@@ -85,5 +87,18 @@ class DatabaseSeeder extends Seeder
         foreach ($subCategories as $subCategory) {
             SubCategory::updateOrCreate(['id' => $subCategory['id']], $subCategory);
         }
+
+        // === Seed User Superadmin ===
+        User::updateOrCreate(
+            ['email' => 'superadmin@tama.com'], // kondisi unik
+            [
+                'id' => 'US001',
+                'role_id' => 'RL001',
+                'name' => 'Super Admin',
+                'username' => 'superadmin', 
+                'email' => 'superadmin@tama.com',
+                'password' => Hash::make('password123'),
+            ]
+        );
     }
 }

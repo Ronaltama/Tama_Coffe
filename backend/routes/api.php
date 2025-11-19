@@ -36,6 +36,5 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('admin-data', function () {
             return "Data admin";
         });
-        Route::apiResource('tables', TableController::class);
     });
 });
