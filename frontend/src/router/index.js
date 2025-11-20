@@ -163,23 +163,23 @@ router.beforeEach(async (to, from, next) => {
   const token = localStorage.getItem("token");
   const user = JSON.parse(localStorage.getItem("user"));
 
-  // 1️⃣ Jika belum login dan bukan halaman login/user → arahkan ke login
+  // Jika belum login dan bukan halaman login/user → arahkan ke login
   if (!token && !to.path.startsWith("/user") && to.path !== "/login") {
     return next("/login");
   }
 
-  // 2️⃣ Jika sudah login, set Authorization header
+  // Jika sudah login, set Authorization header
   if (token) {
     axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
   }
 
-  // 3️⃣ Cegah user yang sudah login masuk ke halaman login lagi
+  // Cegah user yang sudah login masuk ke halaman login lagi
   if (token && to.path === "/login") {
     if (user?.role === "superadmin") return next("/superadmin/dashboard");
     if (user?.role === "admin") return next("/admin/dashboard");
   }
 
-  // 4️⃣ Cek role user berdasarkan path
+  // Cek role user berdasarkan path
   if (to.path.startsWith("/superadmin") && user?.role !== "superadmin") {
     // ⚠️ Ganti alert() dengan SweetAlert2
     await Swal.fire({
@@ -192,7 +192,6 @@ router.beforeEach(async (to, from, next) => {
   }
 
   if (to.path.startsWith("/admin") && user?.role !== "admin") {
-    // ⚠️ Ganti alert() dengan SweetAlert2
     await Swal.fire({
       icon: "warning",
       title: "Akses Ditolak!",

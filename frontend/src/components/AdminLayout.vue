@@ -119,12 +119,6 @@ const handleLogout = async () => {
             <span>Dashboard</span>
           </RouterLink>
 
-          <!-- ✅ MENU TABLES BARU -->
-          <RouterLink to="/admin/tables" class="nav-link" active-class="sidebar-active">
-            <i class="fas fa-table fa-fw"></i>
-            <span>Tables</span>
-          </RouterLink>
-
           <RouterLink to="/admin/history" class="nav-link" active-class="sidebar-active">
             <i class="fas fa-receipt fa-fw"></i>
             <span>Order History</span>
@@ -138,6 +132,11 @@ const handleLogout = async () => {
           <RouterLink to="/admin/confirm-order" class="nav-link" active-class="sidebar-active">
             <i class="fas fa-check-circle fa-fw"></i>
             <span>Confirm Order</span>
+          </RouterLink>
+
+          <RouterLink to="/admin/confirm-order" class="nav-link" active-class="sidebar-active">
+            <i class="fas fa-check-circle fa-fw"></i>
+            <span>Manage Reservation</span>
           </RouterLink>
         </template>
       </nav>
