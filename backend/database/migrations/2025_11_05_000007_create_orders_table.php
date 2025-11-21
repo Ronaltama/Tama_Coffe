@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->string('id')->primary();
-            $table->string('user_id');
+            $table->string('user_id'); //untuk lihat siapa(admin) yang memproses order (log penanggung jawab)
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->string('table_id')->nullable();
             $table->foreign('table_id')->references('id')->on('tables')->onDelete('set null');

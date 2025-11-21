@@ -4,7 +4,7 @@
 
       <header class="fixed top-0 left-0 right-0 max-w-md mx-auto bg-white border-b border-gray-200 z-20">
         <div class="flex items-center justify-between p-4">
-          <router-link to="/user/cart" class="p-2 -ml-2">
+          <router-link to="/order/cart" class="p-2 -ml-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-800" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
@@ -279,7 +279,7 @@ const handlePlaceOrder = () => {
   localStorage.setItem('pendingOrder', JSON.stringify(orderData));
 
   // Redirect ke halaman konfirmasi
-  router.push('/user/payment/confirm');
+  router.push('/order/payment/confirm');
 };
 
 // Computed

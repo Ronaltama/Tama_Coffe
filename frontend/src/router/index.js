@@ -42,7 +42,7 @@ const ConfirmOrderPlaceholder = {
 const routes = [
   {
     path: "/",
-    redirect: "/user/menu", // default ke halaman user
+    redirect: "/order/menu", // default ke halaman user
   },
 
   // --- LOGIN ---
@@ -52,38 +52,39 @@ const routes = [
     component: () => import("../Auth/Login.vue"),
   },
 
-  // --- USER ---
+    // --- USER untuk ORDER---
   {
-    path: "/user/menu",
+    path: "/order/menu",
     name: "UserMenu",
     component: UserMenu,
   },
   {
-    path: "/user/product/:id",
+    path: "/order/product/:id",
     name: "ProductDetail",
     component: ProductDetail,
     props: true,
   },
   {
-    path: "/user/cart",
+    path: "/order/cart",
     name: "UserCart",
     component: Cart,
   },
   {
-    path: "/user/payment",
+    path: "/order/payment",
     name: "UserPayment",
     component: Payment,
   },
   {
-    path: "/user/payment/confirm",
+    path: "/order/payment/confirm",
     name: "PaymentConfirmation",
     component: PaymentConfirmation,
   },
   {
-    path: "/user/payment/success",
+    path: "/order/payment/success",
     name: "PaymentSuccess",
     component: PaymentSuccess,
   },
+  
   // 🆕 Route Reservation
   {
     path: "/user/reservation",
@@ -143,7 +144,7 @@ const routes = [
     ],
   },
 
-  // --- ORDER (User Scan) ---
+  // --- ORDER hanya simulasi ku saja(User Scan) ---
   {
     path: "/order/:id",
     name: "orderUser",
@@ -164,7 +165,7 @@ router.beforeEach(async (to, from, next) => {
   const user = JSON.parse(localStorage.getItem("user"));
 
   // Jika belum login dan bukan halaman login/user → arahkan ke login
-  if (!token && !to.path.startsWith("/user") && to.path !== "/login") {
+  if (!token && !to.path.startsWith("/order") && to.path !== "/login") {
     return next("/login");
   }
 

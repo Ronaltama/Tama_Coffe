@@ -3,7 +3,7 @@
     <div class="max-w-md mx-auto bg-white min-h-screen font-sans flex flex-col">
 
       <header class="bg-white border-b border-gray-200 px-4 py-4 flex items-center justify-between">
-        <router-link to="/user/payment" class="p-1 -ml-2 text-gray-800 hover:text-orange-600 transition-colors">
+        <router-link to="/order/payment" class="p-1 -ml-2 text-gray-800 hover:text-orange-600 transition-colors">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
@@ -129,7 +129,7 @@ onMounted(() => {
     orderNumber.value = 'APP' + Math.floor(1000 + Math.random() * 9000);
     qrCode.value = 'CNP' + Math.random().toString(36).substring(2, 8).toUpperCase();
   } else {
-    router.push('/user/menu');
+    router.push('/order/menu');
   }
 });
 
@@ -148,7 +148,7 @@ const processFinalOrder = async () => {
   localStorage.removeItem('pendingOrder');
   
   // Arahkan ke halaman sukses (Anda sudah punya PaymentSuccess.vue)
-  router.push('/user/payment/success');
+  router.push('/order/payment/success');
 };
 </script>
 

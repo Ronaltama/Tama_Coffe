@@ -143,7 +143,7 @@ onMounted(() => {
 });
 
 const closeModal = () => {
-  router.push('/user/menu');
+  router.push('/order/menu');
 };
 
 const backToMenu = () => {
@@ -152,7 +152,7 @@ const backToMenu = () => {
   localStorage.removeItem('cartNotes');
   localStorage.removeItem('pendingOrder');
   
-  router.push('/user/menu');
+  router.push('/order/menu');
 };
 </script>
 
