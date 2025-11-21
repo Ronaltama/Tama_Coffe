@@ -93,7 +93,10 @@
     	
           <button 
             @click="goToPayment"
-            class="w-full py-4 bg-orange-600 hover:bg-orange-700 text-white text-lg font-bold rounded-xl transition-colors shadow-lg"
+            class="w-full py-4 text-white text-lg font-bold rounded-xl transition-colors shadow-lg"
+            style="background-color: #B85814;"
+            onmouseover="this.style.backgroundColor='#A04D12'" 
+            onmouseout="this.style.backgroundColor='#B85814'"
           >
             Payment
           </button>
@@ -109,27 +112,19 @@ import { ref, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 const router = useRouter();
 
-// ------------------------------------
-// SINKRONISASI LOCALSTORAGE (Items)
-// ------------------------------------
+
 const cartItems = ref(JSON.parse(localStorage.getItem('cart') || '[]'));
 
 watch(cartItems, (newCart) => {
   localStorage.setItem('cart', JSON.stringify(newCart));
 }, { deep: true });
 
-// ------------------------------------
-// SINKRONISASI NOTES
-// ------------------------------------
 const notes = ref(localStorage.getItem('cartNotes') || '');
 
 watch(notes, (newNotes) => {
   localStorage.setItem('cartNotes', newNotes);
 });
 
-// ------------------------------------
-// METHODS
-// ------------------------------------
 
 const formatPrice = (price) => {
   if (price === undefined || price === null) return '0';
@@ -156,9 +151,6 @@ const goToPayment = () => {
   router.push('/order/payment');
 };
 
-// ------------------------------------
-// COMPUTED PROPERTIES
-// ------------------------------------
 
 const totalPrice = computed(() => {
   const total = cartItems.value.reduce((sum, item) => {

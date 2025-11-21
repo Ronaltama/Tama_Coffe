@@ -117,7 +117,10 @@
       <footer class="bg-white border-t border-gray-200 pb-6 pt-4 px-6">
         <button 
           @click="submitReservation"
-          class="w-full py-4 bg-orange-600 hover:bg-orange-700 text-white text-base font-bold rounded-xl transition-all shadow-lg active:scale-[0.98]"
+          class="w-full py-4 text-white text-base font-bold rounded-xl transition-all shadow-lg active:scale-[0.98]"
+          style="background-color: #B85814;"
+          onmouseover="this.style.backgroundColor='#A04D12'" 
+          onmouseout="this.style.backgroundColor='#B85814'"
         >
           Buat Reservasi
         </button>
