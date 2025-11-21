@@ -162,7 +162,7 @@ const submitReservation = () => {
   localStorage.removeItem('cartNotes');
 
   // Redirect ke Menu
-  router.push('/user/menu');
+  router.push('/order/menu');
 };
 </script>
 

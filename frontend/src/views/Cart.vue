@@ -4,7 +4,7 @@
 
       <header class="fixed top-0 left-0 right-0 max-w-md mx-auto bg-white border-b border-gray-200 z-20">
         <div class="flex items-center justify-between p-4">
-          <router-link to="/user/menu" class="p-2 -ml-2">
+          <router-link to="/order/menu" class="p-2 -ml-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-800" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
@@ -23,7 +23,7 @@
             v-for="item in cartItems" 
             :key="item.id"
             class="flex items-center space-x-4 p-3 bg-white rounded-lg"
-          >
+          > 
             <img :src="item.imageUrl" :alt="item.name" class="w-20 h-20 rounded-lg object-cover flex-shrink-0">
             <div class="flex-1 min-w-0">
               <h2 class="text-base font-bold text-gray-900 truncate">{{ item.name }}</h2>
@@ -58,7 +58,7 @@
         
         <div v-else class="text-center pt-24">
           <p class="text-gray-500">Your cart is empty.</p>
-          <router-link to="/user/menu" class="mt-4 inline-block text-orange-600 font-semibold hover:underline">
+          <router-link to="/order/menu" class="mt-4 inline-block text-orange-600 font-semibold hover:underline">
             Start shopping
           </router-link>
         </div>
@@ -148,7 +148,7 @@ const decrementCart = (id) => {
 };
 
 const goToPayment = () => {
-  router.push('/user/payment');
+  router.push('/order/payment');
 };
 
 

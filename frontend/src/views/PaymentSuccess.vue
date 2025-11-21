@@ -143,7 +143,7 @@ onMounted(() => {
 });
 
 const closeModal = () => {
-  router.push('/user/menu');
+  router.push('/order/menu');
 };
 
 const backToMenu = () => {
@@ -154,7 +154,7 @@ const backToMenu = () => {
   localStorage.removeItem('orderType'); // 🆕 Hapus orderType
   localStorage.removeItem('reservationDetails'); // 🆕 Hapus reservationDetails
   
-  router.push('/user/menu');
+  router.push('/order/menu');
 };
 </script>
 
