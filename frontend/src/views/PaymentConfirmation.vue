@@ -176,7 +176,7 @@ const processFinalOrder = async () => {
   localStorage.removeItem('reservationDetails'); // 🆕 Hapus reservationDetails
   
   // Arahkan ke halaman sukses
-  router.push('/user/payment/success');
+  router.push('/order/payment/success');
 };
 </script>
 

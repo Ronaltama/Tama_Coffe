@@ -79,9 +79,12 @@
                 :class="[
                   'flex-1 py-3 px-4 rounded-lg font-medium transition-colors border-2',
                   selectedTemperature === 'iced'
-                    ? 'bg-orange-500 text-white border-orange-500'
-                    : 'bg-white text-gray-700 border-gray-300 hover:border-orange-500'
+                    ? 'text-white border-transparent'
+                    : 'bg-white text-gray-700 border-gray-300'
                 ]"
+                :style="selectedTemperature === 'iced' ? 'background-color: #B85814;' : ''"
+                :onmouseover="selectedTemperature === 'iced' ? '' : 'this.style.borderColor=\'#B85814\''"
+                :onmouseout="selectedTemperature === 'iced' ? '' : 'this.style.borderColor=\'#d1d5db\''"
                 :aria-pressed="selectedTemperature === 'iced'"
               >
                 Iced
@@ -91,9 +94,12 @@
                 :class="[
                   'flex-1 py-3 px-4 rounded-lg font-medium transition-colors border-2',
                   selectedTemperature === 'hot'
-                    ? 'bg-orange-500 text-white border-orange-500'
-                    : 'bg-white text-gray-700 border-gray-300 hover:border-orange-500'
+                    ? 'text-white border-transparent'
+                    : 'bg-white text-gray-700 border-gray-300'
                 ]"
+                :style="selectedTemperature === 'hot' ? 'background-color: #B85814;' : ''"
+                :onmouseover="selectedTemperature === 'hot' ? '' : 'this.style.borderColor=\'#B85814\''"
+                :onmouseout="selectedTemperature === 'hot' ? '' : 'this.style.borderColor=\'#d1d5db\''"
                 :aria-pressed="selectedTemperature === 'hot'"
               >
                 Hot
@@ -114,8 +120,11 @@
                     'w-10 h-10 rounded-full border-2 flex items-center justify-center transition-colors',
                     totalQuantity <= 1
                       ? 'border-gray-300 text-gray-300 cursor-not-allowed'
-                      : 'border-orange-500 text-orange-500 hover:bg-orange-50'
+                      : 'text-gray-700'
                   ]"
+                  :style="totalQuantity > 1 ? 'border-color: #B85814; color: #B85814;' : ''"
+                  :onmouseover="totalQuantity > 1 ? 'this.style.backgroundColor=\'#FFF7ED\'' : ''"
+                  :onmouseout="totalQuantity > 1 ? 'this.style.backgroundColor=\'transparent\'' : ''"
                   aria-label="Decrease quantity"
                 >
                   <svg 
@@ -141,7 +150,10 @@
                 <button 
                   @click="incrementTotal"
                   :disabled="totalQuantity >= 99"
-                  class="w-10 h-10 rounded-full bg-orange-500 text-white flex items-center justify-center hover:bg-orange-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                  class="w-10 h-10 rounded-full text-white flex items-center justify-center transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                  style="background-color: #B85814;"
+                  onmouseover="if(!this.disabled) this.style.backgroundColor='#A04D12'" 
+                  onmouseout="if(!this.disabled) this.style.backgroundColor='#B85814'"
                   aria-label="Increase quantity"
                 >
                   <svg 
@@ -163,7 +175,10 @@
             <!-- Add to Cart Button -->
             <button 
               @click="handleAddToCart"
-              class="w-full py-4 bg-orange-600 hover:bg-orange-700 text-white text-lg font-bold rounded-xl transition-colors shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
+              class="w-full py-4 text-white text-lg font-bold rounded-xl transition-colors shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
+              style="background-color: #B85814;"
+              onmouseover="if(!this.disabled) this.style.backgroundColor='#A04D12'" 
+              onmouseout="if(!this.disabled) this.style.backgroundColor='#B85814'"
               :disabled="isAddingToCart"
             >
               {{ isAddingToCart ? 'Adding...' : `Add Orders - Rp ${totalPrice}` }}
