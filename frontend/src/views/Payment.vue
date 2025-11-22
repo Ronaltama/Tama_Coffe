@@ -86,7 +86,6 @@
               </div>
             </div>
 
-            <!-- Nomor Meja (hanya untuk Dine In) atau Jumlah Orang (untuk Reservasi) -->
             <div v-if="orderType !== 'Reservasi'">
               <label class="text-sm text-gray-900 font-medium mb-2 block">Nomor Meja*</label>
               <div class="relative">
@@ -98,11 +97,13 @@
                 <input 
                   v-model="tableNumber"
                   type="text" 
-                  class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                  readonly
+                  class="w-full pl-10 pr-4 py-3 bg-gray-100 border border-gray-200 rounded-lg text-gray-700"
                 />
               </div>
             </div>
-            <div v-else>
+            
+            <div>
               <label class="text-sm text-gray-900 font-medium mb-2 block">Jumlah Orang*</label>
               <div class="relative">
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -113,8 +114,13 @@
                 <input 
                   v-model="numberOfPeople"
                   type="text"
-                  readonly
-                  class="w-full pl-10 pr-4 py-3 bg-gray-100 border border-gray-200 rounded-lg text-gray-700"
+                  :readonly="orderType !== 'Reservasi'"
+                  :class="[
+                    'w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg',
+                    orderType !== 'Reservasi' 
+                      ? 'bg-gray-100 text-gray-700' 
+                      : 'bg-gray-50 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500'
+                  ]"
                 />
               </div>
             </div>
@@ -170,18 +176,6 @@
           </div>
         </section>
 
-        <button class="w-full bg-white rounded-xl p-4 flex items-center justify-between mb-4">
-          <div class="flex items-center space-x-3">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-orange-600" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
-            </svg>
-            <span class="font-semibold text-orange-600">Tambah Promo atau Voucher</span>
-          </div>
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-          </svg>
-        </button>
-
       </main>
 
       <footer class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-gray-200 z-20">
@@ -208,29 +202,23 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
-
-// Form Data
 const customerName = ref('');
 const phoneNumber = ref('');
 const email = ref('');
-const tableNumber = ref('12');
-const numberOfPeople = ref('');
+const tableNumber = ref('');
+const numberOfPeople = ref(''); 
 const paymentMethod = ref('qris');
 const orderType = ref('Dine In');
-
-// Cart Data
 const cartItems = ref(JSON.parse(localStorage.getItem('cart') || '[]'));
 const notes = ref(localStorage.getItem('cartNotes') || '');
-const TAX_RATE = 0.10;
+const TAX_RATE = 0; 
 
-// Load data on mount
 onMounted(() => {
   const storedOrderType = localStorage.getItem('orderType');
   if (storedOrderType) {
     orderType.value = storedOrderType;
   }
   
-  // Jika reservasi, load data reservasi
   if (orderType.value === 'Reservasi') {
     const reservationDetails = localStorage.getItem('reservationDetails');
     if (reservationDetails) {
@@ -239,6 +227,12 @@ onMounted(() => {
       phoneNumber.value = details.phone;
       numberOfPeople.value = details.people;
     }
+  } else {
+    const savedTable = localStorage.getItem('currentTableNumber');
+    if (savedTable) tableNumber.value = savedTable;
+
+    const savedCapacity = localStorage.getItem('tableCapacity');
+    if (savedCapacity) numberOfPeople.value = savedCapacity;
   }
 });
 
@@ -249,13 +243,11 @@ const formatPrice = (price) => {
 };
 
 const handlePlaceOrder = () => {
-  // Validasi form
   if (!customerName.value.trim()) {
     alert('Silakan masukkan nama Anda');
     return;
   }
 
-  // Siapkan data order
   const orderData = {
     customer: {
       name: customerName.value,
@@ -263,7 +255,7 @@ const handlePlaceOrder = () => {
       email: email.value
     },
     table: orderType.value === 'Reservasi' ? '-' : tableNumber.value,
-    numberOfPeople: orderType.value === 'Reservasi' ? numberOfPeople.value : '-',
+    numberOfPeople: numberOfPeople.value || '-', 
     items: cartItems.value,
     notes: notes.value,
     totals: {
@@ -275,10 +267,7 @@ const handlePlaceOrder = () => {
     orderType: orderType.value
   };
 
-  // Simpan ke localStorage untuk dibawa ke halaman konfirmasi
   localStorage.setItem('pendingOrder', JSON.stringify(orderData));
-
-  // Redirect ke halaman konfirmasi
   router.push('/order/payment/confirm');
 };
 

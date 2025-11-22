@@ -44,21 +44,18 @@ const ConfirmOrderPlaceholder = {
 const routes = [
   {
     path: "/",
-    redirect: "/simulasi", // Redirect ke simulasi scan
+    redirect: "/simulasi",
   },
 
-  // --- SIMULASI SCAN ORDER ---
   {
     path: "/simulasi",
     name: "SimulasiScanOrder",
     component: SimulasiScanOrder,
   },
 
-  // --- SCAN QR REDIRECT (dari QR Code yang di-scan) ---
   {
     path: "/order/:tableId",
     redirect: to => {
-      // Redirect ke /order/menu dengan tableId sebagai query parameter
       return {
         name: "UserMenu",
         query: { table: to.params.tableId }
@@ -174,7 +171,6 @@ router.beforeEach(async (to, from, next) => {
   const token = localStorage.getItem("token");
   const user = JSON.parse(localStorage.getItem("user"));
 
-  // Allow access to order pages and simulasi without login
   if (to.path.startsWith("/order") || to.path === "/simulasi" || to.path === "/login") {
     if (token) {
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
@@ -182,21 +178,16 @@ router.beforeEach(async (to, from, next) => {
     return next();
   }
 
-  // Jika belum login dan bukan halaman public → arahkan ke login
   if (!token) {
     return next("/login");
   }
 
-  // Jika sudah login, set Authorization header
   axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
-  // Cegah user yang sudah login masuk ke halaman login lagi
   if (to.path === "/login") {
     if (user?.role === "superadmin") return next("/superadmin/dashboard");
     if (user?.role === "admin") return next("/admin/dashboard");
   }
-
-  // Cek role user berdasarkan path
   if (to.path.startsWith("/superadmin") && user?.role !== "superadmin") {
     await Swal.fire({
       icon: "warning",

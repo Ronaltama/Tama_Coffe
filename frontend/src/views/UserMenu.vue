@@ -17,6 +17,7 @@
 
       <div class="px-4 py-3 bg-white">
         <h1 class="text-2xl font-bold text-gray-900">Tama Caffeine</h1>
+        <!-- jan tanya aku gi apa aku lagi debugging njir -->
         <p class="text-sm text-gray-500">Open today, 07:00-22:00</p>
       </div>
 
@@ -216,13 +217,8 @@ const fetchTableInfo = async (tableId) => {
     if (response.data.success) {
       tableInfo.value = response.data.data;
       tableNumber.value = response.data.data.table_number;
-      
-      // Simpan tableId ke localStorage untuk digunakan saat checkout
       localStorage.setItem('currentTableId', tableId);
       localStorage.setItem('currentTableNumber', response.data.data.table_number);
-      
-      // Update status meja jadi occupied (opsional)
-      // await axios.post(`${API_URL}/table/${tableId}/occupy`);
     }
   } catch (err) {
     console.error('Error fetching table info:', err);
@@ -232,14 +228,11 @@ const fetchTableInfo = async (tableId) => {
 
 // Fetch data on mount
 onMounted(async () => {
-  // Check if there's a table query parameter
   const tableId = route.query.table;
   
   if (tableId) {
-    // Jika ada table ID dari QR/simulasi
     await fetchTableInfo(tableId);
   } else {
-    // Jika tidak ada, cek dari localStorage (untuk reservasi)
     const storedTableNumber = localStorage.getItem('currentTableNumber');
     if (storedTableNumber) {
       tableNumber.value = storedTableNumber;

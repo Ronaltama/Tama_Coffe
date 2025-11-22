@@ -145,23 +145,18 @@ const form = ref({
 });
 
 const submitReservation = () => {
-  // Validasi
   if (!form.value.name || !form.value.phone || !form.value.date || !form.value.time || !form.value.people) {
     alert('Mohon lengkapi semua data reservasi.');
     return;
   }
 
-  // Set Tipe Order ke 'Reservasi'
   localStorage.setItem('orderType', 'Reservasi');
   
-  // Simpan detail reservasi
   localStorage.setItem('reservationDetails', JSON.stringify(form.value));
   
-  // Bersihkan cart lama jika ada
   localStorage.removeItem('cart');
   localStorage.removeItem('cartNotes');
 
-  // Redirect ke Menu
   router.push('/order/menu');
 };
 </script>
