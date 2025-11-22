@@ -10,12 +10,24 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UserMenuController;
 use Illuminate\Support\Facades\Route;
 
-// Guest routes (tanpa auth)
+// =============================================
+// 🔓 GUEST ROUTES (Untuk User/Customer)
+// =============================================
 Route::prefix('guest')->group(function () {
+    // Ambil semua produk (bisa filter by category)
     Route::get('products', [UserMenuController::class, 'getProducts']);
+
+    // Ambil detail produk by ID
     Route::get('products/{id}', [UserMenuController::class, 'getProductDetail']);
+
+    // Ambil semua kategori
     Route::get('categories', [UserMenuController::class, 'getCategories']);
-    Route::get('table/{qrCode}', [UserMenuController::class, 'getTableByQR']);
+
+    // Ambil info meja by ID (untuk scan QR atau simulasi)
+    Route::get('table-info/{tableId}', [OrderController::class, 'getTableInfo']);
+
+    // Update status meja jadi occupied
+    Route::post('table/{tableId}/occupy', [OrderController::class, 'occupyTable']);
 });
 
 // =============================================
