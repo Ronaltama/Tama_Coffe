@@ -188,14 +188,16 @@
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import axios from 'axios';
 
 const router = useRouter();
+const route = useRoute();
 const activeTab = ref('all');
 const cartItems = ref(JSON.parse(localStorage.getItem('cart') || '[]'));
 const orderType = ref('Dine In');
-const tableNumber = ref('12');
+const tableNumber = ref('Loading...');
+const tableInfo = ref(null);
 const reservationInfo = ref('');
 
 // Dynamic data
@@ -207,24 +209,56 @@ const error = ref(null);
 // API base URL
 const API_URL = 'http://localhost:8000/api/guest';
 
+// Fetch table info
+const fetchTableInfo = async (tableId) => {
+  try {
+    const response = await axios.get(`${API_URL}/table-info/${tableId}`);
+    if (response.data.success) {
+      tableInfo.value = response.data.data;
+      tableNumber.value = response.data.data.table_number;
+      
+      // Simpan tableId ke localStorage untuk digunakan saat checkout
+      localStorage.setItem('currentTableId', tableId);
+      localStorage.setItem('currentTableNumber', response.data.data.table_number);
+      
+      // Update status meja jadi occupied (opsional)
+      // await axios.post(`${API_URL}/table/${tableId}/occupy`);
+    }
+  } catch (err) {
+    console.error('Error fetching table info:', err);
+    error.value = err.response?.data?.message || 'Gagal memuat informasi meja';
+  }
+};
+
 // Fetch data on mount
 onMounted(async () => {
-  const storedOrderType = localStorage.getItem('orderType');
+  // Check if there's a table query parameter
+  const tableId = route.query.table;
   
-  // Cek apakah ada data reservasi
-  const reservationDetails = localStorage.getItem('reservationDetails');
-  
-  if (storedOrderType === 'Reservasi' && reservationDetails) {
-    // Jika memang dari reservasi, set orderType dan info
-    orderType.value = 'Reservasi';
-    const details = JSON.parse(reservationDetails);
-    reservationInfo.value = `${details.people} orang - ${details.date} ${details.time}`;
+  if (tableId) {
+    // Jika ada table ID dari QR/simulasi
+    await fetchTableInfo(tableId);
   } else {
-    // Jika tidak ada reservasi, default ke Dine In dengan nomor meja
-    orderType.value = 'Dine In';
-    // Bisa ambil dari localStorage atau default
-    const storedTable = localStorage.getItem('tableNumber');
-    tableNumber.value = storedTable || '12';
+    // Jika tidak ada, cek dari localStorage (untuk reservasi)
+    const storedTableNumber = localStorage.getItem('currentTableNumber');
+    if (storedTableNumber) {
+      tableNumber.value = storedTableNumber;
+    } else {
+      tableNumber.value = '-';
+    }
+  }
+
+  const storedOrderType = localStorage.getItem('orderType');
+  if (storedOrderType) {
+    orderType.value = storedOrderType;
+  }
+  
+  if (orderType.value === 'Reservasi') {
+    const reservationDetails = localStorage.getItem('reservationDetails');
+    if (reservationDetails) {
+      const details = JSON.parse(reservationDetails);
+      reservationInfo.value = `${details.people} orang - ${details.date} ${details.time}`;
+    }
   }
 
   await Promise.all([fetchCategories(), fetchProducts()]);
@@ -340,7 +374,7 @@ const activeTabSubtitle = computed(() => {
   if (activeTab.value === 'all') return 'OUR SIGNATURES';
   const category = categories.value.find(c => c.id === activeTab.value);
   if (!category) return '';
-  return category.name.toLowerCase().includes('drink') ? 'COFFEE & MOCKTAILS' : 'DESERT & SNACKS';
+  return category.name.toLowerCase().includes('drink') ? 'COFFEE & MOCKTAILS' : 'PASTRY & SNACKS';
 });
 
 const totalItems = computed(() => {

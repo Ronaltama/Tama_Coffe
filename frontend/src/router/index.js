@@ -1,9 +1,12 @@
 import { createRouter, createWebHistory } from "vue-router";
 import axios from "axios";
-import Swal from "sweetalert2"; // 💡 Import SweetAlert2
+import Swal from "sweetalert2";
 
 // --- Layout ---
 import AdminLayout from "../components/AdminLayout.vue";
+
+// simulasi scanorder
+import SimulasiScanOrder from "../views/SimulasiScanOrder/SimulasiScanOrder.vue";
 
 // --- Admin Pages ---
 import DashboardAdmin from "../Admin/Dashboard.vue";
@@ -29,9 +32,8 @@ import Cart from "../views/Cart.vue";
 import Payment from "../views/Payment.vue";
 import PaymentConfirmation from "../views/PaymentConfirmation.vue";
 import PaymentSuccess from "../views/PaymentSuccess.vue";
-import Reservation from "../views/Reservation.vue"; // 🆕 Import Reservation
+import Reservation from "../views/Reservation.vue";
 
-// --- Placeholder Pages (opsional testing) ---
 const HistoryPlaceholder = {
   template: '<h1 class="text-2xl">Halaman Riwayat Order</h1>',
 };
@@ -42,7 +44,26 @@ const ConfirmOrderPlaceholder = {
 const routes = [
   {
     path: "/",
-    redirect: "/order/menu", // default ke halaman user
+    redirect: "/simulasi", // Redirect ke simulasi scan
+  },
+
+  // --- SIMULASI SCAN ORDER ---
+  {
+    path: "/simulasi",
+    name: "SimulasiScanOrder",
+    component: SimulasiScanOrder,
+  },
+
+  // --- SCAN QR REDIRECT (dari QR Code yang di-scan) ---
+  {
+    path: "/order/:tableId",
+    redirect: to => {
+      // Redirect ke /order/menu dengan tableId sebagai query parameter
+      return {
+        name: "UserMenu",
+        query: { table: to.params.tableId }
+      };
+    }
   },
 
   // --- LOGIN ---
@@ -52,7 +73,7 @@ const routes = [
     component: () => import("../Auth/Login.vue"),
   },
 
-    // --- USER untuk ORDER---
+  // --- USER untuk ORDER ---
   {
     path: "/order/menu",
     name: "UserMenu",
@@ -84,8 +105,8 @@ const routes = [
     name: "PaymentSuccess",
     component: PaymentSuccess,
   },
-  
-  // 🆕 Route Reservation
+
+  // Route Reservation
   {
     path: "/user/reservation",
     name: "Reservation",
@@ -105,7 +126,7 @@ const routes = [
         path: "users/edit/:id",
         name: "EditUser",
         component: EditUser,
-        props: true, // supaya :id masuk sebagai props
+        props: true,
       },
       { path: "products", component: Products },
       { path: "products/AddProducts", component: AddProducts },
@@ -121,9 +142,8 @@ const routes = [
         path: "/superadmin/tables/edit/:id",
         name: "EditTable",
         component: EditTable,
-        props: true, // penting supaya param id dikirim ke component
+        props: true,
       },
-
       { path: "history", component: History },
       { path: "history-test", component: HistoryPlaceholder },
     ],
@@ -143,13 +163,6 @@ const routes = [
       { path: "confirm-order-test", component: ConfirmOrderPlaceholder },
     ],
   },
-
-  // --- ORDER hanya simulasi ku saja(User Scan) ---
-  {
-    path: "/order/:id",
-    name: "orderUser",
-    component: () => import("../Order/Order.vue"),
-  },
 ];
 
 const router = createRouter({
@@ -157,32 +170,34 @@ const router = createRouter({
   routes,
 });
 
-// ==============================
-// 🚧 ROUTE GUARD UNTUK LOGIN + ROLE
-// ==============================
 router.beforeEach(async (to, from, next) => {
   const token = localStorage.getItem("token");
   const user = JSON.parse(localStorage.getItem("user"));
 
-  // Jika belum login dan bukan halaman login/user → arahkan ke login
-  if (!token && !to.path.startsWith("/order") && to.path !== "/login") {
+  // Allow access to order pages and simulasi without login
+  if (to.path.startsWith("/order") || to.path === "/simulasi" || to.path === "/login") {
+    if (token) {
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    }
+    return next();
+  }
+
+  // Jika belum login dan bukan halaman public → arahkan ke login
+  if (!token) {
     return next("/login");
   }
 
   // Jika sudah login, set Authorization header
-  if (token) {
-    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-  }
+  axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
   // Cegah user yang sudah login masuk ke halaman login lagi
-  if (token && to.path === "/login") {
+  if (to.path === "/login") {
     if (user?.role === "superadmin") return next("/superadmin/dashboard");
     if (user?.role === "admin") return next("/admin/dashboard");
   }
 
   // Cek role user berdasarkan path
   if (to.path.startsWith("/superadmin") && user?.role !== "superadmin") {
-    // ⚠️ Ganti alert() dengan SweetAlert2
     await Swal.fire({
       icon: "warning",
       title: "Akses Ditolak!",
@@ -202,7 +217,6 @@ router.beforeEach(async (to, from, next) => {
     return next("/login");
   }
 
-  // 5️⃣ Semua OK → lanjut
   next();
 });
 

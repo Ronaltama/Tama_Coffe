@@ -153,14 +153,4 @@ class TableController extends Controller
             ], 404);
         }
     }
-
-    public function scanOrder($id)
-    {
-        try {
-            $table = Table::where('id', $id)->firstOrFail();
-            return response()->json($table);
-        } catch (ModelNotFoundException $e) {
-            return response()->json(['message' => 'Meja tidak ditemukan'], 404);
-        }
-    }
 }
