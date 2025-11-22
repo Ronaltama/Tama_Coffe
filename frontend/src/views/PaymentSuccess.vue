@@ -151,6 +151,8 @@ const backToMenu = () => {
   localStorage.removeItem('cart');
   localStorage.removeItem('cartNotes');
   localStorage.removeItem('pendingOrder');
+  localStorage.removeItem('orderType'); // 🆕 Hapus orderType
+  localStorage.removeItem('reservationDetails'); // 🆕 Hapus reservationDetails
   
   router.push('/order/menu');
 };
