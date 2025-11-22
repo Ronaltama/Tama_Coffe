@@ -144,154 +144,33 @@
                   class="w-10 h-10 rounded-full bg-orange-500 text-white flex items-center justify-center hover:bg-orange-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
                   aria-label="Increase quantity"
                 >
-                    <svg 
-                        xmlns="http://www.w3.org/2000/svg" 
-                        class="h-6 w-6 text-gray-700"
-                        fill="none" 
-                        viewBox="0 0 24 24" 
-                        stroke="currentColor"
-                    >
-                        <path 
-                            stroke-linecap="round" 
-                            stroke-linejoin="round" 
-                            stroke-width="2"
-                            d="M6 18L18 6M6 6l12 12"
-                        />
-                    </svg>
-                </router-link>
-            </section>
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    class="h-5 w-5"
+                    viewBox="0 0 20 20" 
+                    fill="currentColor"
+                  >
+                    <path 
+                      fill-rule="evenodd"
+                      d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
 
-            <!-- Product Details Section -->
-            <section class="bg-white px-6 py-6">
-                <!-- Product Info -->
-                <div class="mb-4">
-                    <h1 class="text-2xl font-bold text-gray-900 mb-2">{{ product.name }}</h1>
-                    <p class="text-2xl font-bold text-orange-600">Rp {{ formatPrice(product.price) }}</p>
-                </div>
-
-                <!-- Product Description -->
-                <div class="mb-6">
-                    <p class="text-gray-600 text-sm leading-relaxed">
-                        {{ product.description }}
-                    </p>
-                </div>
-
-                <!-- Variants Selection -->
-                <div class="mb-6">
-                    <h2 class="text-lg font-bold text-gray-900 mb-3">Variants</h2>
-                    <div class="flex gap-3">
-                        <button 
-                            @click="selectedTemperature = 'iced'"
-                            :class="[
-                                'flex-1 py-3 px-4 rounded-lg font-medium transition-colors border-2',
-                                selectedTemperature === 'iced'
-                                    ? 'text-white border-transparent'
-                                    : 'bg-white text-gray-700 border-gray-300'
-                            ]"
-                            :style="selectedTemperature === 'iced' ? 'background-color: #B85814;' : ''"
-                            :onmouseover="selectedTemperature === 'iced' ? '' : 'this.style.borderColor=\'#B85814\''"
-                            :onmouseout="selectedTemperature === 'iced' ? '' : 'this.style.borderColor=\'#d1d5db\''"
-                            :aria-pressed="selectedTemperature === 'iced'"
-                        >
-                            Iced
-                        </button>
-                        <button 
-                            @click="selectedTemperature = 'hot'"
-                            :class="[
-                                'flex-1 py-3 px-4 rounded-lg font-medium transition-colors border-2',
-                                selectedTemperature === 'hot'
-                                    ? 'text-white border-transparent'
-                                    : 'bg-white text-gray-700 border-gray-300'
-                            ]"
-                            :style="selectedTemperature === 'hot' ? 'background-color: #B85814;' : ''"
-                            :onmouseover="selectedTemperature === 'hot' ? '' : 'this.style.borderColor=\'#B85814\''"
-                            :onmouseout="selectedTemperature === 'hot' ? '' : 'this.style.borderColor=\'#d1d5db\''"
-                            :aria-pressed="selectedTemperature === 'hot'"
-                        >
-                            Hot
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Order Controls -->
-                <div class="bg-white border-t border-gray-200 pt-6 pb-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <span class="text-lg font-bold text-gray-900">Total Order</span>
-                        <div class="flex items-center space-x-3">
-                            <!-- Decrement Button -->
-                            <button 
-                                @click="decrementTotal"
-                                :disabled="totalQuantity <= 1"
-                                :class="[
-                                    'w-10 h-10 rounded-full border-2 flex items-center justify-center transition-colors',
-                                    totalQuantity <= 1
-                                        ? 'border-gray-300 text-gray-300 cursor-not-allowed'
-                                        : 'text-gray-700'
-                                ]"
-                                :style="totalQuantity > 1 ? 'border-color: #B85814; color: #B85814;' : ''"
-                                :onmouseover="totalQuantity > 1 ? 'this.style.backgroundColor=\'#FFF7ED\'' : ''"
-                                :onmouseout="totalQuantity > 1 ? 'this.style.backgroundColor=\'transparent\'' : ''"
-                                aria-label="Decrease quantity"
-                            >
-                                <svg 
-                                    xmlns="http://www.w3.org/2000/svg" 
-                                    class="h-5 w-5"
-                                    viewBox="0 0 20 20" 
-                                    fill="currentColor"
-                                >
-                                    <path 
-                                        fill-rule="evenodd" 
-                                        d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
-                                        clip-rule="evenodd"
-                                    />
-                                </svg>
-                            </button>
-                            
-                            <!-- Quantity Display -->
-                            <span class="text-xl font-bold text-gray-900 w-8 text-center">
-                                {{ totalQuantity }}
-                            </span>
-                            
-                            <!-- Increment Button -->
-                            <button 
-                                @click="incrementTotal"
-                                :disabled="totalQuantity >= 99"
-                                class="w-10 h-10 rounded-full text-white flex items-center justify-center transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
-                                style="background-color: #B85814;"
-                                onmouseover="if(!this.disabled) this.style.backgroundColor='#A04D12'" 
-                                onmouseout="if(!this.disabled) this.style.backgroundColor='#B85814'"
-                                aria-label="Increase quantity"
-                            >
-                                <svg 
-                                    xmlns="http://www.w3.org/2000/svg" 
-                                    class="h-5 w-5"
-                                    viewBox="0 0 20 20" 
-                                    fill="currentColor"
-                                >
-                                    <path 
-                                        fill-rule="evenodd"
-                                        d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-                                        clip-rule="evenodd"
-                                    />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Add to Cart Button -->
-                    <button 
-                        @click="handleAddToCart"
-                        class="w-full py-4 text-white text-lg font-bold rounded-xl transition-colors shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
-                        style="background-color: #B85814;"
-                        onmouseover="if(!this.disabled) this.style.backgroundColor='#A04D12'" 
-                        onmouseout="if(!this.disabled) this.style.backgroundColor='#B85814'"
-                        :disabled="isAddingToCart"
-                    >
-                        {{ isAddingToCart ? 'Adding...' : `Add Orders - Rp ${totalPrice}` }}
-                    </button>
-                </div>
-            </section>
-        </div>
+            <!-- Add to Cart Button -->
+            <button 
+              @click="handleAddToCart"
+              class="w-full py-4 bg-orange-600 hover:bg-orange-700 text-white text-lg font-bold rounded-xl transition-colors shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
+              :disabled="isAddingToCart"
+            >
+              {{ isAddingToCart ? 'Adding...' : `Add Orders - Rp ${totalPrice}` }}
+            </button>
+          </div>
+        </section>
+      </template>
     </div>
   </div>
 </template>
