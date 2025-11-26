@@ -12,6 +12,7 @@ import SimulasiScanOrder from "../views/SimulasiScanOrder/SimulasiScanOrder.vue"
 import DashboardAdmin from "../Admin/Dashboard.vue";
 import AddOrder from "../Admin/AddOrder.vue";
 import ConfirmOrder from "../Admin/ConfirmOrder.vue";
+import OrderDetail from "../Admin/OrderDetail.vue";
 
 // --- SuperAdmin Pages ---
 import DashboardSuperAdmin from "../SuperAdmin/DashboardSuper.vue";
@@ -42,27 +43,6 @@ const ConfirmOrderPlaceholder = {
 };
 
 const routes = [
-  {
-    path: "/",
-    redirect: "/simulasi",
-  },
-
-  {
-    path: "/simulasi",
-    name: "SimulasiScanOrder",
-    component: SimulasiScanOrder,
-  },
-
-  {
-    path: "/order/:tableId",
-    redirect: to => {
-      return {
-        name: "UserMenu",
-        query: { table: to.params.tableId }
-      };
-    }
-  },
-
   // --- LOGIN ---
   {
     path: "/login",
@@ -70,45 +50,169 @@ const routes = [
     component: () => import("../Auth/Login.vue"),
   },
 
-  // --- USER untuk ORDER ---
+  // Simulasi Scan Order
   {
-    path: "/order/menu",
-    name: "UserMenu",
-    component: UserMenu,
+    path: "/",
+    redirect: "/simulasi",
   },
   {
-    path: "/order/product/:id",
+    path: "/simulasi",
+    name: "SimulasiScanOrder",
+    component: SimulasiScanOrder,
+  },
+
+  // --- USER ORDER ROUTES dengan table parameter ---
+  {
+    path: "/order/:tableId/menu",
+    name: "UserMenu",
+    component: UserMenu,
+    props: true,
+  },
+  {
+    path: "/order/:tableId/product/:id",
     name: "ProductDetail",
     component: ProductDetail,
     props: true,
   },
   {
-    path: "/order/cart",
+    path: "/order/:tableId/cart",
     name: "UserCart",
     component: Cart,
+    props: true,
+  },
+  {
+    path: "/order/:tableId/payment",
+    name: "UserPayment",
+    component: Payment,
+    props: true,
+  },
+  {
+    path: "/order/:tableId/payment/confirm",
+    name: "PaymentConfirmation",
+    component: PaymentConfirmation,
+    props: true,
+  },
+  {
+    path: "/order/:tableId/payment/success",
+    name: "PaymentSuccess",
+    component: PaymentSuccess,
+    props: true,
+  },
+  {
+    path: "/order/:tableId/reservation",
+    name: "Reservation",
+    component: Reservation,
+    props: true,
+  },
+
+  // 🔥 FIX: Redirect dari QR code URL (/order/TB001) ke (/order/TB001/menu)
+  {
+    path: "/order/:tableId",
+    redirect: to => {
+      const tableId = to.params.tableId;
+      // Simpan tableId ke localStorage untuk validasi
+      localStorage.setItem('currentTableId', tableId);
+      
+      // Fetch table info untuk dapatkan nomor meja
+      const fetchTableInfo = async () => {
+        try {
+          const API_BASE = "http://localhost:8000/api/guest";
+          const response = await axios.get(`${API_BASE}/table-info/${tableId}`);
+          if (response.data.success) {
+            const tableData = response.data.data;
+            localStorage.setItem('currentTableNumber', tableData.table_number);
+            localStorage.setItem('tableCapacity', tableData.capacity);
+          }
+        } catch (err) {
+          console.error('Error fetching table info:', err);
+        }
+      };
+      
+      fetchTableInfo();
+      
+      return { path: `/order/${tableId}/menu` };
+    }
+  },
+
+  // Redirect dari path lama ke path baru dengan tableId
+  {
+    path: "/order/menu",
+    redirect: to => {
+      const tableId = localStorage.getItem('currentTableId');
+      if (tableId) {
+        return { path: `/order/${tableId}/menu` };
+      }
+      return { path: '/simulasi' };
+    }
+  },
+  {
+    path: "/order/product/:id",
+    redirect: to => {
+      const tableId = localStorage.getItem('currentTableId');
+      if (tableId) {
+        return { path: `/order/${tableId}/product/${to.params.id}` };
+      }
+      return { path: '/simulasi' };
+    }
+  },
+  {
+    path: "/order/cart",
+    redirect: to => {
+      const tableId = localStorage.getItem('currentTableId');
+      if (tableId) {
+        return { path: `/order/${tableId}/cart` };
+      }
+      return { path: '/simulasi' };
+    }
   },
   {
     path: "/order/payment",
-    name: "UserPayment",
-    component: Payment,
+    redirect: to => {
+      const tableId = localStorage.getItem('currentTableId');
+      if (tableId) {
+        return { path: `/order/${tableId}/payment` };
+      }
+      return { path: '/simulasi' };
+    }
   },
   {
     path: "/order/payment/confirm",
-    name: "PaymentConfirmation",
-    component: PaymentConfirmation,
+    redirect: to => {
+      const tableId = localStorage.getItem('currentTableId');
+      if (tableId) {
+        return { path: `/order/${tableId}/payment/confirm` };
+      }
+      return { path: '/simulasi' };
+    }
   },
   {
     path: "/order/payment/success",
-    name: "PaymentSuccess",
-    component: PaymentSuccess,
+    redirect: to => {
+      const tableId = localStorage.getItem('currentTableId');
+      if (tableId) {
+        return { path: `/order/${tableId}/payment/success` };
+      }
+      return { path: '/simulasi' };
+    }
   },
 
-  // Route Reservation
+  // RESERVASI
   {
     path: "/user/reservation",
-    name: "Reservation",
+    name: "UserReservation",
     component: Reservation,
   },
+  
+  // {
+  //   path: "/user/reservation",
+  //   redirect: to => {
+  //     const tableId = localStorage.getItem('currentTableId');
+  //     if (tableId) {
+  //       return { path: `/order/${tableId}/reservation` };
+  //     }
+  //     return { path: '/simulasi' };
+  //   }
+  // },
 
   // --- SUPERADMIN ---
   {
@@ -158,6 +262,12 @@ const routes = [
       { path: "add-order", component: AddOrder },
       { path: "confirm-order", component: ConfirmOrder },
       { path: "confirm-order-test", component: ConfirmOrderPlaceholder },
+      {
+        path: "order-detail/:id",
+        name: "OrderDetail",
+        component: OrderDetail,
+        props: true,
+      },
     ],
   },
 ];
@@ -167,17 +277,61 @@ const router = createRouter({
   routes,
 });
 
+// Helper function untuk validasi table
+const validateTableAccess = (to) => {
+  const tableId = to.params.tableId;
+  const storedTableId = localStorage.getItem('currentTableId');
+  
+  // Untuk route /order/:tableId (redirect), selalu allow
+  if (to.path === `/order/${tableId}` && !to.params.id) {
+    return true;
+  }
+  
+  // Untuk route lainnya, validasi tableId harus sama
+  if (!tableId || tableId !== storedTableId) {
+    return false;
+  }
+  
+  return true;
+};
+
 router.beforeEach(async (to, from, next) => {
   const token = localStorage.getItem("token");
   const user = JSON.parse(localStorage.getItem("user"));
 
-  if (to.path.startsWith("/order") || to.path === "/simulasi" || to.path === "/login") {
+  // Route untuk guest/order (harus punya tableId yang valid)
+  if (to.path.startsWith("/order/")) {
+    // Validasi table access
+    if (!validateTableAccess(to)) {
+      await Swal.fire({
+        icon: "warning",
+        title: "Akses Ditolak!",
+        text: "Anda harus scan meja terlebih dahulu untuk mengakses halaman ini.",
+        confirmButtonText: "Scan Meja",
+      });
+      return next("/simulasi");
+    }
+    
+    // Untuk route redirect (/order/:tableId), simpan tableId
+    if (to.path === `/order/${to.params.tableId}` && !to.params.id) {
+      localStorage.setItem('currentTableId', to.params.tableId);
+    }
+    
     if (token) {
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
     }
     return next();
   }
 
+  // Route simulasi dan login bebas diakses
+  if (to.path === "/simulasi" || to.path === "/login") {
+    if (token) {
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    }
+    return next();
+  }
+
+  // Untuk route admin/superadmin, perlu token
   if (!token) {
     return next("/login");
   }
@@ -188,6 +342,7 @@ router.beforeEach(async (to, from, next) => {
     if (user?.role === "superadmin") return next("/superadmin/dashboard");
     if (user?.role === "admin") return next("/admin/dashboard");
   }
+  
   if (to.path.startsWith("/superadmin") && user?.role !== "superadmin") {
     await Swal.fire({
       icon: "warning",

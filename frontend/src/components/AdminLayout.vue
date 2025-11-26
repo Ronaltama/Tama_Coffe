@@ -134,7 +134,7 @@ const handleLogout = async () => {
             <span>Confirm Order</span>
           </RouterLink>
 
-          <RouterLink to="/admin/confirm-order" class="nav-link" active-class="sidebar-active">
+          <RouterLink to="/admin/confirm-order" class="nav-link" active-class="">
             <i class="fas fa-check-circle fa-fw"></i>
             <span>Manage Reservation</span>
           </RouterLink>
