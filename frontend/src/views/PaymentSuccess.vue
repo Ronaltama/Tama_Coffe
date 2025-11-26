@@ -107,9 +107,18 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 
 const router = useRouter();
+const route = useRoute();
+
+// Terima tableId sebagai prop
+const props = defineProps({
+  tableId: {
+    type: String,
+    required: true
+  }
+});
 
 // State
 const hasData = ref(false);
@@ -163,7 +172,7 @@ const closeModal = () => {
 const backToMenu = () => {
   localStorage.removeItem('finishedOrder');
   
-  router.push('/order/menu');
+  router.push(`/order/${props.tableId}/menu`);
 };
 </script>
 

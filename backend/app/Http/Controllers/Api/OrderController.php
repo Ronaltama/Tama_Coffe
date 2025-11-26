@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Table;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
@@ -57,37 +58,138 @@ class OrderController extends Controller
     }
 
     /**
-     * Update status meja menjadi occupied ketika user mulai order
-     * Endpoint: POST /api/guest/table/{tableId}/occupy
+     * Submit order dari customer (guest)
+     * Endpoint: POST /api/guest/orders
      */
-    public function occupyTable($tableId)
+    public function submitOrder(Request $request)
     {
         try {
-            $table = Table::find($tableId);
+            // Validasi input
+            $validated = $request->validate([
+                'customer_name' => 'required|string|max:255',
+                'customer_phone' => 'nullable|string|max:20',
+                'customer_email' => 'nullable|email',
+                'table_id' => 'nullable|string|exists:tables,id',
+                'table_number' => 'nullable|string',
+                'number_of_people' => 'nullable|integer|min:1',
+                'order_type' => 'required|in:Dine In,Reservasi',
+                'payment_method' => 'required|in:cash,qris',
+                'notes' => 'nullable|string',
+                'items' => 'required|array|min:1',
+                'items.*.product_id' => 'required|string|exists:products,id',
+                'items.*.quantity' => 'required|integer|min:1',
+                'items.*.variant' => 'nullable|string',
+                'items.*.price' => 'required|numeric|min:0',
+            ]);
 
-            if (!$table) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Meja tidak ditemukan'
-                ], 404);
+            DB::beginTransaction();
+
+            // Generate Order ID
+            $orderCount = DB::table('orders')->count();
+            $orderId = 'OR' . str_pad($orderCount + 1, 4, '0', STR_PAD_LEFT);
+
+            // Hitung total price
+            $totalPrice = 0;
+            foreach ($validated['items'] as $item) {
+                $totalPrice += $item['price'] * $item['quantity'];
             }
 
-            // Update status ke occupied
-            $table->update(['status' => 'occupied']);
+            // Cari user_id default (ambil admin pertama untuk log)
+            $defaultUser = DB::table('users')
+                ->where('role_id', 'RL002') // Role Admin
+                ->first();
+
+            if (!$defaultUser) {
+                $defaultUser = DB::table('users')->first();
+            }
+
+            $defaultUserId = $defaultUser ? $defaultUser->id : null;
+
+            // Buat Order
+            DB::table('orders')->insert([
+                'id' => $orderId,
+                'user_id' => $defaultUserId,
+                'table_id' => $validated['table_id'] ?? null,
+                'customer_name' => $validated['customer_name'],
+                'customer_phone' => $validated['customer_phone'] ?? '',
+                'total_price' => $totalPrice,
+                'note' => $validated['notes'] ?? null,
+                'status' => 'pending',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            // Buat Order Details
+            foreach ($validated['items'] as $item) {
+                $detailCount = DB::table('order_details')->count();
+                $detailId = 'OD' . str_pad($detailCount + 1, 4, '0', STR_PAD_LEFT);
+                $subtotal = $item['price'] * $item['quantity'];
+
+                DB::table('order_details')->insert([
+                    'id' => $detailId,
+                    'order_id' => $orderId,
+                    'product_id' => $item['product_id'],
+                    'quantity' => $item['quantity'],
+                    'variant' => $item['variant'] ?? null,
+                    'unit_price' => $item['price'],
+                    'subtotal' => $subtotal,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+
+            // Buat Payment Record
+            $paymentCount = DB::table('payments')->count();
+            $paymentId = 'PM' . str_pad($paymentCount + 1, 4, '0', STR_PAD_LEFT);
+
+            DB::table('payments')->insert([
+                'id' => $paymentId,
+                'order_id' => $orderId,
+                'amount' => $totalPrice,
+                'method' => $validated['payment_method'] === 'qris' ? 'midtrans' : 'cash',
+                'payment_type' => $validated['payment_method'],
+                'status' => $validated['payment_method'] === 'cash' ? 'pending' : 'pending',
+                'date' => now(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            // Update status meja jadi occupied (jika ada table_id)
+            if ($validated['table_id']) {
+                DB::table('tables')
+                    ->where('id', $validated['table_id'])
+                    ->update([
+                        'status' => 'occupied',
+                        'updated_at' => now()
+                    ]);
+            }
+
+            DB::commit();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Status meja berhasil diupdate',
+                'message' => 'Order berhasil dibuat',
                 'data' => [
-                    'id' => $table->id,
-                    'table_number' => $table->table_number,
-                    'status' => $table->status
+                    'order_id' => $orderId,
+                    'payment_id' => $paymentId,
+                    'total_price' => $totalPrice,
+                    'status' => 'pending',
+                    'payment_method' => $validated['payment_method'],
                 ]
-            ], 200);
-        } catch (\Exception $e) {
+            ], 201);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollBack();
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal mengupdate status meja',
+                'message' => 'Validasi gagal',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal membuat order',
                 'error' => $e->getMessage()
             ], 500);
         }

@@ -4,7 +4,7 @@
 
       <header class="fixed top-0 left-0 right-0 max-w-md mx-auto bg-white border-b border-gray-200 z-20">
         <div class="flex items-center justify-between p-4">
-          <router-link to="/order/menu" class="p-2 -ml-2">
+          <router-link :to="`/order/${tableId}/menu`" class="p-2 -ml-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-800" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
@@ -58,7 +58,7 @@
         
         <div v-else class="text-center pt-24">
           <p class="text-gray-500">Your cart is empty.</p>
-          <router-link to="/order/menu" class="mt-4 inline-block text-orange-600 font-semibold hover:underline">
+          <router-link :to="`/order/${tableId}/menu`" class="mt-4 inline-block text-orange-600 font-semibold hover:underline">
             Start shopping
           </router-link>
         </div>
@@ -109,9 +109,18 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue';
-import { useRouter } from 'vue-router';
-const router = useRouter();
+import { useRouter, useRoute } from 'vue-router';
 
+const router = useRouter();
+const route = useRoute();
+
+// Terima tableId sebagai prop
+const props = defineProps({
+  tableId: {
+    type: String,
+    required: true
+  }
+});
 
 const cartItems = ref(JSON.parse(localStorage.getItem('cart') || '[]'));
 
@@ -124,7 +133,6 @@ const notes = ref(localStorage.getItem('cartNotes') || '');
 watch(notes, (newNotes) => {
   localStorage.setItem('cartNotes', newNotes);
 });
-
 
 const formatPrice = (price) => {
   if (price === undefined || price === null) return '0';
@@ -148,9 +156,8 @@ const decrementCart = (id) => {
 };
 
 const goToPayment = () => {
-  router.push('/order/payment');
+  router.push(`/order/${props.tableId}/payment`);
 };
-
 
 const totalPrice = computed(() => {
   const total = cartItems.value.reduce((sum, item) => {

@@ -11,18 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('order_details', function (Blueprint $table) {
-            $table->string('id')->primary();
-            $table->string('order_id');
-            $table->foreign('order_id')->references('id')->on('orders')->onDelete('cascade');
-            $table->string('product_id');
-            $table->foreign('product_id')->references('id')->on('products')->onDelete('cascade');
-            $table->integer('quantity');
-            $table->string('variant')->nullable();
-            $table->decimal('unit_price', 10, 2);
-            $table->decimal('subtotal', 10, 2);
-            $table->timestamps();
-        });
+            Schema::create('order_details', function (Blueprint $table) {
+                $table->string('id')->primary();
+                $table->string('order_id');
+                $table->foreign('order_id')->references('id')->on('orders')->onDelete('cascade');
+                $table->string('product_id');
+                $table->foreign('product_id')->references('id')->on('products')->onDelete('cascade');
+                $table->integer('quantity');
+                $table->string('variant')->nullable();
+                $table->decimal('unit_price', 10, 2);
+                $table->decimal('subtotal', 10, 2);
+                $table->timestamps();
+            });
     }
 
     /**

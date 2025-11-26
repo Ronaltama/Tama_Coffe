@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\DashboardSuperController;
 use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\ProcessOrderController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\TableController;
 use App\Http\Controllers\Api\UserController;
@@ -26,8 +27,11 @@ Route::prefix('guest')->group(function () {
     // Ambil info meja by ID (untuk scan QR atau simulasi)
     Route::get('table-info/{tableId}', [OrderController::class, 'getTableInfo']);
 
-    // Update status meja jadi occupied
-    Route::post('table/{tableId}/occupy', [OrderController::class, 'occupyTable']);
+    // 🆕 Ambil list semua meja (untuk simulasi scan)
+    Route::get('tables', [TableController::class, 'index']);
+
+    // Submit order (POST)
+    Route::post('orders', [OrderController::class, 'submitOrder']);
 });
 
 // =============================================
@@ -62,6 +66,13 @@ Route::middleware('auth:sanctum')->group(function () {
     // 🛠️ ADMIN ROUTES (Role: RL002)
     // =============================================
     Route::middleware('role:RL002')->group(function () {
+        // Order Board & Processing
+        Route::get('orders/board', [ProcessOrderController::class, 'getOrderBoard']);
+        Route::get('orders/{id}/detail', [ProcessOrderController::class, 'getOrderDetail']);
+        Route::post('orders/{id}/process-payment', [ProcessOrderController::class, 'processPayment']);
+        Route::patch('orders/{id}/status', [ProcessOrderController::class, 'updateStatus']);
+        Route::delete('orders/{id}', [ProcessOrderController::class, 'deleteOrder']);
+
         Route::get('admin-data', function () {
             return "Data admin";
         });
