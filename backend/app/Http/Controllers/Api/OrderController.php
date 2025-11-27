@@ -80,7 +80,30 @@ class OrderController extends Controller
                 'items.*.quantity' => 'required|integer|min:1',
                 'items.*.variant' => 'nullable|string',
                 'items.*.price' => 'required|numeric|min:0',
+                'reservation_date' => 'required_if:order_type,Reservasi|nullable|date|after:today',
+                'reservation_time' => 'required_if:order_type,Reservasi|nullable',
             ]);
+
+            // Additional Validation for Reservation
+            if ($validated['order_type'] === 'Reservasi') {
+                // Check if table is available
+                // This is a basic check. You might want to check against existing reservations.
+                // For now, we rely on the frontend to show available tables.
+                // But we should verify if the table is actually available in the database if table_id is provided.
+                if (!empty($validated['table_id'])) {
+                    $isReserved = \App\Models\Reservation::where('date', $validated['reservation_date'])
+                        ->where('table_id', $validated['table_id'])
+                        ->whereIn('status', ['pending', 'confirmed'])
+                        ->exists();
+                    
+                    if ($isReserved) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Meja sudah direservasi pada tanggal tersebut.'
+                        ], 422);
+                    }
+                }
+            }
 
             DB::beginTransaction();
 
@@ -114,10 +137,27 @@ class OrderController extends Controller
                 'customer_phone' => $validated['customer_phone'] ?? '',
                 'total_price' => $totalPrice,
                 'note' => $validated['notes'] ?? null,
+                'note' => $validated['notes'] ?? null,
                 'status' => 'pending',
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
+
+            // Jika order type adalah reservasi, simpan data reservasi
+            if ($validated['order_type'] === 'Reservasi') {
+                \App\Models\Reservation::create([
+                    'id' => 'RES' . time() . rand(100, 999),
+                    'user_id' => $defaultUserId, // Use defaultUserId or adjust as needed for guest
+                    'order_id' => $orderId, // Link to the newly created order
+                    'name' => $validated['customer_name'],
+                    'phone' => $validated['customer_phone'],
+                    // 'people_count' => $validated['number_of_people'], // Removed column
+                    'table_id' => $validated['table_id'] ?? null, // Save selected table
+                    'date' => $request->reservation_date,
+                    'time' => $request->reservation_time,
+                    'status' => 'pending'
+                ]);
+            }
 
             // Buat Order Details
             foreach ($validated['items'] as $item) {

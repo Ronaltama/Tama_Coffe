@@ -78,3 +78,11 @@ Route::middleware('auth:sanctum')->group(function () {
         });
     });
 });
+// Reservation Routes
+Route::get('/reservations/availability', [\App\Http\Controllers\Api\ReservationController::class, 'checkAvailability']);
+
+Route::middleware('auth:sanctum')->group(function () {
+    // Admin Reservation Routes
+    Route::get('/admin/reservations', [\App\Http\Controllers\Api\ReservationController::class, 'index']);
+    Route::put('/admin/reservations/{id}/status', [\App\Http\Controllers\Api\ReservationController::class, 'updateStatus']);
+});

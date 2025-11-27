@@ -68,6 +68,8 @@
                 <input 
                   v-model="form.date" 
                   type="date" 
+                  :min="minDate"
+                  @change="checkAvailability"
                   placeholder="mm/dd/yyyy"
                   class="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition-all"
                 />
@@ -84,6 +86,7 @@
                 <input 
                   v-model="form.time" 
                   type="time" 
+                  @change="checkAvailability"
                   placeholder="--:-- --"
                   class="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition-all"
                 />
@@ -91,22 +94,31 @@
             </div>
           </div>
 
-          <!-- Jumlah Orang -->
-          <div>
-            <label class="text-sm font-semibold text-gray-700 mb-2 block">Jumlah Orang</label>
-            <div class="relative">
-              <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
-                </svg>
-              </div>
-              <input 
-                v-model="form.people" 
-                type="text" 
-                placeholder="Jumlah orang yang akan hadir"
-                class="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition-all placeholder:text-gray-400"
-              />
+          <!-- Pilih Meja -->
+          <div v-if="availableTables.length > 0">
+            <label class="text-sm font-semibold text-gray-700 mb-2 block">Pilih Meja</label>
+            <div class="grid grid-cols-3 gap-3">
+              <button 
+                v-for="table in availableTables" 
+                :key="table.id"
+                @click="form.tableId = table.id"
+                :class="[
+                  'py-3 px-2 rounded-xl border text-sm font-medium transition-all',
+                  form.tableId === table.id 
+                    ? 'border-orange-500 bg-orange-50 text-orange-700 ring-2 ring-orange-100' 
+                    : 'border-gray-200 bg-white text-gray-600 hover:border-orange-300'
+                ]"
+              >
+                {{ table.table_number }}
+                <span class="block text-xs font-normal text-gray-400 mt-1">{{ table.capacity }} Orang</span>
+              </button>
             </div>
+          </div>
+          <div v-else-if="form.date && form.time && !isLoading" class="text-center py-4 bg-gray-50 rounded-xl border border-dashed border-gray-300">
+            <p class="text-sm text-gray-500">Tidak ada meja tersedia pada waktu ini.</p>
+          </div>
+          <div v-else-if="isLoading" class="text-center py-4">
+            <p class="text-sm text-gray-500">Mengecek ketersediaan...</p>
           </div>
 
         </section>
@@ -117,10 +129,11 @@
       <footer class="bg-white border-t border-gray-200 pb-6 pt-4 px-6">
         <button 
           @click="submitReservation"
-          class="w-full py-4 text-white text-base font-bold rounded-xl transition-all shadow-lg active:scale-[0.98]"
-          style="background-color: #B85814;"
-          onmouseover="this.style.backgroundColor='#A04D12'" 
-          onmouseout="this.style.backgroundColor='#B85814'"
+          :disabled="!isFormValid"
+          :class="[
+            'w-full py-4 text-white text-base font-bold rounded-xl transition-all shadow-lg active:scale-[0.98]',
+            isFormValid ? 'bg-[#B85814] hover:bg-[#A04D12]' : 'bg-gray-300 cursor-not-allowed'
+          ]"
         >
           Buat Reservasi
         </button>
@@ -131,8 +144,9 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import axios from 'axios';
 
 const router = useRouter();
 
@@ -141,18 +155,70 @@ const form = ref({
   phone: '',
   date: '',
   time: '',
-  people: ''
+  tableId: ''
 });
 
+const availableTables = ref([]);
+const isLoading = ref(false);
+
+// Calculate min date (tomorrow)
+const minDate = computed(() => {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  return tomorrow.toISOString().split('T')[0];
+});
+
+const isFormValid = computed(() => {
+  return form.value.name && 
+         form.value.phone && 
+         form.value.date && 
+         form.value.time && 
+         form.value.tableId;
+});
+
+const checkAvailability = async () => {
+  if (!form.value.date || !form.value.time) return;
+
+  isLoading.value = true;
+  availableTables.value = [];
+  form.value.tableId = ''; // Reset selection
+
+  try {
+    const response = await axios.get('http://localhost:8000/api/reservations/availability', {
+      params: {
+        date: form.value.date,
+        time: form.value.time
+      }
+    });
+    
+    if (response.data.success) {
+      availableTables.value = response.data.data;
+    }
+  } catch (error) {
+    console.error('Error checking availability:', error);
+    alert('Gagal mengecek ketersediaan meja.');
+  } finally {
+    isLoading.value = false;
+  }
+};
+
 const submitReservation = () => {
-  if (!form.value.name || !form.value.phone || !form.value.date || !form.value.time || !form.value.people) {
+  if (!isFormValid.value) {
     alert('Mohon lengkapi semua data reservasi.');
     return;
   }
 
   localStorage.setItem('orderType', 'Reservasi');
   
-  localStorage.setItem('reservationDetails', JSON.stringify(form.value));
+  // Find selected table number for display
+  const selectedTable = availableTables.value.find(t => t.id === form.value.tableId);
+  const reservationData = {
+    ...form.value,
+    tableNumber: selectedTable ? selectedTable.table_number : '',
+    people: selectedTable ? selectedTable.capacity : 0 // Use capacity as default people count or remove if not needed
+  };
+
+  localStorage.setItem('reservationDetails', JSON.stringify(reservationData));
   
   localStorage.removeItem('cart');
   localStorage.removeItem('cartNotes');
@@ -164,13 +230,5 @@ const submitReservation = () => {
 <style scoped>
 main {
   overflow-y: auto;
-}
-
-input[type="date"]::-webkit-calendar-picker-indicator,
-input[type="time"]::-webkit-calendar-picker-indicator {
-  opacity: 0;
-  position: absolute;
-  right: 12px;
-  cursor: pointer;
 }
 </style>

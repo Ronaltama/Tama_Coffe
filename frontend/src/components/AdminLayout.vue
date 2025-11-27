@@ -2,14 +2,11 @@
 import axios from 'axios'
 import { RouterLink, RouterView, useRouter } from 'vue-router'
 import { ref } from 'vue'
-import Swal from 'sweetalert2' // 💡 Import SweetAlert2
-// Ganti path logo sesuai dengan struktur proyek Anda
+import Swal from 'sweetalert2'
 import logo from '../assets/img/logo.png'
 
-// router instance
 const router = useRouter()
 
-// menerima prop role
 defineProps({
   role: {
     type: String,
@@ -17,7 +14,6 @@ defineProps({
   }
 })
 
-// 💡 Fungsi handleLogout yang diupdate dengan SweetAlert2
 const handleLogout = async () => {
   const result = await Swal.fire({
     title: "Yakin Ingin Keluar?",
@@ -32,10 +28,7 @@ const handleLogout = async () => {
 
   if (result.isConfirmed) {
     try {
-      // Panggil API Logout (menggunakan try-catch untuk memastikan data lokal terhapus)
       await axios.post('http://127.0.0.1:8000/api/logout');
-
-      // 🟢 Notifikasi Sukses
       await Swal.fire({
         icon: "success",
         title: "Berhasil Logout!",
@@ -43,12 +36,8 @@ const handleLogout = async () => {
         showConfirmButton: false,
         timer: 1500,
       });
-
     } catch (error) {
-      // Tangani error, tapi tetap paksa logout di sisi klien
       console.error("Error saat mencoba logout dari API:", error);
-
-      // ⚠️ Tampilkan peringatan jika terjadi masalah API (misalnya token sudah kadaluarsa)
       await Swal.fire({
         icon: "warning",
         title: "Sesi Habis!",
@@ -56,25 +45,19 @@ const handleLogout = async () => {
         confirmButtonText: "OK",
       });
     } finally {
-      // Blok finally wajib untuk memastikan penghapusan token di klien
-      localStorage.removeItem('user'); // Hapus data user juga
+      localStorage.removeItem('user');
       localStorage.removeItem('token');
       delete axios.defaults.headers.common["Authorization"];
-
-      // Redirect ke login
       router.push('/login');
     }
   }
 };
 </script>
 
-
 <template>
   <div class="flex h-screen">
-
     <!-- SIDEBAR -->
     <aside class="w-64 flex-shrink-0 bg-[#FBE8D9] flex flex-col">
-
       <!-- HEADER LOGO -->
       <div class="py-5 px-6 border-b border-orange-200 flex items-center justify-center gap-3">
         <img :src="logo" alt="Logo Tama Coffee" class="w-20 h-20 object-contain" />
@@ -82,7 +65,6 @@ const handleLogout = async () => {
 
       <!-- NAVIGATION -->
       <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
-
         <!-- SUPERADMIN MENU -->
         <template v-if="role === 'superadmin'">
           <RouterLink to="/superadmin/dashboard" class="nav-link" active-class="sidebar-active">
@@ -100,7 +82,6 @@ const handleLogout = async () => {
             <span>Products</span>
           </RouterLink>
 
-          <!-- ✅ MENU TABLES BARU -->
           <RouterLink to="/superadmin/tables" class="nav-link" active-class="sidebar-active">
             <i class="fas fa-table fa-fw"></i>
             <span>Tables</span>
@@ -134,13 +115,12 @@ const handleLogout = async () => {
             <span>Confirm Order</span>
           </RouterLink>
 
-          <RouterLink to="/admin/confirm-order" class="nav-link" active-class="">
-            <i class="fas fa-check-circle fa-fw"></i>
+          <RouterLink to="/admin/reservations" class="nav-link" active-class="sidebar-active">
+            <i class="fas fa-calendar-check fa-fw"></i>
             <span>Manage Reservation</span>
           </RouterLink>
         </template>
       </nav>
-
 
       <!-- LOGOUT -->
       <div class="p-4 mt-auto border-t border-orange-200">

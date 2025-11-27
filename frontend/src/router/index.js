@@ -13,6 +13,7 @@ import DashboardAdmin from "../Admin/Dashboard.vue";
 import AddOrder from "../Admin/AddOrder.vue";
 import ConfirmOrder from "../Admin/ConfirmOrder.vue";
 import OrderDetail from "../Admin/OrderDetail.vue";
+import AdminReservation from "../views/Admin/Reservation.vue";
 
 // --- SuperAdmin Pages ---
 import DashboardSuperAdmin from "../SuperAdmin/DashboardSuper.vue";
@@ -96,12 +97,6 @@ const routes = [
     path: "/order/:tableId/payment/success",
     name: "PaymentSuccess",
     component: PaymentSuccess,
-    props: true,
-  },
-  {
-    path: "/order/:tableId/reservation",
-    name: "Reservation",
-    component: Reservation,
     props: true,
   },
 
@@ -198,11 +193,11 @@ const routes = [
 
   // RESERVASI
   {
-    path: "/user/reservation",
-    name: "UserReservation",
+    path: "/reservation",
+    name: "Reservation",
     component: Reservation,
   },
-
+  
   // {
   //   path: "/user/reservation",
   //   redirect: to => {
@@ -268,6 +263,7 @@ const routes = [
         component: OrderDetail,
         props: true,
       },
+      { path: "reservations", component: AdminReservation },
     ],
   },
 ];
@@ -323,8 +319,8 @@ router.beforeEach(async (to, from, next) => {
     return next();
   }
 
-  // Route simulasi dan login bebas diakses
-  if (to.path === "/simulasi" || to.path === "/login") {
+  // Route simulasi, login, dan reservation bebas diakses
+  if (to.path === "/simulasi" || to.path === "/login" || to.path === "/reservation") {
     if (token) {
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
     }

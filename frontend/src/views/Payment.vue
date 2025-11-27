@@ -114,10 +114,10 @@
                 <input 
                   v-model="numberOfPeople"
                   type="text"
-                  :readonly="orderType !== 'Reservasi'"
+                  :readonly="orderType === 'Reservasi'"
                   :class="[
                     'w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg',
-                    orderType !== 'Reservasi' 
+                    orderType === 'Reservasi' 
                       ? 'bg-gray-100 text-gray-700' 
                       : 'bg-gray-50 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500'
                   ]"
@@ -200,6 +200,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
+import axios from 'axios';
 
 const router = useRouter();
 const route = useRoute();
@@ -212,74 +213,20 @@ const props = defineProps({
   }
 });
 
+// State
+const orderType = ref('Dine In');
 const customerName = ref('');
 const phoneNumber = ref('');
 const email = ref('');
 const tableNumber = ref('');
-const numberOfPeople = ref(''); 
-const paymentMethod = ref('qris');
-const orderType = ref('Dine In');
-const cartItems = ref(JSON.parse(localStorage.getItem('cart') || '[]'));
-const notes = ref(localStorage.getItem('cartNotes') || '');
-const TAX_RATE = 0; 
+const numberOfPeople = ref('');
+const paymentMethod = ref('cash');
+const cartItems = ref([]);
+const cartNotes = ref('');
+const reservationDate = ref('');
+const reservationTime = ref('');
 
-onMounted(() => {
-  const storedOrderType = localStorage.getItem('orderType');
-  if (storedOrderType) {
-    orderType.value = storedOrderType;
-  }
-  
-  if (orderType.value === 'Reservasi') {
-    const reservationDetails = localStorage.getItem('reservationDetails');
-    if (reservationDetails) {
-      const details = JSON.parse(reservationDetails);
-      customerName.value = details.name;
-      phoneNumber.value = details.phone;
-      numberOfPeople.value = details.people;
-    }
-  } else {
-    const savedTable = localStorage.getItem('currentTableNumber');
-    if (savedTable) tableNumber.value = savedTable;
-
-    const savedCapacity = localStorage.getItem('tableCapacity');
-    if (savedCapacity) numberOfPeople.value = savedCapacity;
-  }
-});
-
-// Methods
-const formatPrice = (price) => {
-  if (price === undefined || price === null) return '0';
-  return price.toLocaleString('id-ID');
-};
-
-const handlePlaceOrder = () => {
-  if (!customerName.value.trim()) {
-    alert('Silakan masukkan nama Anda');
-    return;
-  }
-
-  const orderData = {
-    customer: {
-      name: customerName.value,
-      phone: phoneNumber.value,
-      email: email.value
-    },
-    table: orderType.value === 'Reservasi' ? '-' : tableNumber.value,
-    numberOfPeople: numberOfPeople.value || '-', 
-    items: cartItems.value,
-    notes: notes.value,
-    totals: {
-      subTotal: subTotalPrice.value,
-      tax: taxPrice.value,
-      total: totalPaymentPrice.value
-    },
-    payment: paymentMethod.value,
-    orderType: orderType.value
-  };
-
-  localStorage.setItem('pendingOrder', JSON.stringify(orderData));
-  router.push(`/order/${props.tableId}/payment/confirm`);
-};
+const TAX_RATE = 0; // Sesuaikan jika ada pajak
 
 // Computed
 const subTotalPrice = computed(() => {
@@ -294,6 +241,86 @@ const taxPrice = computed(() => {
 
 const totalPaymentPrice = computed(() => {
   return subTotalPrice.value + taxPrice.value;
+});
+
+// Methods
+const formatPrice = (price) => {
+  return (price || 0).toLocaleString('id-ID');
+};
+
+const handlePlaceOrder = () => {
+  if (!customerName.value) {
+    alert('Mohon isi nama lengkap Anda');
+    return;
+  }
+  
+  if (!numberOfPeople.value) {
+    alert('Mohon isi jumlah orang');
+    return;
+  }
+
+  const orderData = {
+    orderType: orderType.value,
+    customer: {
+      name: customerName.value,
+      phone: phoneNumber.value,
+      email: email.value
+    },
+    table: tableNumber.value,
+    numberOfPeople: numberOfPeople.value,
+    payment: paymentMethod.value,
+    items: cartItems.value,
+    notes: cartNotes.value,
+    totals: {
+      subTotal: subTotalPrice.value,
+      tax: taxPrice.value,
+      total: totalPaymentPrice.value
+    },
+    reservationDate: reservationDate.value,
+    reservationTime: reservationTime.value
+  };
+
+  localStorage.setItem('pendingOrder', JSON.stringify(orderData));
+  router.push(`/order/${props.tableId}/payment/confirm`);
+};
+
+onMounted(() => {
+  // Load cart
+  const savedCart = localStorage.getItem('cart');
+  if (savedCart) {
+    cartItems.value = JSON.parse(savedCart);
+  }
+  
+  const savedNotes = localStorage.getItem('cartNotes');
+  if (savedNotes) {
+    cartNotes.value = savedNotes;
+  }
+
+  // Load table info
+  const savedTableNumber = localStorage.getItem('currentTableNumber');
+  if (savedTableNumber) {
+    tableNumber.value = savedTableNumber;
+  }
+
+  // Load order type
+  const storedOrderType = localStorage.getItem('orderType');
+  if (storedOrderType) {
+    orderType.value = storedOrderType;
+  }
+  
+  // Load reservation details if applicable
+  if (orderType.value === 'Reservasi') {
+    const reservationDetails = localStorage.getItem('reservationDetails');
+    if (reservationDetails) {
+      const details = JSON.parse(reservationDetails);
+      customerName.value = details.name;
+      phoneNumber.value = details.phone;
+      numberOfPeople.value = details.people;
+      reservationDate.value = details.date;
+      reservationTime.value = details.time;
+      tableNumber.value = '-'; // No table number for reservation yet
+    }
+  }
 });
 </script>
 

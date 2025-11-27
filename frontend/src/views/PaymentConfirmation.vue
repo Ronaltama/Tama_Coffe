@@ -183,7 +183,9 @@ const processFinalOrder = async () => {
         quantity: item.quantity,
         variant: item.variant,
         price: item.price
-      }))
+      })),
+      reservation_date: orderData.value.reservationDate || null,
+      reservation_time: orderData.value.reservationTime || null
     };
 
     console.log('Sending order to backend:', orderPayload);
