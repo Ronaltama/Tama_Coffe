@@ -223,7 +223,7 @@ const orderType = ref('Dine In');
 const tableNumber = ref('Loading...');
 const tableInfo = ref(null);
 const reservationInfo = ref('');
-const isCartOpen = ref(false); // State Dropdown
+const isCartOpen = ref(false);
 
 // Dynamic data
 const products = ref([]);
@@ -308,10 +308,12 @@ const formatPrice = (price) => {
 };
 
 const handleProductClick = (product) => {
+  const tableId = route.query.table || localStorage.getItem('currentTableId');
+  
   if (product.type === 'food') {
     addToCart(product);
   } else if (product.type === 'drink') {
-    router.push(`/order/product/${product.id}`);
+    router.push(`/order/${tableId}/product/${product.id}`);
   }
 };
 
@@ -345,14 +347,25 @@ const decrementCart = (id) => {
     item.quantity--;
   } else if (item && item.quantity === 1) {
     cartItems.value = cartItems.value.filter(i => i.id !== id);
-    // Jika keranjang kosong, tutup dropdown otomatis
     if (cartItems.value.length === 0) isCartOpen.value = false;
   }
 };
 
-// Langsung ke Payment (Skip halaman Cart lama)
+// FIX: Navigate ke Cart (Your Order) untuk review & edit
 const goToPayment = () => {
-  router.push('/order/payment');
+  // Simpan cart sebelum navigate
+  localStorage.setItem('cart', JSON.stringify(cartItems.value));
+  
+  const tableId = route.query.table || localStorage.getItem('currentTableId');
+  
+  if (!tableId) {
+    alert('Sesi Anda berakhir. Silakan scan meja kembali.');
+    router.push('/simulasi');
+    return;
+  }
+  
+  // Navigate ke Cart (Your Order) untuk review & edit items
+  router.push(`/order/${tableId}/cart`);
 };
 
 const filteredProducts = computed(() => {
@@ -399,7 +412,6 @@ const totalPrice = computed(() => {
   overflow: hidden;
 }
 
-/* Custom Scrollbar untuk Dropdown */
 .custom-scrollbar::-webkit-scrollbar {
   width: 4px;
 }

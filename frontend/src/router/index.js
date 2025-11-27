@@ -112,7 +112,7 @@ const routes = [
       const tableId = to.params.tableId;
       // Simpan tableId ke localStorage untuk validasi
       localStorage.setItem('currentTableId', tableId);
-      
+
       // Fetch table info untuk dapatkan nomor meja
       const fetchTableInfo = async () => {
         try {
@@ -127,9 +127,9 @@ const routes = [
           console.error('Error fetching table info:', err);
         }
       };
-      
+
       fetchTableInfo();
-      
+
       return { path: `/order/${tableId}/menu` };
     }
   },
@@ -202,7 +202,7 @@ const routes = [
     name: "UserReservation",
     component: Reservation,
   },
-  
+
   // {
   //   path: "/user/reservation",
   //   redirect: to => {
@@ -281,17 +281,17 @@ const router = createRouter({
 const validateTableAccess = (to) => {
   const tableId = to.params.tableId;
   const storedTableId = localStorage.getItem('currentTableId');
-  
+
   // Untuk route /order/:tableId (redirect), selalu allow
   if (to.path === `/order/${tableId}` && !to.params.id) {
     return true;
   }
-  
+
   // Untuk route lainnya, validasi tableId harus sama
   if (!tableId || tableId !== storedTableId) {
     return false;
   }
-  
+
   return true;
 };
 
@@ -311,12 +311,12 @@ router.beforeEach(async (to, from, next) => {
       });
       return next("/simulasi");
     }
-    
+
     // Untuk route redirect (/order/:tableId), simpan tableId
     if (to.path === `/order/${to.params.tableId}` && !to.params.id) {
       localStorage.setItem('currentTableId', to.params.tableId);
     }
-    
+
     if (token) {
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
     }
@@ -342,7 +342,7 @@ router.beforeEach(async (to, from, next) => {
     if (user?.role === "superadmin") return next("/superadmin/dashboard");
     if (user?.role === "admin") return next("/admin/dashboard");
   }
-  
+
   if (to.path.startsWith("/superadmin") && user?.role !== "superadmin") {
     await Swal.fire({
       icon: "warning",
