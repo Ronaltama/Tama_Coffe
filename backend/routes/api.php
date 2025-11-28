@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\TableController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UserMenuController;
+use App\Http\Controllers\Api\ManualOrderController;
 use Illuminate\Support\Facades\Route;
 
 // =============================================
@@ -72,6 +73,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('orders/{id}/process-payment', [ProcessOrderController::class, 'processPayment']);
         Route::patch('orders/{id}/status', [ProcessOrderController::class, 'updateStatus']);
         Route::delete('orders/{id}', [ProcessOrderController::class, 'deleteOrder']);
+        
+        // 🆕 Manual Order Routes
+        Route::post('orders/manual', [ManualOrderController::class, 'createManualOrder']);
+        Route::get('orders/manual/available-tables', [ManualOrderController::class, 'getAvailableTables']);
 
         Route::get('admin-data', function () {
             return "Data admin";

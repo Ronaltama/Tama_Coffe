@@ -37,3 +37,8 @@ Route::prefix('superadmin')->name('superadmin.')->middleware(['superadmin'])->gr
     Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show');
 
 });
+
+// Route::get('/api/docs', function () {
+//     return view('vendor.l5-swagger.index');
+// });
+
