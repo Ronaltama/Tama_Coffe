@@ -108,7 +108,7 @@ const routes = [
     redirect: to => {
       const tableId = to.params.tableId;
       localStorage.setItem('currentTableId', tableId);
-      
+
       const fetchTableInfo = async () => {
         try {
           const API_BASE = "http://localhost:8000/api/guest";
@@ -122,9 +122,9 @@ const routes = [
           console.error('Error fetching table info:', err);
         }
       };
-      
+
       fetchTableInfo();
-      
+
       return { path: `/order/${tableId}/menu` };
     }
   },
@@ -177,6 +177,17 @@ const routes = [
     name: "UserReservation",
     component: Reservation,
   },
+
+  // {
+  //   path: "/user/reservation",
+  //   redirect: to => {
+  //     const tableId = localStorage.getItem('currentTableId');
+  //     if (tableId) {
+  //       return { path: `/order/${tableId}/reservation` };
+  //     }
+  //     return { path: '/simulasi' };
+  //   }
+  // },
 
   // --- SUPERADMIN ---
   {
@@ -244,15 +255,15 @@ const router = createRouter({
 const validateTableAccess = (to) => {
   const tableId = to.params.tableId;
   const storedTableId = localStorage.getItem('currentTableId');
-  
+
   if (to.path === `/order/${tableId}` && !to.params.id) {
     return true;
   }
-  
+
   if (!tableId || tableId !== storedTableId) {
     return false;
   }
-  
+
   return true;
 };
 
@@ -271,11 +282,11 @@ router.beforeEach(async (to, from, next) => {
       });
       return next("/simulasi");
     }
-    
+
     if (to.path === `/order/${to.params.tableId}` && !to.params.id) {
       localStorage.setItem('currentTableId', to.params.tableId);
     }
-    
+
     if (token) {
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
     }
@@ -301,7 +312,7 @@ router.beforeEach(async (to, from, next) => {
     if (user?.role === "superadmin") return next("/superadmin/dashboard");
     if (user?.role === "admin") return next("/admin/dashboard");
   }
-  
+
   if (to.path.startsWith("/superadmin") && user?.role !== "superadmin") {
     await Swal.fire({
       icon: "warning",
