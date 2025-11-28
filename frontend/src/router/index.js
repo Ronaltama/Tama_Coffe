@@ -38,9 +38,6 @@ import Reservation from "../views/Reservation.vue";
 const HistoryPlaceholder = {
   template: '<h1 class="text-2xl">Halaman Riwayat Order</h1>',
 };
-const ConfirmOrderPlaceholder = {
-  template: '<h1 class="text-2xl">Halaman Konfirmasi Order</h1>',
-};
 
 const routes = [
   // --- LOGIN ---
@@ -110,10 +107,8 @@ const routes = [
     path: "/order/:tableId",
     redirect: to => {
       const tableId = to.params.tableId;
-      // Simpan tableId ke localStorage untuk validasi
       localStorage.setItem('currentTableId', tableId);
       
-      // Fetch table info untuk dapatkan nomor meja
       const fetchTableInfo = async () => {
         try {
           const API_BASE = "http://localhost:8000/api/guest";
@@ -175,26 +170,6 @@ const routes = [
       return { path: '/simulasi' };
     }
   },
-  {
-    path: "/order/payment/confirm",
-    redirect: to => {
-      const tableId = localStorage.getItem('currentTableId');
-      if (tableId) {
-        return { path: `/order/${tableId}/payment/confirm` };
-      }
-      return { path: '/simulasi' };
-    }
-  },
-  {
-    path: "/order/payment/success",
-    redirect: to => {
-      const tableId = localStorage.getItem('currentTableId');
-      if (tableId) {
-        return { path: `/order/${tableId}/payment/success` };
-      }
-      return { path: '/simulasi' };
-    }
-  },
 
   // RESERVASI
   {
@@ -202,17 +177,6 @@ const routes = [
     name: "UserReservation",
     component: Reservation,
   },
-  
-  // {
-  //   path: "/user/reservation",
-  //   redirect: to => {
-  //     const tableId = localStorage.getItem('currentTableId');
-  //     if (tableId) {
-  //       return { path: `/order/${tableId}/reservation` };
-  //     }
-  //     return { path: '/simulasi' };
-  //   }
-  // },
 
   // --- SUPERADMIN ---
   {
@@ -261,10 +225,9 @@ const routes = [
       { path: "history-test", component: HistoryPlaceholder },
       { path: "add-order", component: AddOrder },
       { path: "confirm-order", component: ConfirmOrder },
-      { path: "confirm-order-test", component: ConfirmOrderPlaceholder },
       {
         path: "order-detail/:id",
-        name: "OrderDetail",
+        name: "AdminOrderDetail",
         component: OrderDetail,
         props: true,
       },
@@ -282,12 +245,10 @@ const validateTableAccess = (to) => {
   const tableId = to.params.tableId;
   const storedTableId = localStorage.getItem('currentTableId');
   
-  // Untuk route /order/:tableId (redirect), selalu allow
   if (to.path === `/order/${tableId}` && !to.params.id) {
     return true;
   }
   
-  // Untuk route lainnya, validasi tableId harus sama
   if (!tableId || tableId !== storedTableId) {
     return false;
   }
@@ -299,9 +260,8 @@ router.beforeEach(async (to, from, next) => {
   const token = localStorage.getItem("token");
   const user = JSON.parse(localStorage.getItem("user"));
 
-  // Route untuk guest/order (harus punya tableId yang valid)
+  // Route untuk guest/order
   if (to.path.startsWith("/order/")) {
-    // Validasi table access
     if (!validateTableAccess(to)) {
       await Swal.fire({
         icon: "warning",
@@ -312,7 +272,6 @@ router.beforeEach(async (to, from, next) => {
       return next("/simulasi");
     }
     
-    // Untuk route redirect (/order/:tableId), simpan tableId
     if (to.path === `/order/${to.params.tableId}` && !to.params.id) {
       localStorage.setItem('currentTableId', to.params.tableId);
     }
