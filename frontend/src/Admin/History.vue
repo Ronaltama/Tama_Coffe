@@ -1,22 +1,91 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
+import axios from 'axios';
 
-// --- DATA CONTOH ---
-// Ganti ini dengan data dari API Anda, mungkin menggunakan onMounted
+// === API BASE URL ===
+const API_BASE = 'http://localhost:8000/api';
+
+// === STATE ===
+const loading = ref(true);
+const error = ref(null);
+
 const stats = ref({
-  waiting: 12,
-  processing: 5,
-  finishedRevenue: 890120
+  waiting: 0,
+  processing: 0,
+  finishedRevenue: 0
 });
 
-const recentOrders = ref([
-  { id: '#12345', customer: 'Sophia Clark', date: '2023-08-15', status: 'Waiting', total: 120000 },
-  { id: '#12346', customer: 'Ethan Carter', date: '2023-08-14', status: 'Processing', total: 85000 },
-  { id: '#12347', customer: 'Olivia Bennett', date: '2023-08-13', status: 'Processing', total: 250000 },
-  { id: '#12348', customer: 'Liam Foster', date: '2023-08-12', status: 'Cancelled', total: 50000 },
-  { id: '#12349', customer: 'Ava Harper', date: '2023-08-11', status: 'Finished', total: 150000 },
-]);
-// --- AKHIR DATA CONTOH ---
+const allOrders = ref([]);
+
+// === FETCH DATA FROM API ===
+const fetchOrders = async () => {
+  try {
+    loading.value = true;
+    error.value = null;
+    
+    const token = localStorage.getItem('token');
+    const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+    
+    const res = await axios.get(`${API_BASE}/orders/board`, config);
+    
+    if (res.data.success) {
+      const orders = res.data.data;
+      
+      // Calculate stats
+      stats.value.waiting = orders.waiting?.length || 0;
+      stats.value.processing = orders.processing?.length || 0;
+      
+      // Calculate finished revenue (sum of all completed orders)
+      stats.value.finishedRevenue = orders.finished?.reduce((sum, order) => {
+        return sum + (parseFloat(order.total_price) || 0);
+      }, 0) || 0;
+      
+      // Combine all orders and sort by created_at (newest first)
+      const combined = [
+        ...(orders.waiting || []),
+        ...(orders.processing || []),
+        ...(orders.finished || []),
+        ...(orders.cancelled || [])
+      ];
+      
+      // Sort all orders by date (newest first) and map to display format
+      allOrders.value = combined
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+        .map(order => ({
+          id: order.id,
+          customer: order.customer_name,
+          date: formatDate(order.created_at),
+          status: mapStatus(order.status),
+          total: order.total_price
+        }));
+    }
+  } catch (err) {
+    console.error('Error fetching orders:', err);
+    error.value = 'Gagal memuat data. Silakan refresh halaman.';
+  } finally {
+    loading.value = false;
+  }
+};
+
+// === HELPER FUNCTIONS ===
+const formatDate = (datetime) => {
+  if (!datetime) return '-';
+  const date = new Date(datetime);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const mapStatus = (status) => {
+  const statusMap = {
+    'pending': 'Waiting',
+    'processing': 'Processing',
+    'completed': 'Finished',
+    'cancelled': 'Cancelled'
+  };
+  return statusMap[status] || status;
+};
 
 // Helper untuk format mata uang
 const formatCurrency = (value) => {
@@ -42,77 +111,101 @@ const getStatusClasses = (status) => {
       return 'bg-gray-100 text-gray-700';
   }
 };
+
+// === LIFECYCLE ===
+onMounted(() => {
+  fetchOrders();
+});
 </script>
 
 <template>
   <div class="space-y-8">
 
     <div>
-      <h1 class="text-3xl font-bold text-gray-900">Dashboard</h1>
+      <h1 class="text-3xl font-bold text-gray-900">Order History</h1>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-        <div class="text-sm text-gray-600 mb-2">Waiting</div>
-        <div class="text-3xl font-bold text-gray-900">{{ stats.waiting }}</div>
-      </div>
-      <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-        <div class="text-sm text-gray-600 mb-2">Process</div>
-        <div class="text-3xl font-bold text-gray-900">{{ stats.processing }}</div>
-      </div>
-      <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-        <div class="text-sm text-gray-600 mb-2">Finished</div>
-        <div class="text-3xl font-bold text-gray-900">{{ formatCurrency(stats.finishedRevenue) }}</div>
-      </div>
+    <!-- Loading State -->
+    <div v-if="loading" class="text-center py-12">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
+      <p class="text-gray-500 mt-4">Loading...</p>
     </div>
 
-    <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-      <h2 class="text-xl font-bold text-gray-900 mb-6">Recent Orders</h2>
+    <!-- Error State -->
+    <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+      <p class="text-red-600">{{ error }}</p>
+      <button 
+        @click="fetchOrders" 
+        class="mt-3 text-sm text-red-600 hover:text-red-800 underline"
+      >
+        Coba Lagi
+      </button>
+    </div>
 
-      <div class="overflow-x-auto">
-        <table class="w-full min-w-[640px]">
-          <thead>
-            <tr class="border-b border-gray-200 text-left text-sm font-semibold text-gray-700">
-              <th class="py-3 px-4">Order ID</th>
-              <th class="py-3 px-4">Customer</th>
-              <th class="py-3 px-4">Date</th>
-              <th class="py-3 px-4">Status</th>
-              <th class="py-3 px-4">Total</th>
-              <th class="py-3 px-4">Actions</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-100">
-            <template v-if="recentOrders.length > 0">
-              <tr v-for="order in recentOrders" :key="order.id" class="hover:bg-gray-50">
-                <td class="py-3 px-4 text-sm text-gray-900">{{ order.id }}</td>
-                <td class="py-3 px-4 text-sm text-gray-900">{{ order.customer }}</td>
-                <td class="py-3 px-4 text-sm text-gray-900">{{ order.date }}</td>
-                <td class="py-3 px-4">
-                  <span
-                    class="inline-block px-3 py-1 text-xs rounded-full"
-                    :class="getStatusClasses(order.status)"
-                  >
-                    {{ order.status }}
-                  </span>
-                </td>
-                <td class="py-3 px-4 text-sm text-gray-900">{{ formatCurrency(order.total) }}</td>
-                <td class="py-3 px-4 text-sm">
-                  <a href="#" class="text-blue-600 hover:text-blue-800 mr-2">Edit</a>
-                  <a href="#" class="text-red-600 hover:text-red-800">Delete</a>
-                </td>
+    <!-- Content -->
+    <template v-else>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+          <div class="text-sm text-gray-600 mb-2">Waiting</div>
+          <div class="text-3xl font-bold text-gray-900">{{ stats.waiting }}</div>
+        </div>
+        <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+          <div class="text-sm text-gray-600 mb-2">Process</div>
+          <div class="text-3xl font-bold text-gray-900">{{ stats.processing }}</div>
+        </div>
+        <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+          <div class="text-sm text-gray-600 mb-2">Finished</div>
+          <div class="text-3xl font-bold text-gray-900">{{ formatCurrency(stats.finishedRevenue) }}</div>
+        </div>
+      </div>
+
+      <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+        <h2 class="text-xl font-bold text-gray-900 mb-6">All Orders</h2>
+
+        <div class="overflow-x-auto">
+          <table class="w-full min-w-[640px]">
+            <thead>
+              <tr class="border-b border-gray-200 text-left text-sm font-semibold text-gray-700">
+                <th class="py-3 px-4">Order ID</th>
+                <th class="py-3 px-4">Customer</th>
+                <th class="py-3 px-4">Date</th>
+                <th class="py-3 px-4">Status</th>
+                <th class="py-3 px-4">Total</th>
+                <th class="py-3 px-4">Actions</th>
               </tr>
-            </template>
-            <template v-else>
-              <tr>
-                <td colspan="6" class="py-8 text-center text-sm text-gray-500">
-                  No recent orders found.
-                </td>
-              </tr>
-            </template>
-          </tbody>
-        </table>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              <template v-if="allOrders.length > 0">
+                <tr v-for="order in allOrders" :key="order.id" class="hover:bg-gray-50">
+                  <td class="py-3 px-4 text-sm text-gray-900">{{ order.id }}</td>
+                  <td class="py-3 px-4 text-sm text-gray-900">{{ order.customer }}</td>
+                  <td class="py-3 px-4 text-sm text-gray-900">{{ order.date }}</td>
+                  <td class="py-3 px-4">
+                    <span
+                      class="inline-block px-3 py-1 text-xs rounded-full"
+                      :class="getStatusClasses(order.status)"
+                    >
+                      {{ order.status }}
+                    </span>
+                  </td>
+                  <td class="py-3 px-4 text-sm text-gray-900">{{ formatCurrency(order.total) }}</td>
+                  <td class="py-3 px-4 text-sm">
+                    <a href="#" class="text-blue-600 hover:text-blue-800 mr-2">View</a>
+                  </td>
+                </tr>
+              </template>
+              <template v-else>
+                <tr>
+                  <td colspan="6" class="py-8 text-center text-sm text-gray-500">
+                    No orders found.
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+    </template>
 
   </div>
 </template>

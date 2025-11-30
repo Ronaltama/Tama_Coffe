@@ -13,13 +13,14 @@ import DashboardAdmin from "../Admin/Dashboard.vue";
 import AddOrder from "../Admin/AddOrder.vue";
 import ConfirmOrder from "../Admin/ConfirmOrder.vue";
 import OrderDetail from "../Admin/OrderDetail.vue";
+import HistoryAdmin from "../Admin/History.vue";
 
 // --- SuperAdmin Pages ---
 import DashboardSuperAdmin from "../SuperAdmin/DashboardSuper.vue";
 import Users from "../SuperAdmin/Users.vue";
 import Products from "../SuperAdmin/Products.vue";
 import AddProducts from "../SuperAdmin/AddProducts.vue";
-import History from "../SuperAdmin/History.vue";
+import HistorySuperAdmin from "../SuperAdmin/History.vue";
 import AddAdmin from "../SuperAdmin/AddAdmin.vue";
 import EditUser from "../SuperAdmin/EditUser.vue";
 import Tables from "../SuperAdmin/Tables.vue";
@@ -178,17 +179,6 @@ const routes = [
     component: Reservation,
   },
 
-  // {
-  //   path: "/user/reservation",
-  //   redirect: to => {
-  //     const tableId = localStorage.getItem('currentTableId');
-  //     if (tableId) {
-  //       return { path: `/order/${tableId}/reservation` };
-  //     }
-  //     return { path: '/simulasi' };
-  //   }
-  // },
-
   // --- SUPERADMIN ---
   {
     path: "/superadmin",
@@ -220,7 +210,7 @@ const routes = [
         component: EditTable,
         props: true,
       },
-      { path: "history", component: History },
+      { path: "history", component: HistorySuperAdmin },
       { path: "history-test", component: HistoryPlaceholder },
     ],
   },
@@ -232,7 +222,7 @@ const routes = [
     props: { role: "admin" },
     children: [
       { path: "dashboard", component: DashboardAdmin },
-      { path: "history", component: History },
+      { path: "history", component: HistoryAdmin },
       { path: "history-test", component: HistoryPlaceholder },
       { path: "add-order", component: AddOrder },
       { path: "confirm-order", component: ConfirmOrder },
