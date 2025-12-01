@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Table;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class OrderController extends Controller
 {
@@ -64,6 +65,8 @@ class OrderController extends Controller
     public function submitOrder(Request $request)
     {
         try {
+            Log::info('Order Request Received:', $request->all());
+
             // Validasi input
             $validated = $request->validate([
                 'customer_name' => 'required|string|max:255',
@@ -71,7 +74,6 @@ class OrderController extends Controller
                 'customer_email' => 'nullable|email',
                 'table_id' => 'nullable|string|exists:tables,id',
                 'table_number' => 'nullable|string',
-                'number_of_people' => 'nullable|integer|min:1',
                 'order_type' => 'required|in:Dine In,Reservasi',
                 'payment_method' => 'required|in:cash,qris',
                 'notes' => 'nullable|string',
@@ -80,9 +82,61 @@ class OrderController extends Controller
                 'items.*.quantity' => 'required|integer|min:1',
                 'items.*.variant' => 'nullable|string',
                 'items.*.price' => 'required|numeric|min:0',
+                // reservation_data untuk create reservasi baru bersamaan dengan order
+                'reservation_data' => 'nullable|array',
+                'reservation_data.customer_name' => 'required_with:reservation_data|string|max:255',
+                'reservation_data.customer_phone' => 'required_with:reservation_data|string|max:20',
+                'reservation_data.table_id' => 'required_with:reservation_data|string|exists:tables,id',
+                'reservation_data.reservation_date' => 'required_with:reservation_data|date',
+                'reservation_data.reservation_time' => 'required_with:reservation_data',
             ]);
 
             DB::beginTransaction();
+
+            // Check if this is a reservation order - create reservation first
+            $reservationId = null;
+            if ($validated['order_type'] === 'Reservasi' && !empty($validated['reservation_data'])) {
+                // Validasi meja belum direservasi (cukup cek tanggal dan table_id)
+                $isReserved = \App\Models\Reservation::where('date', $validated['reservation_data']['reservation_date'])
+                    ->where('table_id', $validated['reservation_data']['table_id'])
+                    ->exists();
+
+                if ($isReserved) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Meja sudah direservasi pada tanggal tersebut.'
+                    ], 422);
+                }
+
+                // Generate Reservation ID & Booking Code
+                $reservationId = 'RES' . time() . rand(100, 999);
+                $bookingCode = 'BOOK' . strtoupper(substr(md5($reservationId), 0, 6));
+
+                Log::info('Creating reservation:', [
+                    'id' => $reservationId,
+                    'booking_code' => $bookingCode,
+                    'data' => $validated['reservation_data']
+                ]);
+
+                // Create reservation
+                \App\Models\Reservation::create([
+                    'id' => $reservationId,
+                    'order_id' => null, // Will be updated after order created
+                    'name' => $validated['reservation_data']['customer_name'],
+                    'phone' => $validated['reservation_data']['customer_phone'],
+                    'table_id' => $validated['reservation_data']['table_id'],
+                    'date' => $validated['reservation_data']['reservation_date'],
+                    'time' => $validated['reservation_data']['reservation_time'],
+                    'booking_code' => $bookingCode,
+                ]);
+
+                Log::info('Reservation created successfully', ['id' => $reservationId]);
+            }
+
+            // For guest orders, no need for user_id
+            $defaultUserId = null;
+
+            // --- LOGIKA CREATE ORDER (untuk Dine In atau Reservasi) ---
 
             // Generate Order ID
             $orderCount = DB::table('orders')->count();
@@ -93,17 +147,6 @@ class OrderController extends Controller
             foreach ($validated['items'] as $item) {
                 $totalPrice += $item['price'] * $item['quantity'];
             }
-
-            // Cari user_id default (ambil admin pertama untuk log)
-            $defaultUser = DB::table('users')
-                ->where('role_id', 'RL002') // Role Admin
-                ->first();
-
-            if (!$defaultUser) {
-                $defaultUser = DB::table('users')->first();
-            }
-
-            $defaultUserId = $defaultUser ? $defaultUser->id : null;
 
             // Buat Order
             DB::table('orders')->insert([
@@ -118,6 +161,13 @@ class OrderController extends Controller
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
+
+            // Update reservation dengan order_id jika ini dari reservasi
+            if (!empty($reservationId)) {
+                DB::table('reservations')
+                    ->where('id', $reservationId)
+                    ->update(['order_id' => $orderId, 'updated_at' => now()]);
+            }
 
             // Buat Order Details
             foreach ($validated['items'] as $item) {
@@ -148,14 +198,15 @@ class OrderController extends Controller
                 'amount' => $totalPrice,
                 'method' => $validated['payment_method'] === 'qris' ? 'midtrans' : 'cash',
                 'payment_type' => $validated['payment_method'],
-                'status' => $validated['payment_method'] === 'cash' ? 'pending' : 'pending',
+                'status' => 'pending',
                 'date' => now(),
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
 
-            // Update status meja jadi occupied (jika ada table_id)
-            if ($validated['table_id']) {
+            // Update status meja HANYA untuk Dine In (bukan Reservasi)
+            // Untuk Reservasi, meja tetap available sampai hari H
+            if ($validated['table_id'] && $validated['order_type'] === 'Dine In') {
                 DB::table('tables')
                     ->where('id', $validated['table_id'])
                     ->update([
@@ -166,16 +217,28 @@ class OrderController extends Controller
 
             DB::commit();
 
+            // Prepare response data
+            $responseData = [
+                'order_id' => $orderId,
+                'payment_id' => $paymentId,
+                'total_price' => $totalPrice,
+                'status' => 'pending',
+                'payment_method' => $validated['payment_method'],
+            ];
+
+            // Add booking code for reservations
+            if ($validated['order_type'] === 'Reservasi' && !empty($reservationId)) {
+                $reservation = \App\Models\Reservation::find($reservationId);
+                $responseData['reservation_id'] = $reservationId;
+                $responseData['booking_code'] = $reservation->booking_code;
+            }
+
             return response()->json([
                 'success' => true,
-                'message' => 'Order berhasil dibuat',
-                'data' => [
-                    'order_id' => $orderId,
-                    'payment_id' => $paymentId,
-                    'total_price' => $totalPrice,
-                    'status' => 'pending',
-                    'payment_method' => $validated['payment_method'],
-                ]
+                'message' => $validated['order_type'] === 'Reservasi'
+                    ? 'Reservasi dan order berhasil dibuat.'
+                    : 'Order berhasil dibuat',
+                'data' => $responseData
             ], 201);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -187,10 +250,16 @@ class OrderController extends Controller
             ], 422);
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('Order creation failed:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal membuat order',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile()
             ], 500);
         }
     }

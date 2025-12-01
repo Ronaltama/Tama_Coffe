@@ -1,9 +1,9 @@
 <script setup>
-import { ref, onMounted } from 'vue';
-import axios from 'axios';
+import { ref, onMounted } from "vue";
+import axios from "axios";
 
 // === API BASE URL ===
-const API_BASE = 'http://localhost:8000/api';
+const API_BASE = "http://localhost:8000/api";
 
 // === STATE ===
 const loading = ref(true);
@@ -12,7 +12,8 @@ const error = ref(null);
 const stats = ref({
   waiting: 0,
   processing: 0,
-  finishedRevenue: 0
+  completed: 0,
+  finishedRevenue: 0,
 });
 
 const allOrders = ref([]);
@@ -22,46 +23,35 @@ const fetchOrders = async () => {
   try {
     loading.value = true;
     error.value = null;
-    
-    const token = localStorage.getItem('token');
-    const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
-    
-    const res = await axios.get(`${API_BASE}/orders/board`, config);
-    
+
+    const token = localStorage.getItem("token");
+    const config = token
+      ? { headers: { Authorization: `Bearer ${token}` } }
+      : {};
+
+    const res = await axios.get(`${API_BASE}/orders/history`, config);
+
     if (res.data.success) {
-      const orders = res.data.data;
-      
-      // Calculate stats
-      stats.value.waiting = orders.waiting?.length || 0;
-      stats.value.processing = orders.processing?.length || 0;
-      
-      // Calculate finished revenue (sum of all completed orders)
-      stats.value.finishedRevenue = orders.finished?.reduce((sum, order) => {
-        return sum + (parseFloat(order.total_price) || 0);
-      }, 0) || 0;
-      
-      // Combine all orders and sort by created_at (newest first)
-      const combined = [
-        ...(orders.waiting || []),
-        ...(orders.processing || []),
-        ...(orders.finished || []),
-        ...(orders.cancelled || [])
-      ];
-      
-      // Sort all orders by date (newest first) and map to display format
-      allOrders.value = combined
-        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-        .map(order => ({
-          id: order.id,
-          customer: order.customer_name,
-          date: formatDate(order.created_at),
-          status: mapStatus(order.status),
-          total: order.total_price
-        }));
+      const data = res.data.data;
+
+      // Set stats from API (today's data)
+      stats.value.waiting = data.stats.waiting;
+      stats.value.processing = data.stats.processing;
+      stats.value.completed = data.stats.completed;
+      stats.value.finishedRevenue = data.stats.finishedRevenue;
+
+      // Map all orders
+      allOrders.value = data.orders.map((order) => ({
+        id: order.id,
+        customer: order.customer_name,
+        date: formatDate(order.created_at),
+        status: mapStatus(order.status),
+        total: order.total_price,
+      }));
     }
   } catch (err) {
-    console.error('Error fetching orders:', err);
-    error.value = 'Gagal memuat data. Silakan refresh halaman.';
+    console.error("Error fetching orders:", err);
+    error.value = "Gagal memuat data. Silakan refresh halaman.";
   } finally {
     loading.value = false;
   }
@@ -69,46 +59,46 @@ const fetchOrders = async () => {
 
 // === HELPER FUNCTIONS ===
 const formatDate = (datetime) => {
-  if (!datetime) return '-';
+  if (!datetime) return "-";
   const date = new Date(datetime);
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 };
 
 const mapStatus = (status) => {
   const statusMap = {
-    'pending': 'Waiting',
-    'processing': 'Processing',
-    'completed': 'Finished',
-    'cancelled': 'Cancelled'
+    pending: "Waiting",
+    processing: "Processing",
+    completed: "Finished",
+    cancelled: "Cancelled",
   };
   return statusMap[status] || status;
 };
 
 // Helper untuk format mata uang
 const formatCurrency = (value) => {
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    minimumFractionDigits: 0
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    minimumFractionDigits: 0,
   }).format(value);
 };
 
 // Helper untuk mendapatkan kelas CSS berdasarkan status
 const getStatusClasses = (status) => {
   switch (status) {
-    case 'Waiting':
-      return 'bg-yellow-100 text-yellow-700';
-    case 'Processing':
-      return 'bg-blue-100 text-blue-700';
-    case 'Finished':
-      return 'bg-green-100 text-green-700';
-    case 'Cancelled':
-      return 'bg-red-100 text-red-700';
+    case "Waiting":
+      return "bg-yellow-100 text-yellow-700";
+    case "Processing":
+      return "bg-blue-100 text-blue-700";
+    case "Finished":
+      return "bg-green-100 text-green-700";
+    case "Cancelled":
+      return "bg-red-100 text-red-700";
     default:
-      return 'bg-gray-100 text-gray-700';
+      return "bg-gray-100 text-gray-700";
   }
 };
 
@@ -120,22 +110,26 @@ onMounted(() => {
 
 <template>
   <div class="space-y-8">
-
     <div>
       <h1 class="text-3xl font-bold text-gray-900">Order History</h1>
     </div>
 
     <!-- Loading State -->
     <div v-if="loading" class="text-center py-12">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
+      <div
+        class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"
+      ></div>
       <p class="text-gray-500 mt-4">Loading...</p>
     </div>
 
     <!-- Error State -->
-    <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+    <div
+      v-else-if="error"
+      class="bg-red-50 border border-red-200 rounded-xl p-6 text-center"
+    >
       <p class="text-red-600">{{ error }}</p>
-      <button 
-        @click="fetchOrders" 
+      <button
+        @click="fetchOrders"
         class="mt-3 text-sm text-red-600 hover:text-red-800 underline"
       >
         Coba Lagi
@@ -144,18 +138,30 @@ onMounted(() => {
 
     <!-- Content -->
     <template v-else>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-          <div class="text-sm text-gray-600 mb-2">Waiting</div>
-          <div class="text-3xl font-bold text-gray-900">{{ stats.waiting }}</div>
+          <div class="text-sm text-gray-600 mb-2">Waiting (All)</div>
+          <div class="text-3xl font-bold text-gray-900">
+            {{ stats.waiting }}
+          </div>
         </div>
         <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-          <div class="text-sm text-gray-600 mb-2">Process</div>
-          <div class="text-3xl font-bold text-gray-900">{{ stats.processing }}</div>
+          <div class="text-sm text-gray-600 mb-2">Processing (All)</div>
+          <div class="text-3xl font-bold text-gray-900">
+            {{ stats.processing }}
+          </div>
         </div>
         <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-          <div class="text-sm text-gray-600 mb-2">Finished</div>
-          <div class="text-3xl font-bold text-gray-900">{{ formatCurrency(stats.finishedRevenue) }}</div>
+          <div class="text-sm text-gray-600 mb-2">Completed (All)</div>
+          <div class="text-3xl font-bold text-gray-900">
+            {{ stats.completed }}
+          </div>
+        </div>
+        <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+          <div class="text-sm text-gray-600 mb-2">Finished (All)</div>
+          <div class="text-3xl font-bold text-gray-900">
+            {{ formatCurrency(stats.finishedRevenue) }}
+          </div>
         </div>
       </div>
 
@@ -165,7 +171,9 @@ onMounted(() => {
         <div class="overflow-x-auto">
           <table class="w-full min-w-[640px]">
             <thead>
-              <tr class="border-b border-gray-200 text-left text-sm font-semibold text-gray-700">
+              <tr
+                class="border-b border-gray-200 text-left text-sm font-semibold text-gray-700"
+              >
                 <th class="py-3 px-4">Order ID</th>
                 <th class="py-3 px-4">Customer</th>
                 <th class="py-3 px-4">Date</th>
@@ -176,10 +184,20 @@ onMounted(() => {
             </thead>
             <tbody class="divide-y divide-gray-100">
               <template v-if="allOrders.length > 0">
-                <tr v-for="order in allOrders" :key="order.id" class="hover:bg-gray-50">
-                  <td class="py-3 px-4 text-sm text-gray-900">{{ order.id }}</td>
-                  <td class="py-3 px-4 text-sm text-gray-900">{{ order.customer }}</td>
-                  <td class="py-3 px-4 text-sm text-gray-900">{{ order.date }}</td>
+                <tr
+                  v-for="order in allOrders"
+                  :key="order.id"
+                  class="hover:bg-gray-50"
+                >
+                  <td class="py-3 px-4 text-sm text-gray-900">
+                    {{ order.id }}
+                  </td>
+                  <td class="py-3 px-4 text-sm text-gray-900">
+                    {{ order.customer }}
+                  </td>
+                  <td class="py-3 px-4 text-sm text-gray-900">
+                    {{ order.date }}
+                  </td>
                   <td class="py-3 px-4">
                     <span
                       class="inline-block px-3 py-1 text-xs rounded-full"
@@ -188,15 +206,22 @@ onMounted(() => {
                       {{ order.status }}
                     </span>
                   </td>
-                  <td class="py-3 px-4 text-sm text-gray-900">{{ formatCurrency(order.total) }}</td>
+                  <td class="py-3 px-4 text-sm text-gray-900">
+                    {{ formatCurrency(order.total) }}
+                  </td>
                   <td class="py-3 px-4 text-sm">
-                    <a href="#" class="text-blue-600 hover:text-blue-800 mr-2">View</a>
+                    <a href="#" class="text-blue-600 hover:text-blue-800 mr-2"
+                      >View</a
+                    >
                   </td>
                 </tr>
               </template>
               <template v-else>
                 <tr>
-                  <td colspan="6" class="py-8 text-center text-sm text-gray-500">
+                  <td
+                    colspan="6"
+                    class="py-8 text-center text-sm text-gray-500"
+                  >
                     No orders found.
                   </td>
                 </tr>
@@ -206,9 +231,7 @@ onMounted(() => {
         </div>
       </div>
     </template>
-
   </div>
 </template>
 
-<style scoped>
-</style>
+<style scoped></style>

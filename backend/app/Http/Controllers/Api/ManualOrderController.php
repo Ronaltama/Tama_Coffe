@@ -67,7 +67,7 @@ class ManualOrderController extends Controller
                 'customer_phone' => $request->customer_phone,
                 'total_price' => $totalPrice,
                 'note' => $request->note,
-                'status' => 'completed', // Langsung processing karena sudah bayar
+                'status' => 'pending', // Mulai dari pending agar masuk ke Confirm Order board
             ]);
 
             // 4. Buat Order Details
@@ -96,11 +96,11 @@ class ManualOrderController extends Controller
                 'order_id' => $orderId,
                 'amount' => $totalPrice,
                 'method' => $request->payment['method'],
-                'status' => 'paid', // Langsung paid untuk order manual
+                'status' => 'pending', // Pending dulu, nanti diproses di Confirm Order
                 'date' => now(),
             ];
 
-            // Jika cash, simpan jumlah yang dibayar
+            // Jika cash, simpan jumlah yang dibayar untuk referensi
             if ($request->payment['method'] === 'cash') {
                 $paymentData['callback_payload'] = json_encode([
                     'paid_amount' => $request->payment['amount'],
@@ -110,10 +110,8 @@ class ManualOrderController extends Controller
 
             Payment::create($paymentData);
 
-            // 6. Update status meja jika dine-in
-            if ($request->order_type === 'dine-in' && $request->table_id) {
-                Table::where('id', $request->table_id)->update(['status' => 'occupied']);
-            }
+            // 6. JANGAN update status meja dulu, biarkan sampai order di-process di Confirm Order
+            // Meja akan di-update saat admin klik "Process" di Confirm Order board
 
             DB::commit();
 

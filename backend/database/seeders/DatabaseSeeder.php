@@ -8,6 +8,8 @@ use App\Models\Category;
 use App\Models\Role;
 use App\Models\SubCategory;
 use App\Models\User;
+use App\Models\Product;
+use App\Models\Table;
 use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
@@ -95,9 +97,48 @@ class DatabaseSeeder extends Seeder
                 'id' => 'US001',
                 'role_id' => 'RL001',
                 'name' => 'Super Admin',
-                'username' => 'superadmin', 
+                'username' => 'superadmin',
                 'email' => 'superadmin@tama.com',
                 'password' => Hash::make('password123'),
+            ]
+        );
+
+        // === Seed User Admin ===
+        User::updateOrCreate(
+            ['email' => 'admin@tama.com'],
+            [
+                'id' => 'US002',
+                'role_id' => 'RL002',
+                'name' => 'Admin',
+                'username' => 'admin',
+                'email' => 'admin@tama.com',
+                'password' => Hash::make('password123'),
+            ]
+        );
+
+        // === Seed Table ===
+        Table::updateOrCreate(
+            ['id' => 'TB001'],
+            [
+                'id' => 'TB001',
+                'table_number' => 'A1',
+                'capacity' => 4,
+                'type' => 'indoor',
+                'status' => 'available',
+            ]
+        );
+
+        // === Seed Product ===
+        Product::updateOrCreate(
+            ['id' => 'PR001'],
+            [
+                'id' => 'PR001',
+                'category_id' => 'CT001', // Drink category
+                'name' => 'Espresso',
+                'description' => 'Classic Italian espresso',
+                'price' => 25000,
+                'status' => 'available',
+                'image' => null,
             ]
         );
     }

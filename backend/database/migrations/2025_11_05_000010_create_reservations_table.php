@@ -13,16 +13,14 @@ return new class extends Migration
     {
         Schema::create('reservations', function (Blueprint $table) {
             $table->string('id')->primary();
-            $table->string('user_id');
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->string('order_id')->nullable(); // FK akan ditambah setelah order dibuat
             $table->string('table_id')->nullable();
             $table->foreign('table_id')->references('id')->on('tables')->onDelete('set null');
             $table->string('name');
             $table->string('phone');
-            $table->integer('people_count');
             $table->date('date');
             $table->time('time');
-            $table->enum('status', ['pending', 'confirmed', 'completed', 'cancelled'])->default('pending');
+            $table->string('booking_code')->nullable();
             $table->timestamps();
         });
     }

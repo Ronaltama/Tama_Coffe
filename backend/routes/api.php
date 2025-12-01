@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\TableController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UserMenuController;
 use App\Http\Controllers\Api\ManualOrderController;
+use App\Http\Controllers\Api\MidtransController;
 use Illuminate\Support\Facades\Route;
 
 // =============================================
@@ -33,6 +34,15 @@ Route::prefix('guest')->group(function () {
 
     // Submit order (POST)
     Route::post('orders', [OrderController::class, 'submitOrder']);
+
+    // 🆕 Reservation Routes
+    Route::post('reservations', [\App\Http\Controllers\Api\ReservationController::class, 'store']);
+    Route::get('reservations/{id}/status', [\App\Http\Controllers\Api\ReservationController::class, 'getStatus']);
+
+    // 💳 Midtrans Payment Routes
+    Route::post('midtrans/create-snap-token', [MidtransController::class, 'createSnapToken']);
+    Route::post('midtrans/notification', [MidtransController::class, 'notification']);
+    Route::get('midtrans/check-status', [MidtransController::class, 'checkStatus']);
 });
 
 // =============================================
@@ -73,7 +83,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('orders/{id}/process-payment', [ProcessOrderController::class, 'processPayment']);
         Route::patch('orders/{id}/status', [ProcessOrderController::class, 'updateStatus']);
         Route::delete('orders/{id}', [ProcessOrderController::class, 'deleteOrder']);
-        
+
+        // Dashboard & Stats
+        Route::get('dashboard/stats', [ProcessOrderController::class, 'getDashboardStats']);
+        Route::get('orders/history', [ProcessOrderController::class, 'getOrderHistory']);
+
         // 🆕 Manual Order Routes
         Route::post('orders/manual', [ManualOrderController::class, 'createManualOrder']);
         Route::get('orders/manual/available-tables', [ManualOrderController::class, 'getAvailableTables']);
@@ -83,3 +97,6 @@ Route::middleware('auth:sanctum')->group(function () {
         });
     });
 });
+// Reservation Routes (Public - No Auth)
+Route::get('/reservations/availability', [\App\Http\Controllers\Api\ReservationController::class, 'checkAvailability']);
+Route::get('/admin/reservations', [\App\Http\Controllers\Api\ReservationController::class, 'index']); // Public untuk Admin view history

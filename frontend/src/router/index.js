@@ -15,6 +15,9 @@ import ConfirmOrder from "../Admin/ConfirmOrder.vue";
 import OrderDetail from "../Admin/OrderDetail.vue";
 import HistoryAdmin from "../Admin/History.vue";
 
+import AdminReservation from "../views/Admin/Reservation.vue";
+
+
 // --- SuperAdmin Pages ---
 import DashboardSuperAdmin from "../SuperAdmin/DashboardSuper.vue";
 import Users from "../SuperAdmin/Users.vue";
@@ -96,12 +99,6 @@ const routes = [
     component: PaymentSuccess,
     props: true,
   },
-  {
-    path: "/order/:tableId/reservation",
-    name: "Reservation",
-    component: Reservation,
-    props: true,
-  },
 
   // 🔥 FIX: Redirect dari QR code URL (/order/TB001) ke (/order/TB001/menu)
   {
@@ -174,8 +171,8 @@ const routes = [
 
   // RESERVASI
   {
-    path: "/user/reservation",
-    name: "UserReservation",
+    path: "/reservation",
+    name: "Reservation",
     component: Reservation,
   },
 
@@ -232,6 +229,7 @@ const routes = [
         component: OrderDetail,
         props: true,
       },
+      { path: "reservations", component: AdminReservation },
     ],
   },
 ];
@@ -283,8 +281,8 @@ router.beforeEach(async (to, from, next) => {
     return next();
   }
 
-  // Route simulasi dan login bebas diakses
-  if (to.path === "/simulasi" || to.path === "/login") {
+  // Route simulasi, login, dan reservation bebas diakses
+  if (to.path === "/simulasi" || to.path === "/login" || to.path === "/reservation") {
     if (token) {
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
     }

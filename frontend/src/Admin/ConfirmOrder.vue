@@ -22,18 +22,44 @@ const showPaymentModal = ref(false);
 const selectedOrder = ref(null);
 const amountPaid = ref(0);
 
+// Filter orders by today's date only
+const isTodayOrder = (orderDate) => {
+  if (!orderDate) return false;
+  const today = new Date();
+  const orderDay = new Date(orderDate);
+  return (
+    today.getDate() === orderDay.getDate() &&
+    today.getMonth() === orderDay.getMonth() &&
+    today.getFullYear() === orderDay.getFullYear()
+  );
+};
+
 // Fetch orders from API
 const fetchOrders = async () => {
   try {
     loading.value = true;
     const token = localStorage.getItem("token");
-    
+
     const res = await axios.get(`${API_BASE}/orders/board`, {
-      headers: { Authorization: `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${token}` },
     });
 
     if (res.data.success) {
-      orders.value = res.data.data;
+      // Filter only today's orders
+      orders.value = {
+        waiting: res.data.data.waiting.filter((order) =>
+          isTodayOrder(order.created_at)
+        ),
+        processing: res.data.data.processing.filter((order) =>
+          isTodayOrder(order.created_at)
+        ),
+        finished: res.data.data.finished.filter((order) =>
+          isTodayOrder(order.created_at)
+        ),
+        cancelled: res.data.data.cancelled.filter((order) =>
+          isTodayOrder(order.created_at)
+        ),
+      };
     }
   } catch (err) {
     console.error("Error fetching orders:", err);
@@ -73,7 +99,7 @@ const processPayment = async () => {
 
   try {
     const token = localStorage.getItem("token");
-    
+
     const res = await axios.post(
       `${API_BASE}/orders/${selectedOrder.value.id}/process-payment`,
       { amount_paid: amountPaid.value },
@@ -103,7 +129,7 @@ const processPayment = async () => {
 const updateStatus = async (orderId, newStatus) => {
   try {
     const token = localStorage.getItem("token");
-    
+
     const res = await axios.patch(
       `${API_BASE}/orders/${orderId}/status`,
       { status: newStatus },
@@ -140,7 +166,7 @@ const cancelOrder = async (orderId) => {
   });
 
   if (result.isConfirmed) {
-    await updateStatus(orderId, 'cancelled');
+    await updateStatus(orderId, "cancelled");
   }
 };
 
@@ -159,9 +185,9 @@ const deleteOrder = async (orderId) => {
   if (result.isConfirmed) {
     try {
       const token = localStorage.getItem("token");
-      
+
       await axios.delete(`${API_BASE}/orders/${orderId}`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       Swal.fire("Terhapus!", "Order telah dihapus.", "success");
@@ -187,12 +213,12 @@ const formatCurrency = (value) => {
 };
 
 const formatTime = (datetime) => {
-  if (!datetime) return '-';
+  if (!datetime) return "-";
   const date = new Date(datetime);
   const now = new Date();
   const diff = Math.floor((now - date) / 60000); // minutes
 
-  if (diff < 1) return 'Baru saja';
+  if (diff < 1) return "Baru saja";
   if (diff < 60) return `${diff} menit lalu`;
   if (diff < 1440) return `${Math.floor(diff / 60)} jam lalu`;
   return `${Math.floor(diff / 1440)} hari lalu`;
@@ -206,180 +232,235 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen flex flex-col bg-[#FFF7ED]">
+  <div class="min-h-screen flex flex-col bg-[#F7F7F7]">
     <!-- Loading -->
     <div v-if="loading" class="flex-1 flex items-center justify-center">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
+      <div
+        class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#854D0E]"
+      ></div>
     </div>
 
     <!-- Content -->
-    <div v-else class="flex-1 overflow-y-auto p-6">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-        
-        <!-- MENUNGGU (Pending) -->
-        <div class="rounded-xl p-4 border border-yellow-200 bg-[#FEF9C3]">
-          <h2 class="font-semibold text-yellow-700 mb-3">
-            Menunggu ({{ orders.waiting.length }})
+    <div v-else class="flex-1 overflow-y-auto p-8">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8 items-start">
+        <!-- MENUNGGU (Waiting) -->
+        <div class="rounded-lg p-4 bg-yellow-100 h-fit">
+          <h2 class="font-bold text-[#1E40AF] text-lg text-center mb-4">
+            Waiting
           </h2>
-          
-          <div v-if="orders.waiting.length === 0" class="text-center text-gray-500 py-8 text-sm">
+
+          <div
+            v-if="orders.waiting.length === 0"
+            class="text-center text-gray-500 py-8 text-sm"
+          >
             Tidak ada pesanan
           </div>
 
           <div
             v-for="item in orders.waiting"
             :key="item.id"
-            class="bg-white rounded-lg shadow-sm border border-yellow-100 p-4 mb-3 hover:shadow-md transition cursor-pointer"
+            class="bg-white rounded-lg shadow-sm border border-[#E5E5E5] p-4 mb-4 hover:shadow-md transition cursor-pointer"
             @click="viewDetail(item.id)"
           >
-            <div class="text-xs text-gray-500 text-right">{{ formatTime(item.created_at) }}</div>
-            <div class="font-semibold text-gray-800">{{ item.id }}</div>
-            <div class="text-gray-700 text-sm">{{ item.customer_name }}</div>
-            <div class="text-gray-500 text-sm mb-1">{{ item.table_number || 'Take Away' }}</div>
-            <div class="text-blue-700 font-semibold">Rp{{ formatCurrency(item.total_price) }}</div>
-
-            <div class="flex items-center justify-between mt-2">
-              <span class="text-xs px-2 py-1 rounded-full bg-red-100 text-red-700">
-                {{ item.payment_status === 'paid' ? 'Sudah Bayar' : 'Belum Bayar' }}
-              </span>
-              <span class="text-xs text-gray-600 uppercase">{{ item.payment_type || 'CASH' }}</span>
+            <div class="flex justify-between items-start mb-2">
+              <div class="font-bold text-[#1E293B] text-sm">{{ item.id }}</div>
+              <div class="text-[#737373] text-sm">
+                {{ formatTime(item.created_at) }}
+              </div>
+            </div>
+            <div class="text-[#334155] text-base mb-1">
+              {{ item.customer_name }}
+            </div>
+            <div class="text-[#64748B] text-base mb-3">
+              {{ item.table_number || "Take Away" }}
+            </div>
+            <div class="text-[#1E40AF] font-bold text-sm mb-4">
+              Rp{{ formatCurrency(item.total_price) }}
             </div>
 
-            <div class="grid grid-cols-2 gap-2 mt-3">
-              <button
-                @click.stop="openPaymentModal(item)"
-                class="text-sm bg-green-500 hover:bg-green-600 text-white py-1.5 rounded font-medium"
-              >
-                Proses
-              </button>
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2">
+                <span
+                  :class="
+                    item.payment_status === 'paid'
+                      ? 'bg-[#ECFDF5] text-[#059669]'
+                      : 'bg-[#F0F0F0] text-[#DC2626]'
+                  "
+                  class="text-xs px-2 py-0.5 rounded-full"
+                >
+                  {{
+                    item.payment_status === "paid"
+                      ? "Sudah Bayar"
+                      : "Belum Bayar"
+                  }}
+                </span>
+                <span class="text-xs text-[#64748B]">{{
+                  item.payment_type || "CASH"
+                }}</span>
+              </div>
+            </div>
+
+            <div class="flex gap-2">
               <button
                 @click.stop="cancelOrder(item.id)"
-                class="text-sm bg-red-500 hover:bg-red-600 text-white py-1.5 rounded font-medium"
+                class="flex-1 text-sm bg-[#E5E5E5] hover:bg-[#D4D4D4] text-[#1E293B] py-1 px-4 rounded font-bold"
               >
-                Batal
+                Cancel
+              </button>
+              <button
+                @click.stop="openPaymentModal(item)"
+                class="flex-1 text-sm bg-[#E5E5E5] hover:bg-[#D4D4D4] text-[#1E293B] py-1 px-4 rounded font-bold"
+              >
+                Process
               </button>
             </div>
           </div>
         </div>
 
         <!-- DIPROSES (Processing) -->
-        <div class="rounded-xl p-4 border border-blue-200 bg-[#ADCCFF]">
-          <h2 class="font-semibold text-blue-700 mb-3">
-            Diproses ({{ orders.processing.length }})
-          </h2>
+        <div class="rounded-lg p-4 bg-blue-200/90 h-fit">
+          <h2 class="font-bold text-[#EA580C] text-lg mb-4">Processing</h2>
 
-          <div v-if="orders.processing.length === 0" class="text-center text-gray-500 py-8 text-sm">
+          <div
+            v-if="orders.processing.length === 0"
+            class="text-center text-gray-500 py-8 text-sm"
+          >
             Tidak ada pesanan
           </div>
 
           <div
             v-for="item in orders.processing"
             :key="item.id"
-            class="bg-white rounded-lg shadow-sm border border-blue-100 p-4 mb-3 hover:shadow-md transition cursor-pointer"
+            class="bg-white rounded-lg shadow-sm border border-[#E5E5E5] p-4 mb-4 hover:shadow-md transition cursor-pointer"
             @click="viewDetail(item.id)"
           >
-            <div class="text-xs text-gray-500 text-right">{{ formatTime(item.created_at) }}</div>
-            <div class="font-semibold text-gray-800">{{ item.id }}</div>
-            <div class="text-gray-700 text-sm">{{ item.customer_name }}</div>
-            <div class="text-gray-500 text-sm mb-1">{{ item.table_number || 'Take Away' }}</div>
-            <div class="text-blue-700 font-semibold">Rp{{ formatCurrency(item.total_price) }}</div>
+            <div class="flex justify-between items-start mb-2">
+              <div class="font-bold text-[#1E293B] text-sm">{{ item.id }}</div>
+              <div class="text-[#737373] text-sm">
+                {{ formatTime(item.created_at) }}
+              </div>
+            </div>
+            <div class="text-[#334155] text-base mb-1">
+              {{ item.customer_name }}
+            </div>
+            <div class="text-[#64748B] text-base mb-3">
+              {{ item.table_number || "Take Away" }}
+            </div>
+            <div class="text-[#1E40AF] font-bold text-sm mb-4">
+              Rp{{ formatCurrency(item.total_price) }}
+            </div>
 
-            <div class="flex items-center justify-between mt-2">
-              <span class="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700">
-                Sudah Bayar
-              </span>
-              <span class="text-xs text-gray-600 uppercase">{{ item.payment_type || 'CASH' }}</span>
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2">
+                <span
+                  class="bg-[#ECFDF5] text-[#059669] text-xs px-2 py-0.5 rounded-full"
+                >
+                  Sudah Bayar
+                </span>
+                <span class="text-xs text-[#64748B]">{{
+                  item.payment_type || "CASH"
+                }}</span>
+              </div>
             </div>
 
             <button
               @click.stop="updateStatus(item.id, 'completed')"
-              class="mt-3 w-full text-sm bg-blue-500 hover:bg-blue-600 text-white py-1.5 rounded font-medium"
+              class="w-full text-sm bg-[#E5E5E5] hover:bg-[#D4D4D4] text-[#1E293B] py-1 px-4 rounded font-bold"
             >
-              Selesai
+              Done
             </button>
           </div>
         </div>
 
         <!-- SELESAI (Completed) -->
-        <div class="rounded-xl p-4 border border-green-200 bg-[#DCFCE7]">
-          <h2 class="font-semibold text-green-700 mb-3">
-            Selesai ({{ orders.finished.length }})
-          </h2>
+        <div class="rounded-lg p-4 bg-green-100 h-fit">
+          <h2 class="font-bold text-[#059669] text-lg mb-4">Completed</h2>
 
-          <div v-if="orders.finished.length === 0" class="text-center text-gray-500 py-8 text-sm">
+          <div
+            v-if="orders.finished.length === 0"
+            class="text-center text-gray-500 py-8 text-sm"
+          >
             Tidak ada pesanan
           </div>
 
           <div
             v-for="item in orders.finished"
             :key="item.id"
-            class="bg-white rounded-lg shadow-sm border border-green-100 p-4 mb-3 hover:shadow-md transition cursor-pointer"
+            class="bg-white rounded-lg shadow-sm border border-[#E5E5E5] p-4 mb-4 hover:shadow-md transition cursor-pointer"
             @click="viewDetail(item.id)"
           >
-            <div class="text-xs text-gray-500 text-right">{{ formatTime(item.created_at) }}</div>
-            <div class="font-semibold text-gray-800">{{ item.id }}</div>
-            <div class="text-gray-700 text-sm">{{ item.customer_name }}</div>
-            <div class="text-gray-500 text-sm mb-1">{{ item.table_number || 'Take Away' }}</div>
-            <div class="text-blue-700 font-semibold">Rp{{ formatCurrency(item.total_price) }}</div>
-
-            <div class="flex items-center justify-between mt-2">
-              <span class="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700">
-                Selesai
-              </span>
-              <span class="text-xs text-gray-600 uppercase">{{ item.payment_type || 'CASH' }}</span>
+            <div class="flex justify-between items-start mb-2">
+              <div class="font-bold text-[#1E293B] text-sm">{{ item.id }}</div>
+              <div class="text-[#737373] text-sm">
+                {{ formatTime(item.created_at) }}
+              </div>
+            </div>
+            <div class="text-[#334155] text-base mb-1">
+              {{ item.customer_name }}
+            </div>
+            <div class="text-[#64748B] text-base mb-3">
+              {{ item.table_number || "Take Away" }}
+            </div>
+            <div class="text-[#1E40AF] font-bold text-sm mb-4">
+              Rp{{ formatCurrency(item.total_price) }}
             </div>
 
-            <div class="grid grid-cols-2 gap-2 mt-3">
-              <button
-                @click.stop="viewDetail(item.id)"
-                class="text-sm bg-gray-500 hover:bg-gray-600 text-white py-1.5 rounded font-medium"
+            <div class="flex items-center gap-2">
+              <span
+                class="bg-[#ECFDF5] text-[#059669] text-xs px-2 py-0.5 rounded-full"
               >
-                Detail
-              </button>
-              <button
-                class="text-sm bg-orange-500 hover:bg-orange-600 text-white py-1.5 rounded font-medium"
-              >
-                Print
-              </button>
+                Sudah Bayar
+              </span>
+              <span class="text-xs text-[#64748B]">{{
+                item.payment_type || "CASH"
+              }}</span>
             </div>
           </div>
         </div>
 
         <!-- BATAL (Cancelled) -->
-        <div class="rounded-xl p-4 border border-red-200 bg-[#FEE2E2]">
-          <h2 class="font-semibold text-red-700 mb-3">
-            Batal ({{ orders.cancelled.length }})
-          </h2>
+        <div class="rounded-lg p-4 bg-red-100 h-fit">
+          <h2 class="font-bold text-[#DC2626] text-lg mb-4">Cancelled</h2>
 
-          <div v-if="orders.cancelled.length === 0" class="text-center text-gray-500 py-8 text-sm">
+          <div
+            v-if="orders.cancelled.length === 0"
+            class="text-center text-gray-500 py-8 text-sm"
+          >
             Tidak ada pesanan
           </div>
 
           <div
             v-for="item in orders.cancelled"
             :key="item.id"
-            class="bg-white rounded-lg shadow-sm border border-red-100 p-4 mb-3 hover:shadow-md transition cursor-pointer"
+            class="bg-white rounded-lg shadow-sm border border-[#E5E5E5] p-4 mb-4 hover:shadow-md transition cursor-pointer"
             @click="viewDetail(item.id)"
           >
-            <div class="text-xs text-gray-500 text-right">{{ formatTime(item.created_at) }}</div>
-            <div class="font-semibold text-gray-800">{{ item.id }}</div>
-            <div class="text-gray-700 text-sm">{{ item.customer_name }}</div>
-            <div class="text-gray-500 text-sm mb-1">{{ item.table_number || 'Take Away' }}</div>
-            <div class="text-blue-700 font-semibold">Rp{{ formatCurrency(item.total_price) }}</div>
-
-            <div class="flex items-center justify-between mt-2">
-              <span class="text-xs px-2 py-1 rounded-full bg-red-100 text-red-700">
-                Dibatalkan
-              </span>
-              <span class="text-xs text-gray-600 uppercase">{{ item.payment_type || 'CASH' }}</span>
+            <div class="flex justify-between items-start mb-2">
+              <div class="font-bold text-[#1E293B] text-sm">{{ item.id }}</div>
+              <div class="text-[#737373] text-sm">
+                {{ formatTime(item.created_at) }}
+              </div>
+            </div>
+            <div class="text-[#334155] text-base mb-1">
+              {{ item.customer_name }}
+            </div>
+            <div class="text-[#64748B] text-base mb-3">
+              {{ item.table_number || "Take Away" }}
+            </div>
+            <div class="text-[#1E40AF] font-bold text-sm mb-4">
+              Rp{{ formatCurrency(item.total_price) }}
             </div>
 
-            <button
-              @click.stop="deleteOrder(item.id)"
-              class="mt-3 w-full text-sm bg-red-500 hover:bg-red-600 text-white py-1.5 rounded font-medium"
-            >
-              Hapus
-            </button>
+            <div class="flex items-center gap-2">
+              <span
+                class="bg-[#FEF3C7] text-[#EA580C] text-xs px-2 py-0.5 rounded-full"
+              >
+                Pending
+              </span>
+              <span class="text-xs text-[#64748B]">{{
+                item.payment_type || "CASH"
+              }}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -393,7 +474,7 @@ onMounted(() => {
     >
       <div class="bg-white rounded-xl p-6 w-96 shadow-2xl">
         <h3 class="text-xl font-bold mb-4">Proses Pembayaran</h3>
-        
+
         <div class="space-y-3 mb-6">
           <div class="flex justify-between">
             <span class="text-gray-600">Order ID:</span>
@@ -401,11 +482,15 @@ onMounted(() => {
           </div>
           <div class="flex justify-between">
             <span class="text-gray-600">Customer:</span>
-            <span class="font-semibold">{{ selectedOrder?.customer_name }}</span>
+            <span class="font-semibold">{{
+              selectedOrder?.customer_name
+            }}</span>
           </div>
           <div class="flex justify-between text-lg">
             <span class="font-semibold">Total:</span>
-            <span class="font-bold text-orange-600">Rp{{ formatCurrency(selectedOrder?.total_price) }}</span>
+            <span class="font-bold text-orange-600"
+              >Rp{{ formatCurrency(selectedOrder?.total_price) }}</span
+            >
           </div>
         </div>
 

@@ -155,6 +155,16 @@ class ProcessOrderController extends Controller
                     'updated_at' => now()
                 ]);
 
+            // Update table status to occupied if dine-in order
+            if ($order->table_id) {
+                DB::table('tables')
+                    ->where('id', $order->table_id)
+                    ->update([
+                        'status' => 'occupied',
+                        'updated_at' => now()
+                    ]);
+            }
+
             DB::commit();
 
             return response()->json([
@@ -280,6 +290,134 @@ class ProcessOrderController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal menghapus order',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get dashboard statistics (today's data)
+     * GET /api/dashboard/stats
+     */
+    public function getDashboardStats()
+    {
+        try {
+            $today = now()->toDateString();
+
+            // Count orders by status (only today)
+            $waiting = DB::table('orders')
+                ->whereDate('created_at', $today)
+                ->where('status', 'pending')
+                ->count();
+
+            $processing = DB::table('orders')
+                ->whereDate('created_at', $today)
+                ->where('status', 'processing')
+                ->count();
+
+            $completed = DB::table('orders')
+                ->whereDate('created_at', $today)
+                ->where('status', 'completed')
+                ->count();
+
+            // Calculate total revenue from completed orders (only today)
+            $finishedRevenue = DB::table('orders')
+                ->whereDate('created_at', $today)
+                ->where('status', 'completed')
+                ->sum('total_price');
+
+            // Get recent orders (today only, limit 5)
+            $recentOrders = DB::table('orders')
+                ->leftJoin('tables', 'orders.table_id', '=', 'tables.id')
+                ->select(
+                    'orders.id',
+                    'orders.customer_name',
+                    'orders.created_at',
+                    'orders.status',
+                    'orders.total_price',
+                    'tables.table_number'
+                )
+                ->whereDate('orders.created_at', $today)
+                ->orderBy('orders.created_at', 'desc')
+                ->limit(5)
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'stats' => [
+                        'waiting' => $waiting,
+                        'processing' => $processing,
+                        'completed' => $completed,
+                        'finishedRevenue' => (float) $finishedRevenue
+                    ],
+                    'recentOrders' => $recentOrders
+                ]
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengambil data dashboard',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get all orders history with stats
+     * GET /api/orders/history
+     */
+    public function getOrderHistory()
+    {
+        try {
+            // Count orders by status (ALL TIME - no date filter)
+            $waiting = DB::table('orders')
+                ->where('status', 'pending')
+                ->count();
+
+            $processing = DB::table('orders')
+                ->where('status', 'processing')
+                ->count();
+
+            $completed = DB::table('orders')
+                ->where('status', 'completed')
+                ->count();
+
+            // Calculate total revenue from completed orders (ALL TIME)
+            $finishedRevenue = DB::table('orders')
+                ->where('status', 'completed')
+                ->sum('total_price');
+
+            // Get ALL orders (no date filter)
+            $allOrders = DB::table('orders')
+                ->leftJoin('tables', 'orders.table_id', '=', 'tables.id')
+                ->select(
+                    'orders.id',
+                    'orders.customer_name',
+                    'orders.created_at',
+                    'orders.status',
+                    'orders.total_price',
+                    'tables.table_number'
+                )
+                ->orderBy('orders.created_at', 'desc')
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'stats' => [
+                        'waiting' => $waiting,
+                        'processing' => $processing,
+                        'completed' => $completed,
+                        'finishedRevenue' => (float) $finishedRevenue
+                    ],
+                    'orders' => $allOrders
+                ]
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengambil data history',
                 'error' => $e->getMessage()
             ], 500);
         }

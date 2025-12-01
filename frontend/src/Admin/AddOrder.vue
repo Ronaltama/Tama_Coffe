@@ -1,84 +1,94 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import axios from 'axios';
-import Swal from 'sweetalert2';
+import { ref, computed, onMounted } from "vue";
+import { useRouter } from "vue-router";
+import axios from "axios";
+import Swal from "sweetalert2";
 
 const router = useRouter();
-const API_BASE = 'http://localhost:8000/api';
+const API_BASE = "http://localhost:8000/api";
 
 // --- STATE ---
-const orderType = ref(''); // 'dine-in' atau 'take-away'
+const orderType = ref(""); // 'dine-in' atau 'take-away'
 const selectedTable = ref(null);
 const tables = ref([]);
 const products = ref([]);
 const categories = ref([]);
-const activeTab = ref('All');
-const searchTerm = ref('');
+const activeTab = ref("All");
+const searchTerm = ref("");
 const cart = ref([]);
-const customerName = ref('');
-const customerPhone = ref('');
-const orderNote = ref('');
+const customerName = ref("");
+const customerPhone = ref("");
+const orderNote = ref("");
 const loading = ref(false);
 
 // Modal untuk memilih varian
 const showVariantModal = ref(false);
 const selectedProduct = ref(null);
-const selectedVariant = ref('');
+const selectedVariant = ref("");
 
 // --- FETCH DATA ---
 const fetchProducts = async () => {
   try {
-    const response = await axios.get(`${API_BASE}/guest/products`);
+    const token = localStorage.getItem("token");
+    const response = await axios.get(`${API_BASE}/guest/products`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
     if (response.data.success) {
-      products.value = response.data.data;
-      
-      // 🐛 DEBUG: Log untuk cek data produk (unpacked dari Proxy)
-      console.log('Products loaded:', products.value.length);
-      console.log('Sample product:', JSON.parse(JSON.stringify(products.value[0])));
-      console.log('All products:', JSON.parse(JSON.stringify(products.value)));
-      
-      // Pastikan semua produk punya status
-      products.value = products.value.map(product => ({
+      // Backend sudah mengirim imageUrl
+      products.value = response.data.data.map((product) => ({
         ...product,
-        status: product.status || 'available' // Default ke available jika null
+        status: product.status || "available", // Default ke available jika null
       }));
+
+      console.log("Products loaded:", products.value.length);
     }
   } catch (error) {
-    console.error('Error fetching products:', error);
+    console.error("Error fetching products:", error);
     Swal.fire({
-      icon: 'error',
-      title: 'Gagal Memuat Data',
-      text: 'Tidak dapat memuat daftar produk. Silakan refresh halaman.',
+      icon: "error",
+      title: "Gagal Memuat Data",
+      text: "Tidak dapat memuat daftar produk. Silakan refresh halaman.",
     });
   }
 };
 
 const fetchCategories = async () => {
   try {
-    const response = await axios.get(`${API_BASE}/guest/categories`);
+    const token = localStorage.getItem("token");
+    const response = await axios.get(`${API_BASE}/guest/categories`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
     if (response.data.success) {
-      categories.value = ['All', ...response.data.data.map(cat => cat.name)];
-      console.log('Categories loaded:', JSON.parse(JSON.stringify(categories.value)));
+      categories.value = ["All", ...response.data.data.map((cat) => cat.name)];
+      console.log(
+        "Categories loaded:",
+        JSON.parse(JSON.stringify(categories.value))
+      );
     }
   } catch (error) {
-    console.error('Error fetching categories:', error);
+    console.error("Error fetching categories:", error);
   }
 };
 
 const fetchTables = async () => {
   try {
+    const token = localStorage.getItem("token");
     // Gunakan endpoint khusus untuk manual order yang sudah filter available
-    const response = await axios.get(`${API_BASE}/orders/manual/available-tables`);
+    const response = await axios.get(
+      `${API_BASE}/orders/manual/available-tables`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
     if (response.data.success) {
       tables.value = response.data.data;
     }
   } catch (error) {
-    console.error('Error fetching tables:', error);
+    console.error("Error fetching tables:", error);
     Swal.fire({
-      icon: 'error',
-      title: 'Gagal Memuat Data',
-      text: 'Tidak dapat memuat daftar meja. Silakan refresh halaman.',
+      icon: "error",
+      title: "Gagal Memuat Data",
+      text: "Tidak dapat memuat daftar meja. Silakan refresh halaman.",
     });
   }
 };
@@ -93,15 +103,17 @@ onMounted(() => {
 const filteredProducts = computed(() => {
   let items = [...products.value]; // Clone array
 
-  console.log('=== FILTERING START ===');
-  console.log('Active Tab:', activeTab.value);
-  console.log('Total products:', items.length);
+  console.log("=== FILTERING START ===");
+  console.log("Active Tab:", activeTab.value);
+  console.log("Total products:", items.length);
 
   // Filter by category
-  if (activeTab.value !== 'All') {
-    items = items.filter(p => {
+  if (activeTab.value !== "All") {
+    items = items.filter((p) => {
       const match = p.category_name === activeTab.value;
-      console.log(`Product: ${p.name}, Category: "${p.category_name}", Tab: "${activeTab.value}", Match: ${match}`);
+      console.log(
+        `Product: ${p.name}, Category: "${p.category_name}", Tab: "${activeTab.value}", Match: ${match}`
+      );
       return match;
     });
   }
@@ -109,22 +121,20 @@ const filteredProducts = computed(() => {
   // Filter by search
   if (searchTerm.value) {
     const searchLower = searchTerm.value.toLowerCase();
-    items = items.filter(p => 
-      p.name.toLowerCase().includes(searchLower)
-    );
+    items = items.filter((p) => p.name.toLowerCase().includes(searchLower));
   }
 
-  console.log('Filtered products:', items.length);
-  console.log('=== FILTERING END ===');
+  console.log("Filtered products:", items.length);
+  console.log("=== FILTERING END ===");
   return items;
 });
 
 // --- HELPER ---
 const formatCurrency = (value) => {
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    minimumFractionDigits: 0
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    minimumFractionDigits: 0,
   }).format(value);
 };
 
@@ -132,9 +142,14 @@ const formatCurrency = (value) => {
 const isDrink = (categoryName) => {
   if (!categoryName) return false;
   const lowerCategory = categoryName.toLowerCase();
-  console.log('Checking isDrink for:', categoryName, '→', lowerCategory === 'drink');
+  console.log(
+    "Checking isDrink for:",
+    categoryName,
+    "→",
+    lowerCategory === "drink"
+  );
   // Hanya kategori Drink yang butuh varian
-  return lowerCategory === 'drink';
+  return lowerCategory === "drink";
 };
 
 // --- CART LOGIC ---
@@ -142,7 +157,7 @@ const handleAddToCart = (product) => {
   // Jika produk adalah minuman, tampilkan modal untuk pilih varian
   if (isDrink(product.category_name)) {
     selectedProduct.value = product;
-    selectedVariant.value = 'Ice'; // Default
+    selectedVariant.value = "Ice"; // Default
     showVariantModal.value = true;
   } else {
     // Langsung tambahkan ke cart tanpa varian
@@ -155,14 +170,14 @@ const confirmVariant = () => {
     addToCart(selectedProduct.value, selectedVariant.value);
     showVariantModal.value = false;
     selectedProduct.value = null;
-    selectedVariant.value = '';
+    selectedVariant.value = "";
   }
 };
 
 const addToCart = (product, variant = null) => {
   const cartKey = variant ? `${product.id}-${variant}` : product.id;
-  
-  const itemInCart = cart.value.find(item => {
+
+  const itemInCart = cart.value.find((item) => {
     if (variant) {
       return item.id === product.id && item.variant === variant;
     }
@@ -201,7 +216,10 @@ const removeFromCart = (index) => {
 
 // --- CALCULATION ---
 const cartSubtotal = computed(() => {
-  return cart.value.reduce((total, item) => total + (item.price * item.quantity), 0);
+  return cart.value.reduce(
+    (total, item) => total + item.price * item.quantity,
+    0
+  );
 });
 
 const cartTax = computed(() => {
@@ -215,7 +233,7 @@ const cartTotal = computed(() => {
 // --- VALIDATION ---
 const canProceedToPayment = computed(() => {
   if (!orderType.value) return false;
-  if (orderType.value === 'dine-in' && !selectedTable.value) return false;
+  if (orderType.value === "dine-in" && !selectedTable.value) return false;
   if (cart.value.length === 0) return false;
   if (!customerName.value.trim() || !customerPhone.value.trim()) return false;
   return true;
@@ -223,8 +241,8 @@ const canProceedToPayment = computed(() => {
 
 // --- PAYMENT CALCULATOR ---
 const showPaymentModal = ref(false);
-const paymentAmount = ref('');
-const paymentMethod = ref('cash');
+const paymentAmount = ref("");
+const paymentMethod = ref("cash");
 
 const paymentChange = computed(() => {
   const amount = parseFloat(paymentAmount.value) || 0;
@@ -234,9 +252,9 @@ const paymentChange = computed(() => {
 const handlePayment = () => {
   if (!canProceedToPayment.value) {
     Swal.fire({
-      icon: 'warning',
-      title: 'Data Tidak Lengkap',
-      text: 'Mohon lengkapi semua data order terlebih dahulu!',
+      icon: "warning",
+      title: "Data Tidak Lengkap",
+      text: "Mohon lengkapi semua data order terlebih dahulu!",
     });
     return;
   }
@@ -249,13 +267,15 @@ const quickAmount = (amount) => {
 };
 
 const processPayment = async () => {
-  if (paymentMethod.value === 'cash') {
+  if (paymentMethod.value === "cash") {
     const amount = parseFloat(paymentAmount.value) || 0;
     if (amount < cartTotal.value) {
       Swal.fire({
-        icon: 'error',
-        title: 'Pembayaran Kurang',
-        text: `Jumlah pembayaran kurang Rp ${formatCurrency(cartTotal.value - amount)}`,
+        icon: "error",
+        title: "Pembayaran Kurang",
+        text: `Jumlah pembayaran kurang Rp ${formatCurrency(
+          cartTotal.value - amount
+        )}`,
       });
       return;
     }
@@ -264,14 +284,15 @@ const processPayment = async () => {
   loading.value = true;
 
   try {
+    const token = localStorage.getItem("token");
     // Prepare order data
     const orderData = {
       order_type: orderType.value,
-      table_id: orderType.value === 'dine-in' ? selectedTable.value : null,
+      table_id: orderType.value === "dine-in" ? selectedTable.value : null,
       customer_name: customerName.value,
       customer_phone: customerPhone.value,
       note: orderNote.value,
-      items: cart.value.map(item => ({
+      items: cart.value.map((item) => ({
         product_id: item.id,
         quantity: item.quantity,
         variant: item.variant,
@@ -279,32 +300,39 @@ const processPayment = async () => {
       })),
       payment: {
         method: paymentMethod.value,
-        amount: paymentMethod.value === 'cash' ? parseFloat(paymentAmount.value) : cartTotal.value,
-      }
+        amount:
+          paymentMethod.value === "cash"
+            ? parseFloat(paymentAmount.value)
+            : cartTotal.value,
+      },
     };
 
-    const response = await axios.post(`${API_BASE}/orders/manual`, orderData);
+    const response = await axios.post(`${API_BASE}/orders/manual`, orderData, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
     if (response.data.success) {
       showPaymentModal.value = false;
-      
+
       await Swal.fire({
-        icon: 'success',
-        title: 'Order Berhasil!',
-        text: `Order #${response.data.data.order_id} telah dibuat`,
+        icon: "success",
+        title: "Order Berhasil!",
+        text: `Order #${response.data.data.order_id} telah dibuat dan masuk ke daftar konfirmasi`,
         timer: 2000,
         showConfirmButton: false,
       });
 
-      // Redirect ke detail order
-      router.push(`/admin/order-detail/${response.data.data.order_id}`);
+      // Redirect ke Confirm Order untuk proses lebih lanjut
+      router.push("/admin/confirm-order");
     }
   } catch (error) {
-    console.error('Error processing order:', error);
+    console.error("Error processing order:", error);
     Swal.fire({
-      icon: 'error',
-      title: 'Gagal Memproses Order',
-      text: error.response?.data?.message || 'Terjadi kesalahan saat memproses order',
+      icon: "error",
+      title: "Gagal Memproses Order",
+      text:
+        error.response?.data?.message ||
+        "Terjadi kesalahan saat memproses order",
     });
   } finally {
     loading.value = false;
@@ -331,19 +359,22 @@ const processPayment = async () => {
             'p-4 rounded-lg border-2 transition-all',
             orderType === 'dine-in'
               ? 'border-amber-500 bg-amber-50 text-amber-700'
-              : 'border-gray-200 hover:border-gray-300'
+              : 'border-gray-200 hover:border-gray-300',
           ]"
         >
           <i class="fas fa-utensils text-2xl mb-2"></i>
           <div class="font-semibold">Dine In</div>
         </button>
         <button
-          @click="orderType = 'take-away'; selectedTable = null;"
+          @click="
+            orderType = 'take-away';
+            selectedTable = null;
+          "
           :class="[
             'p-4 rounded-lg border-2 transition-all',
             orderType === 'take-away'
               ? 'border-amber-500 bg-amber-50 text-amber-700'
-              : 'border-gray-200 hover:border-gray-300'
+              : 'border-gray-200 hover:border-gray-300',
           ]"
         >
           <i class="fas fa-shopping-bag text-2xl mb-2"></i>
@@ -353,7 +384,10 @@ const processPayment = async () => {
     </div>
 
     <!-- Step 2: Pilih Meja (jika dine-in) -->
-    <div v-if="orderType === 'dine-in'" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+    <div
+      v-if="orderType === 'dine-in'"
+      class="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+    >
       <h2 class="text-xl font-semibold text-gray-900 mb-4">2. Pilih Meja</h2>
       <div class="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-7 gap-3">
         <button
@@ -364,7 +398,7 @@ const processPayment = async () => {
             'p-4 rounded-lg border-2 transition-all text-center',
             selectedTable === table.id
               ? 'border-amber-500 bg-amber-50'
-              : 'border-gray-200 hover:border-gray-300'
+              : 'border-gray-200 hover:border-gray-300',
           ]"
         >
           <div class="font-bold text-lg">{{ table.table_number }}</div>
@@ -377,13 +411,18 @@ const processPayment = async () => {
     </div>
 
     <!-- Step 3: Data Customer -->
-    <div v-if="orderType" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+    <div
+      v-if="orderType"
+      class="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+    >
       <h2 class="text-xl font-semibold text-gray-900 mb-4">
-        {{ orderType === 'dine-in' ? '3' : '2' }}. Data Customer
+        {{ orderType === "dine-in" ? "3" : "2" }}. Data Customer
       </h2>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Nama Customer</label>
+          <label class="block text-sm font-medium text-gray-700 mb-2"
+            >Nama Customer</label
+          >
           <input
             v-model="customerName"
             type="text"
@@ -392,7 +431,9 @@ const processPayment = async () => {
           />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">No. Telepon</label>
+          <label class="block text-sm font-medium text-gray-700 mb-2"
+            >No. Telepon</label
+          >
           <input
             v-model="customerPhone"
             type="tel"
@@ -401,7 +442,9 @@ const processPayment = async () => {
           />
         </div>
         <div class="md:col-span-2">
-          <label class="block text-sm font-medium text-gray-700 mb-2">Catatan (Opsional)</label>
+          <label class="block text-sm font-medium text-gray-700 mb-2"
+            >Catatan (Opsional)</label
+          >
           <textarea
             v-model="orderNote"
             rows="2"
@@ -415,14 +458,18 @@ const processPayment = async () => {
     <!-- Step 4: Pilih Produk -->
     <div v-if="orderType" class="flex flex-col lg:flex-row gap-6">
       <!-- Product List -->
-      <div class="flex-1 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div
+        class="flex-1 bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+      >
         <h2 class="text-xl font-semibold text-gray-900 mb-4">
-          {{ orderType === 'dine-in' ? '4' : '3' }}. Pilih Menu
+          {{ orderType === "dine-in" ? "4" : "3" }}. Pilih Menu
         </h2>
 
         <!-- Search -->
         <div class="relative mb-4">
-          <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+          <div
+            class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"
+          >
             <i class="fas fa-search text-gray-400"></i>
           </div>
           <input
@@ -444,7 +491,7 @@ const processPayment = async () => {
                 'py-3 px-2 text-sm font-medium whitespace-nowrap transition-colors',
                 activeTab === category
                   ? 'text-amber-700 border-b-2 border-amber-700'
-                  : 'text-gray-500 hover:text-gray-700'
+                  : 'text-gray-500 hover:text-gray-700',
               ]"
             >
               {{ category }}
@@ -453,27 +500,45 @@ const processPayment = async () => {
         </div>
 
         <!-- Products Grid -->
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-h-[600px] overflow-y-auto">
+        <div
+          class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-h-[600px] overflow-y-auto"
+        >
           <div
             v-for="product in filteredProducts"
             :key="product.id"
             class="bg-white border border-gray-200 rounded-xl shadow-sm p-4 flex flex-col"
           >
-            <div class="w-full h-24 bg-gray-100 rounded-lg mb-3 flex items-center justify-center">
-              <i class="fas fa-mug-hot text-gray-400 text-3xl"></i>
+            <div
+              class="w-full h-24 bg-gray-100 rounded-lg mb-3 flex items-center justify-center overflow-hidden"
+            >
+              <img
+                v-if="product.imageUrl"
+                :src="product.imageUrl"
+                :alt="product.name"
+                class="w-full h-full object-cover"
+                @error="(e) => (e.target.style.display = 'none')"
+              />
+              <i v-else class="fas fa-mug-hot text-gray-400 text-3xl"></i>
             </div>
-            <h3 class="font-semibold text-sm text-gray-800 flex-1">{{ product.name }}</h3>
-            <p class="text-sm text-gray-600 mt-1">{{ formatCurrency(product.price) }}</p>
+            <h3 class="font-semibold text-sm text-gray-800 flex-1">
+              {{ product.name }}
+            </h3>
+            <p class="text-sm text-gray-600 mt-1">
+              {{ formatCurrency(product.price) }}
+            </p>
             <button
               @click="handleAddToCart(product)"
               :disabled="product.status === 'unavailable'"
               class="mt-3 w-full px-3 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition text-sm font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed"
             >
-              {{ product.status === 'available' ? 'Tambah' : 'Tidak Tersedia' }}
+              {{ product.status === "available" ? "Tambah" : "Tidak Tersedia" }}
             </button>
           </div>
 
-          <div v-if="filteredProducts.length === 0" class="col-span-full text-center py-10 text-gray-500">
+          <div
+            v-if="filteredProducts.length === 0"
+            class="col-span-full text-center py-10 text-gray-500"
+          >
             <p>Tidak ada menu yang ditemukan</p>
           </div>
         </div>
@@ -481,14 +546,19 @@ const processPayment = async () => {
 
       <!-- Cart -->
       <div class="w-full lg:w-96">
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 sticky top-6">
+        <div
+          class="bg-white rounded-xl shadow-sm border border-gray-200 sticky top-6"
+        >
           <div class="p-5 border-b border-gray-200">
             <h2 class="text-xl font-semibold text-gray-900">Keranjang</h2>
             <p class="text-sm text-gray-500">{{ cart.length }} item</p>
           </div>
 
           <div class="p-5 space-y-3 max-h-[400px] overflow-y-auto">
-            <div v-if="cart.length === 0" class="text-center py-10 text-gray-500">
+            <div
+              v-if="cart.length === 0"
+              class="text-center py-10 text-gray-500"
+            >
               <i class="fas fa-shopping-cart text-4xl mb-2"></i>
               <p>Keranjang masih kosong</p>
             </div>
@@ -499,9 +569,15 @@ const processPayment = async () => {
               class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
             >
               <div class="flex-1">
-                <h4 class="font-medium text-sm text-gray-900">{{ item.name }}</h4>
-                <p v-if="item.variant" class="text-xs text-amber-600">{{ item.variant }}</p>
-                <p class="text-xs text-gray-600">{{ formatCurrency(item.price) }}</p>
+                <h4 class="font-medium text-sm text-gray-900">
+                  {{ item.name }}
+                </h4>
+                <p v-if="item.variant" class="text-xs text-amber-600">
+                  {{ item.variant }}
+                </p>
+                <p class="text-xs text-gray-600">
+                  {{ formatCurrency(item.price) }}
+                </p>
               </div>
 
               <div class="flex items-center gap-2">
@@ -511,7 +587,9 @@ const processPayment = async () => {
                 >
                   -
                 </button>
-                <span class="w-8 text-center text-sm font-medium">{{ item.quantity }}</span>
+                <span class="w-8 text-center text-sm font-medium">{{
+                  item.quantity
+                }}</span>
                 <button
                   @click="incrementQuantity(index)"
                   class="w-7 h-7 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm"
@@ -532,12 +610,16 @@ const processPayment = async () => {
           <div class="p-5 border-t border-gray-200 space-y-3">
             <div class="flex justify-between text-sm text-gray-700">
               <span>Subtotal:</span>
-              <span class="font-medium">{{ formatCurrency(cartSubtotal) }}</span>
+              <span class="font-medium">{{
+                formatCurrency(cartSubtotal)
+              }}</span>
             </div>
-            <hr class="border-gray-200">
+            <hr class="border-gray-200" />
             <div class="flex justify-between text-lg font-bold">
               <span>Total:</span>
-              <span class="text-amber-700">{{ formatCurrency(cartTotal) }}</span>
+              <span class="text-amber-700">{{
+                formatCurrency(cartTotal)
+              }}</span>
             </div>
 
             <button
@@ -553,20 +635,45 @@ const processPayment = async () => {
     </div>
 
     <!-- Modal: Pilih Varian -->
-    <div v-if="showVariantModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div
+      v-if="showVariantModal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    >
       <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4">
         <h3 class="text-xl font-bold text-gray-900 mb-4">Pilih Varian</h3>
         <p class="text-gray-600 mb-4">{{ selectedProduct?.name }}</p>
-        
+
         <div class="space-y-2 mb-6">
-          <label class="flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer hover:bg-gray-50"
-            :class="selectedVariant === 'Ice' ? 'border-amber-500 bg-amber-50' : 'border-gray-200'">
-            <input type="radio" v-model="selectedVariant" value="Ice" class="text-amber-600">
+          <label
+            class="flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer hover:bg-gray-50"
+            :class="
+              selectedVariant === 'Ice'
+                ? 'border-amber-500 bg-amber-50'
+                : 'border-gray-200'
+            "
+          >
+            <input
+              type="radio"
+              v-model="selectedVariant"
+              value="Ice"
+              class="text-amber-600"
+            />
             <span class="font-medium">Ice</span>
           </label>
-          <label class="flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer hover:bg-gray-50"
-            :class="selectedVariant === 'Hot' ? 'border-amber-500 bg-amber-50' : 'border-gray-200'">
-            <input type="radio" v-model="selectedVariant" value="Hot" class="text-amber-600">
+          <label
+            class="flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer hover:bg-gray-50"
+            :class="
+              selectedVariant === 'Hot'
+                ? 'border-amber-500 bg-amber-50'
+                : 'border-gray-200'
+            "
+          >
+            <input
+              type="radio"
+              v-model="selectedVariant"
+              value="Hot"
+              class="text-amber-600"
+            />
             <span class="font-medium">Hot</span>
           </label>
         </div>
@@ -589,19 +696,26 @@ const processPayment = async () => {
     </div>
 
     <!-- Modal: Pembayaran -->
-    <div v-if="showPaymentModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div
+      v-if="showPaymentModal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    >
       <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4">
         <h3 class="text-xl font-bold text-gray-900 mb-4">Proses Pembayaran</h3>
 
         <!-- Total -->
         <div class="bg-amber-50 rounded-lg p-4 mb-4">
           <div class="text-sm text-gray-600 mb-1">Total Pembayaran</div>
-          <div class="text-2xl font-bold text-amber-700">{{ formatCurrency(cartTotal) }}</div>
+          <div class="text-2xl font-bold text-amber-700">
+            {{ formatCurrency(cartTotal) }}
+          </div>
         </div>
 
         <!-- Payment Method -->
         <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-2">Metode Pembayaran</label>
+          <label class="block text-sm font-medium text-gray-700 mb-2"
+            >Metode Pembayaran</label
+          >
           <div class="grid grid-cols-2 gap-2">
             <button
               @click="paymentMethod = 'cash'"
@@ -609,7 +723,7 @@ const processPayment = async () => {
                 'p-3 rounded-lg border-2 text-sm font-medium',
                 paymentMethod === 'cash'
                   ? 'border-amber-500 bg-amber-50 text-amber-700'
-                  : 'border-gray-200 hover:border-gray-300'
+                  : 'border-gray-200 hover:border-gray-300',
               ]"
             >
               Cash
@@ -620,7 +734,7 @@ const processPayment = async () => {
                 'p-3 rounded-lg border-2 text-sm font-medium',
                 paymentMethod === 'qris'
                   ? 'border-amber-500 bg-amber-50 text-amber-700'
-                  : 'border-gray-200 hover:border-gray-300'
+                  : 'border-gray-200 hover:border-gray-300',
               ]"
             >
               QRIS
@@ -630,14 +744,16 @@ const processPayment = async () => {
 
         <!-- Input Jumlah (untuk cash) -->
         <div v-if="paymentMethod === 'cash'" class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-2">Jumlah Bayar</label>
+          <label class="block text-sm font-medium text-gray-700 mb-2"
+            >Jumlah Bayar</label
+          >
           <input
             v-model="paymentAmount"
             type="number"
             placeholder="0"
             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500 text-lg font-semibold"
           />
-          
+
           <!-- Quick Amount Buttons -->
           <div class="grid grid-cols-3 gap-2 mt-2">
             <button
@@ -651,13 +767,20 @@ const processPayment = async () => {
           </div>
 
           <!-- Change -->
-          <div v-if="paymentChange >= 0" class="mt-3 p-3 bg-green-50 rounded-lg">
+          <div
+            v-if="paymentChange >= 0"
+            class="mt-3 p-3 bg-green-50 rounded-lg"
+          >
             <div class="text-sm text-gray-600">Kembalian</div>
-            <div class="text-xl font-bold text-green-700">{{ formatCurrency(paymentChange) }}</div>
+            <div class="text-xl font-bold text-green-700">
+              {{ formatCurrency(paymentChange) }}
+            </div>
           </div>
           <div v-else class="mt-3 p-3 bg-red-50 rounded-lg">
             <div class="text-sm text-red-600">Pembayaran Kurang</div>
-            <div class="text-xl font-bold text-red-700">{{ formatCurrency(Math.abs(paymentChange)) }}</div>
+            <div class="text-xl font-bold text-red-700">
+              {{ formatCurrency(Math.abs(paymentChange)) }}
+            </div>
           </div>
         </div>
 
