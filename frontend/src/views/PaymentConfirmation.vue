@@ -33,7 +33,8 @@
       >
         <section class="my-4">
           <div
-            class="border-2 border-orange-500 rounded-xl px-4 py-3 flex items-center justify-between"
+            class="border-2 rounded-xl px-4 py-3 flex items-center justify-between"
+            style="border-color: #B85814;"
           >
             <p class="text-sm text-gray-600">Order Type</p>
             <div class="flex items-center gap-2">
@@ -41,7 +42,8 @@
                 {{ orderData.orderType }}
               </p>
               <div
-                class="w-7 h-7 rounded-full bg-orange-600 flex items-center justify-center"
+                class="w-7 h-7 rounded-full flex items-center justify-center"
+                style="background-color: #B85814;"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -129,7 +131,7 @@
             class="flex justify-between items-center font-bold text-base text-gray-900"
           >
             <span>Total</span>
-            <span class="text-orange-600"
+            <span style="color: #B85814;"
               >Rp{{ formatPrice(orderData.totals.total) }}</span
             >
           </div>
@@ -189,7 +191,10 @@
         <button
           @click="processFinalOrder"
           :disabled="isSubmitting"
-          class="w-full py-3.5 bg-orange-600 hover:bg-orange-700 text-white text-base font-bold rounded-xl transition-all shadow-lg active:scale-[0.98] disabled:bg-gray-400 disabled:cursor-not-allowed"
+          class="w-full py-3 text-white text-sm font-bold rounded-xl transition-all shadow-lg active:scale-[0.98] disabled:bg-gray-400 disabled:cursor-not-allowed"
+          style="background-color: #B85814;"
+          @mouseover="!isSubmitting ? ($event.target.style.backgroundColor='#A04D12') : null"
+          @mouseout="!isSubmitting ? ($event.target.style.backgroundColor='#B85814') : null"
         >
           {{ isSubmitting ? "Processing..." : "Submit Order" }}
         </button>

@@ -118,7 +118,8 @@
             <div class="flex items-center gap-2 text-gray-900">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                class="h-5 w-5 text-orange-500"
+                class="h-5 w-5"
+                style="color: #B85814;"
                 viewBox="0 0 20 20"
                 fill="currentColor"
               >
@@ -128,7 +129,7 @@
                   clip-rule="evenodd"
                 />
               </svg>
-              <span class="text-base font-medium text-orange-700">{{
+              <span class="text-base font-medium" style="color: #B85814;">{{
                 dateTime
               }}</span>
             </div>
@@ -169,7 +170,10 @@
       <footer class="bg-white border-t border-gray-200 pb-4 pt-3 px-6">
         <button
           @click="backToMenu"
-          class="w-full py-4 bg-orange-600 hover:bg-orange-700 text-white text-base font-bold rounded-xl transition-all shadow-lg active:scale-[0.98]"
+          class="w-full py-3 text-white text-sm font-bold rounded-xl transition-all shadow-lg active:scale-[0.98]"
+          style="background-color: #B85814;"
+          @mouseover="$event.target.style.backgroundColor='#A04D12'"
+          @mouseout="$event.target.style.backgroundColor='#B85814'"
         >
           {{ hasData ? "Buat Pesanan Baru" : "Kembali ke Menu" }}
         </button>

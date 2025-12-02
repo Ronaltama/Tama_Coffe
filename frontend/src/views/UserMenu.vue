@@ -138,7 +138,10 @@
 
                 <button
                   @click="handleProductClick(product)"
-                  class="w-full py-2 bg-white hover:bg-amber-600 text-amber-600 hover:text-white border border-amber-600 font-medium rounded-md transition-colors text-center mt-auto"
+                  class="w-full py-2 bg-white text-white border-2 font-medium rounded-md transition-colors text-center mt-auto"
+                  style="border-color: #B85814; color: #B85814;"
+                  onmouseover="this.style.backgroundColor='#B85814'; this.style.color='white'"
+                  onmouseout="this.style.backgroundColor='white'; this.style.color='#B85814'"
                 >
                   Add
                 </button>
@@ -287,7 +290,10 @@
               <div class="p-4 bg-white border-t border-gray-100">
                 <button
                   @click="goToPayment"
-                  class="w-full bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white py-3.5 rounded-xl font-bold shadow-lg shadow-orange-200 transform transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                  class="w-full text-white py-3.5 rounded-xl font-bold shadow-lg transform transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                  style="background-color: #B85814;"
+                  onmouseover="this.style.backgroundColor='#A04D12'"
+                  onmouseout="this.style.backgroundColor='#B85814'"
                 >
                   <span>Lanjut Pembayaran</span>
                   <svg

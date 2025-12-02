@@ -87,8 +87,11 @@
                     :class="
                       item.quantity === 1
                         ? 'bg-gray-100 text-gray-400'
-                        : 'bg-white border-2 border-orange-600 text-orange-600 hover:bg-orange-50'
+                        : 'bg-white border-2'
                     "
+                    :style="item.quantity !== 1 ? 'border-color: #B85814; color: #B85814;' : ''"
+                    @mouseover="item.quantity !== 1 ? ($event.target.style.backgroundColor='#FFF7ED') : null"
+                    @mouseout="item.quantity !== 1 ? ($event.target.style.backgroundColor='white') : null"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -111,7 +114,10 @@
 
                   <button
                     @click="incrementCart(item.id)"
-                    class="w-9 h-9 rounded-lg bg-orange-600 text-white flex items-center justify-center hover:bg-orange-700 transition-colors shadow-sm"
+                    class="w-9 h-9 rounded-lg text-white flex items-center justify-center transition-colors shadow-sm"
+                    style="background-color: #B85814;"
+                    @mouseover="$event.target.style.backgroundColor='#A04D12'"
+                    @mouseout="$event.target.style.backgroundColor='#B85814'"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -192,8 +198,8 @@
       >
         <div class="mb-4">
           <div class="flex justify-between items-center">
-            <span class="text-base font-bold text-gray-900">Total</span>
-            <span class="text-2xl font-bold text-gray-900"
+            <span class="text-sm font-bold text-gray-900">Total</span>
+            <span class="text-xl font-bold text-gray-900"
               >Rp{{ totalPrice }}</span
             >
           </div>
@@ -201,7 +207,10 @@
 
         <button
           @click="goToPayment"
-          class="w-full py-4 bg-orange-600 hover:bg-orange-700 text-white text-base font-bold rounded-xl transition-all shadow-lg active:scale-[0.98]"
+          class="w-full py-3 text-white text-sm font-bold rounded-xl transition-all shadow-lg active:scale-[0.98]"
+          style="background-color: #B85814;"
+          @mouseover="$event.target.style.backgroundColor='#A04D12'"
+          @mouseout="$event.target.style.backgroundColor='#B85814'"
         >
           Place Order
         </button>

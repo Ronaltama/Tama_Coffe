@@ -30,14 +30,16 @@
 
       <main class="pt-20 pb-32 px-4 bg-neutral-100">
         <section
-          class="mb-4 bg-white rounded-xl border-2 border-orange-500 p-4 flex items-center justify-between"
+          class="mb-4 bg-white rounded-xl border-2 p-4 flex items-center justify-between"
+          style="border-color: #B85814;"
         >
           <div>
             <p class="text-xs text-gray-500 mb-1">Tipe Pemesanan</p>
             <p class="font-bold text-gray-900">{{ orderType }}</p>
           </div>
           <div
-            class="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center"
+            class="w-8 h-8 rounded-full flex items-center justify-center"
+            style="background-color: #B85814;"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -179,7 +181,7 @@
               </div>
             </div>
 
-            <div>
+            <div v-if="orderType === 'Reservasi'">
               <label class="text-sm text-gray-900 font-medium mb-2 block"
                 >Jumlah Orang*</label
               >
@@ -201,13 +203,8 @@
                 <input
                   v-model="numberOfPeople"
                   type="text"
-                  :readonly="orderType === 'Reservasi'"
-                  :class="[
-                    'w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg',
-                    orderType === 'Reservasi'
-                      ? 'bg-gray-100 text-gray-700'
-                      : 'bg-gray-50 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500',
-                  ]"
+                  readonly
+                  class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg bg-gray-100 text-gray-700"
                 />
               </div>
             </div>
@@ -215,7 +212,7 @@
         </section>
 
         <section class="mb-4 bg-white rounded-xl p-4">
-          <h2 class="text-lg font-bold text-gray-900 mb-4">
+          <h2 class="text-base font-bold text-gray-900 mb-3">
             Metode Pembayaran
           </h2>
 
@@ -224,11 +221,13 @@
             <div v-if="orderType === 'Reservasi'" class="space-y-3">
               <button
                 @click="paymentMethod = 'qris'"
-                class="w-full py-3 px-4 rounded-lg border-2 border-orange-500 bg-orange-50 text-orange-700 font-semibold flex items-center justify-between"
+                class="w-full py-2.5 px-3 rounded-lg border-2 font-medium text-sm flex items-center justify-between"
+                style="border-color: #B85814; background-color: #FFF7ED; color: #B85814;"
               >
                 <span>Pembayaran Online (QRIS)</span>
                 <div
-                  class="w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center"
+                  class="w-6 h-6 rounded-full flex items-center justify-center"
+                  style="background-color: #B85814;"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -255,22 +254,24 @@
                 <button
                   @click="paymentMethod = 'qris'"
                   :class="[
-                    'flex-1 py-3 px-4 rounded-lg border-2 font-semibold transition-colors',
+                    'flex-1 py-2.5 px-3 rounded-lg border-2 font-medium text-sm transition-colors',
                     paymentMethod === 'qris'
-                      ? 'border-orange-500 bg-orange-50 text-orange-700'
+                      ? ''
                       : 'border-gray-200 bg-white text-gray-700',
                   ]"
+                  :style="paymentMethod === 'qris' ? 'border-color: #B85814; background-color: #FFF7ED; color: #B85814;' : ''"
                 >
                   Pembayaran Online
                 </button>
                 <button
                   @click="paymentMethod = 'cash'"
                   :class="[
-                    'flex-1 py-3 px-4 rounded-lg border-2 font-semibold transition-colors',
+                    'flex-1 py-2.5 px-3 rounded-lg border-2 font-medium text-sm transition-colors',
                     paymentMethod === 'cash'
-                      ? 'border-orange-500 bg-orange-50 text-orange-700'
+                      ? ''
                       : 'border-gray-200 bg-white text-gray-700',
                   ]"
+                  :style="paymentMethod === 'cash' ? 'border-color: #B85814; background-color: #FFF7ED; color: #B85814;' : ''"
                 >
                   Bayar di Kasir
                 </button>
@@ -286,13 +287,16 @@
         <div class="p-4 flex items-center justify-between">
           <div>
             <p class="text-xs text-gray-500">Total Pemesanan</p>
-            <p class="text-2xl font-bold text-gray-900">
+            <p class="text-xl font-bold text-gray-900">
               Rp{{ formatPrice(totalPaymentPrice) }}
             </p>
           </div>
           <button
             @click="handlePlaceOrder"
-            class="px-12 py-4 bg-orange-600 hover:bg-orange-700 text-white text-lg font-bold rounded-xl transition-colors shadow-lg"
+            class="px-10 py-3 text-white text-sm font-bold rounded-xl transition-colors shadow-lg"
+            style="background-color: #B85814;"
+            @mouseover="$event.target.style.backgroundColor='#A04D12'"
+            @mouseout="$event.target.style.backgroundColor='#B85814'"
           >
             Pay
           </button>
@@ -359,7 +363,7 @@ const handlePlaceOrder = () => {
     return;
   }
 
-  if (!numberOfPeople.value) {
+  if (orderType.value === 'Reservasi' && !numberOfPeople.value) {
     alert("Mohon isi jumlah orang");
     return;
   }
