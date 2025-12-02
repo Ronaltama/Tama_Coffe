@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Product;
 use App\Models\Table;
 use App\Models\Order;
+use Illuminate\Support\Facades\DB;
 
 class DashboardSuperController extends Controller
 {
@@ -16,12 +17,12 @@ class DashboardSuperController extends Controller
     public function index()
     {
         return response()->json([
-            'total_users'      => User::count(),
-            'total_admins'     => User::whereHas('role', fn($q) => $q->where('name', 'admin'))->count(),
+            'total_users' => User::count(),
+            'total_admins' => User::whereHas('role', fn($q) => $q->where('name', 'admin'))->count(),
             'total_superadmin' => User::whereHas('role', fn($q) => $q->where('name', 'superadmin'))->count(),
-            'total_products'   => Product::count(),
-            'total_tables'     => Table::count(),
-            'total_orders'     => Order::count(),
+            'total_products' => Product::count(),
+            'total_tables' => Table::count(),
+            'total_orders' => Order::count(),
         ]);
     }
 
@@ -119,7 +120,7 @@ class DashboardSuperController extends Controller
 
     private function getProductSales()
     {
-        $sales = \DB::table('order_details')
+        $sales = DB::table('order_details')
             ->join('orders', 'order_details.order_id', '=', 'orders.id')
             ->join('products', 'order_details.product_id', '=', 'products.id')
             ->whereIn('orders.status', ['completed', 'processing'])
@@ -130,5 +131,35 @@ class DashboardSuperController extends Controller
             ->get();
 
         return response()->json($sales);
+    }
+
+    /**
+     * Get all order history for Superadmin with processed_by info
+     */
+    public function getOrderHistory()
+    {
+        // Query orders dengan join ke users untuk mendapatkan nama admin
+        $orders = DB::table('orders')
+            ->leftJoin('users', 'orders.user_id', '=', 'users.id')
+            ->select(
+                'orders.*',
+                'users.name as processed_by'
+            )
+            ->orderBy('orders.created_at', 'desc')
+            ->get();
+
+        // Hitung stats
+        $stats = [
+            'waiting' => $orders->where('status', 'pending')->count(),
+            'processing' => $orders->where('status', 'processing')->count(),
+            'completed' => $orders->where('status', 'completed')->count(),
+            'finishedRevenue' => $orders->where('status', 'completed')->sum('total_price'),
+        ];
+
+        return response()->json([
+            'success' => true,
+            'data' => $orders,
+            'stats' => $stats,
+        ]);
     }
 }
