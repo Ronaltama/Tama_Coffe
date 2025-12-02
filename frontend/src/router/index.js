@@ -208,7 +208,13 @@ const routes = [
         props: true,
       },
       { path: "history", component: HistorySuperAdmin },
-      { path: "history-test", component: HistoryPlaceholder },
+      // Tambahkan route baru untuk SuperAdmin OrderDetail
+      {
+        path: "order-detail/:id",
+        name: "SuperAdminOrderDetail",
+        component: () => import("../SuperAdmin/OrderDetail.vue"),
+        props: true,
+      },
     ],
   },
 
