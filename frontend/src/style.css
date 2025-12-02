@@ -1,1 +1,25 @@
 @import "tailwindcss";
+
+/* Custom Colors - Design System */
+@theme {
+    --color-azure-11: #1E3A8A;
+    --color-azure-17: #1E40AF;
+    --color-azure-27: #3B82F6;
+    --color-azure-34: #60A5FA;
+
+    --color-grey-46: #6B7280;
+    --color-grey-91: #E5E7EB;
+    --color-grey-94: #F3F4F6;
+    --color-grey-96: #F9FAFB;
+
+    --color-orange-29: #D97706;
+    --color-brown: #854D0E;
+    --color-brown-dark: #6B3D0A;
+
+    --color-blue-41: #3B82F6;
+
+    --color-spring-green-36: #10B981;
+    --color-spring-green-45: #10B981;
+
+    --color-red-60: #DC2626;
+}

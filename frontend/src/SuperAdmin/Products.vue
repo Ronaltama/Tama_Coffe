@@ -2,7 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
-import Swal from 'sweetalert2' // Import SweetAlert2
+import Swal from 'sweetalert2'
 
 const router = useRouter()
 
@@ -10,29 +10,24 @@ const router = useRouter()
 const categories = ref([])
 const products = ref([])
 const activeTab = ref(null)
-const activeSubTab = ref(null)
 const loading = ref(true)
 const error = ref(null)
 const searchQuery = ref('')
 const selectedCategory = ref('all')
-const togglingStatus = ref({})
 
 // === API BASE URL ===
-const API_BASE = 'http://localhost:8000/api' // ganti jika port backend berbeda
+const API_BASE = 'http://localhost:8000/api'
 
 // === FETCH DATA CATEGORY DAN PRODUK ===
 const fetchCategories = async () => {
   try {
-    // 💡 Tambahkan header Authorization jika belum diatur secara global
-    const token = localStorage.getItem('token');
-    const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+    const token = localStorage.getItem('token')
+    const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {}
     
     const res = await axios.get(`${API_BASE}/categories`, config)
     categories.value = res.data.data
     if (categories.value.length > 0) {
       activeTab.value = categories.value[0].name
-      const firstSub = categories.value[0].sub_categories[0]
-      activeSubTab.value = firstSub ? firstSub.name : null
     }
   } catch (err) {
     console.error(err)
@@ -42,8 +37,8 @@ const fetchCategories = async () => {
 
 const fetchProducts = async () => {
   try {
-    const token = localStorage.getItem('token');
-    const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+    const token = localStorage.getItem('token')
+    const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {}
 
     const res = await axios.get(`${API_BASE}/products`, config)
     products.value = res.data.data
@@ -86,7 +81,6 @@ const filteredProducts = computed(() => {
   return filtered
 })
 
-
 // Get subcategories for dropdown based on active tab
 const subCategoriesForDropdown = computed(() => {
   const activeCategory = categories.value.find(c => c.name === activeTab.value)
@@ -94,14 +88,6 @@ const subCategoriesForDropdown = computed(() => {
 })
 
 // === HELPER === 
-const getImageUrl = (imagePath) => {
-  if (!imagePath) return 'https://placehold.co/100x100/FBE8D9/8B4113?text=No+Image'
-  // Jika imagePath sudah full URL, return as is
-  if (imagePath.startsWith('http')) return imagePath
-  // Jika imagePath relatif (misal: products/xxx.jpg), gabungkan dengan base URL
-  return `http://localhost:8000/storage/${imagePath}`
-}
-
 const formatCurrency = (value) => {
   return new Intl.NumberFormat('id-ID', {
     style: 'currency',
@@ -110,26 +96,11 @@ const formatCurrency = (value) => {
   }).format(value)
 }
 
-const getStatusClasses = (status) => {
-  if (status === 'available') return 'bg-green-100 text-green-700'
-  if (status === 'unavailable') return 'bg-red-100 text-red-700'
-  return 'bg-gray-100 text-gray-700'
-}
-
-const getStatusText = (status) => {
-  if (status === 'available') return 'Available'
-  if (status === 'unavailable') return 'Unavailable'
-  return status
-}
-
 // === ACTIONS ===
 const setActiveTab = (tabName) => {
   activeTab.value = tabName
-  const category = categories.value.find(c => c.name === tabName)
-  const firstSub = category?.sub_categories[0]
-  activeSubTab.value = firstSub ? firstSub.name : null
-  selectedCategory.value = 'all' // Reset dropdown filter
-  searchQuery.value = '' // Reset search
+  selectedCategory.value = 'all'
+  searchQuery.value = ''
 }
 
 const addProduct = () => {
@@ -140,315 +111,245 @@ const editProduct = (id) => {
   router.push(`/superadmin/products/edit/${id}`)
 }
 
-// 💡 Menggunakan SweetAlert2 untuk konfirmasi dan notifikasi delete
 const deleteProduct = async (product) => {
   const result = await Swal.fire({
-    title: `Hapus ${product.name}?`,
-    text: "Tindakan ini tidak bisa dibatalkan.",
+    title: `Delete ${product.name}?`,
+    text: "This action cannot be undone.",
     icon: "warning",
     showCancelButton: true,
-    confirmButtonColor: "#d33",
-    cancelButtonColor: "#3085d6",
-    confirmButtonText: "Ya, Hapus!",
-    cancelButtonText: "Batal"
-  });
+    confirmButtonColor: "#dc2626",
+    cancelButtonColor: "#6b7280",
+    confirmButtonText: "Yes, delete it!",
+    cancelButtonText: "Cancel",
+    reverseButtons: true
+  })
 
   if (result.isConfirmed) {
     try {
-      // Panggil API delete
-      const token = localStorage.getItem('token');
-      const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+      const token = localStorage.getItem('token')
+      const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {}
       await axios.delete(`${API_BASE}/products/${product.id}`, config)
       
-      // Update state lokal
       products.value = products.value.filter(p => p.id !== product.id)
       
-      // Notifikasi sukses
       Swal.fire({
         icon: "success",
-        title: "Dihapus!",
-        text: `Produk ${product.name} berhasil dihapus.`,
-        showConfirmButton: false,
-        timer: 1500
-      });
+        title: "Deleted!",
+        text: `Product ${product.name} has been deleted.`,
+        confirmButtonColor: "#854D0E",
+        timer: 1500,
+        showConfirmButton: false
+      })
 
     } catch (err) {
       console.error(err)
-      // Notifikasi gagal
       Swal.fire({
         icon: "error",
-        title: "Gagal!",
-        text: "Gagal menghapus produk. Silakan coba lagi.",
-      });
+        title: "Failed!",
+        text: "Failed to delete product. Please try again.",
+        confirmButtonColor: "#854D0E",
+      })
     }
-  }
-}
-
-// 💡 Menggunakan SweetAlert2 untuk notifikasi toggle status
-const toggleProductStatus = async (product) => {
-  togglingStatus.value[product.id] = true
-  let newStatusText = '';
-  try {
-    const token = localStorage.getItem('token');
-    const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
-
-    const response = await axios.patch(`${API_BASE}/products/${product.id}/toggle-status`, {}, config)
-
-    if (response.data.success) {
-      // Update status di local state
-      const index = products.value.findIndex(p => p.id === product.id)
-      if (index !== -1) {
-        products.value[index].status = response.data.data.status
-        newStatusText = getStatusText(response.data.data.status);
-      }
-
-      // Notifikasi sukses
-      Swal.fire({
-        icon: "info",
-        title: "Status Diubah!",
-        text: `${product.name} sekarang: ${newStatusText}.`,
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true,
-      });
-
-    }
-  } catch (err) {
-    console.error(err)
-    // Notifikasi gagal
-    Swal.fire({
-      icon: "error",
-      title: "Gagal!",
-      text: "Gagal mengubah status produk.",
-    });
-  } finally {
-    togglingStatus.value[product.id] = false
   }
 }
 </script>
 
 <template>
-  <div class="p-6 bg-gray-50 min-h-screen">
-    <!-- Header -->
-    <div class="mb-6">
-      <h1 class="text-2xl font-bold text-gray-900">Products Management</h1>
-    </div>
-
-    <!-- Loading State -->
-    <div v-if="loading" class="text-center py-8">
-      <p class="text-gray-500">Loading...</p>
-    </div>
-
-    <!-- Error State -->
-    <div v-else-if="error" class="text-center py-8">
-      <p class="text-red-500">{{ error }}</p>
-    </div>
-
-    <!-- Main Content -->
-    <div v-else>
-      <!-- Tab Navigation: Drink / Food -->
-      <div class="border-b border-gray-200 mb-6">
-        <nav class="flex space-x-8">
-          <button 
-            v-for="category in categories" 
-            :key="category.id" 
-            @click="setActiveTab(category.name)" 
-            :class="[
-              'py-3 px-1 text-base font-medium transition-colors relative',
-              activeTab === category.name
-                ? 'text-amber-700 border-b-2 border-amber-700'
-                : 'text-gray-500 hover:text-gray-700'
-            ]"
-          >
-            {{ category.name }}
-          </button>
-        </nav>
+  <div class="flex-1 overflow-auto font-inter">
+    <div class="p-8 max-w-[1920px] mx-auto">
+      <!-- Page Title -->
+      <div class="mb-6">
+        <h1 class="text-color-azure-11 text-4xl font-bold font-inter leading-tight">Products Management</h1>
       </div>
 
-      <!-- Actions Bar -->
-      <div class="flex justify-end mb-6">
-        <button 
-          @click="addProduct"
-          class="bg-amber-700 hover:bg-amber-800 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
-          </svg>
-          Add Products
-        </button>
-      </div>
-
-      <!-- Search and Filter Bar -->
-      <div class="flex gap-4 mb-6">
-        <!-- Search Input -->
-        <div class="flex-1 relative">
-          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
-            </svg>
-          </div>
-          <input 
-            v-model="searchQuery"
-            type="text" 
-            :placeholder="`Search ${activeTab}`"
-            class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
-          >
+      <!-- Loading State -->
+      <div v-if="loading" class="bg-white rounded-2xl shadow-sm p-16 text-center">
+        <div class="inline-flex items-center gap-3">
+          <div class="w-5 h-5 border-2 border-color-brown border-t-transparent rounded-full animate-spin"></div>
+          <div class="text-color-grey-46 text-sm font-medium">Loading products...</div>
         </div>
+      </div>
 
-        <!-- Category Filter Dropdown -->
-        <div class="relative">
-          <select 
-            v-model="selectedCategory"
-            class="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-10 focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none cursor-pointer"
-          >
-            <option value="all">Category</option>
-            <option 
-              v-for="sub in subCategoriesForDropdown" 
-              :key="sub.id" 
-              :value="sub.name"
+      <!-- Error State -->
+      <div v-else-if="error" class="bg-white rounded-2xl shadow-sm p-16 text-center">
+        <p class="text-red-500">{{ error }}</p>
+      </div>
+
+      <!-- Main Content -->
+      <div v-else>
+        <!-- Tab Navigation: Drink / Food -->
+        <div class="border-b border-gray-200 mb-6">
+          <nav class="flex space-x-8">
+            <button 
+              v-for="category in categories" 
+              :key="category.id" 
+              @click="setActiveTab(category.name)" 
+              :class="[
+                'py-3 px-1 text-base font-semibold font-inter transition-colors relative',
+                activeTab === category.name
+                  ? 'text-color-brown border-b-2'
+                  : 'text-gray-500 hover:text-gray-700'
+              ]"
+              :style="activeTab === category.name ? 'border-color: #854D0E' : ''"
             >
-              {{ sub.name }}
-            </option>
-          </select>
-          <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-            <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-            </svg>
-          </div>
+              {{ category.name }}
+            </button>
+          </nav>
         </div>
-      </div>
 
-      <!-- Products Table -->
-      <div class="bg-white rounded-lg shadow overflow-hidden">
-        <div class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200">
-            <!-- Table Header -->
-            <thead class="bg-gray-50">
-              <tr>
-                <th scope="col" class="px-6 py-4 text-left text-sm font-medium text-gray-700 w-[120px]">Image</th>
-                <th scope="col" class="px-6 py-4 text-left text-sm font-medium text-gray-700 w-[200px]">Products Name</th>
-                <th scope="col" class="px-6 py-4 text-left text-sm font-medium text-gray-700 w-[150px]">Category</th>
-                <th scope="col" class="px-6 py-4 text-left text-sm font-medium text-gray-700 w-[120px]">Status</th>
-                <th scope="col" class="px-6 py-4 text-left text-sm font-medium text-gray-700 w-[150px]">Price</th>
-                <th scope="col" class="px-6 py-4 text-center text-sm font-medium text-gray-700 w-[120px]">Toggle Status</th>
-                <th scope="col" class="px-6 py-4 text-right text-sm font-medium text-gray-700 w-[100px]">Actions</th>
-              </tr>
-            </thead>
+        <!-- Add Products Button -->
+        <div class="mb-6 flex justify-end">
+          <button
+            @click="addProduct"
+            style="background-color: #854D0E"
+            class="px-5 py-2.5 text-white rounded-lg flex items-center gap-2 transition-all duration-200 hover:opacity-90 hover:shadow-md active:scale-95 font-medium"
+          >
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+            <span class="text-sm font-medium font-inter">Add Products</span>
+          </button>
+        </div>
 
-            <!-- Table Body -->
-            <tbody class="bg-white divide-y divide-gray-200">
-              <!-- Empty State -->
-              <tr v-if="filteredProducts.length === 0">
-                <td colspan="7" class="px-6 py-12 text-center">
-                  <div class="flex flex-col items-center justify-center">
-                    <svg class="h-16 w-16 text-gray-400 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                    </svg>
-                    <p class="text-gray-500 text-lg font-medium">No products found</p>
-                    <p class="text-gray-400 text-sm mt-1">Try adjusting your search or filter to find what you're looking for.</p>
-                  </div>
-                </td>
-              </tr>
+        <!-- Table Card -->
+        <div class="rounded-2xl overflow-hidden">
+          <!-- Search and Filter Bar -->
+          <div class="p-6 bg-white border-b border-gray-100 flex gap-4">
+            <!-- Search Input -->
+            <div class="flex-1 relative">
+              <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="11" cy="11" r="6" stroke="currentColor" stroke-width="2"/>
+                <path d="M20 20L17 17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              <input
+                v-model="searchQuery"
+                type="text"
+                :placeholder="`Search ${activeTab}`"
+                class="w-full pl-10 pr-4 py-2.5 bg-white rounded-xl border border-gray-200 text-sm font-normal font-inter text-gray-700 placeholder-gray-400 outline-none focus:border-color-brown focus:ring-2 focus:ring-orange-100 transition-all duration-200"
+              />
+            </div>
 
-              <!-- Product Rows -->
-              <tr 
-                v-else
-                v-for="product in filteredProducts" 
-                :key="product.id"
-                class="hover:bg-gray-50 transition-colors"
+            <!-- Category Filter Dropdown -->
+            <div class="relative">
+              <select
+                v-model="selectedCategory"
+                class="appearance-none bg-white border border-gray-200 rounded-xl px-4 py-2.5 pr-10 text-sm font-normal font-inter text-gray-700 outline-none focus:border-color-brown focus:ring-2 focus:ring-orange-100 cursor-pointer transition-all duration-200"
+                style="background-image: url('data:image/svg+xml,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 fill=%27none%27 viewBox=%270 0 20 20%27%3e%3cpath stroke=%27%236b7280%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27 stroke-width=%271.5%27 d=%27M6 8l4 4 4-4%27/%3e%3c/svg%3e'); background-position: right 0.75rem center; background-repeat: no-repeat; background-size: 1.25em 1.25em; padding-right: 2.5rem;"
               >
-                <!-- Product Image -->
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <img 
-                    :src="getImageUrl(product.image)" 
-                    :alt="product.name"
-                    class="w-16 h-16 object-cover rounded-lg border border-gray-200"
-                    @error="$event.target.src='https://placehold.co/60x60/FBE8D9/8B4113?text=No+Image'"
+                <option value="all">Category</option>
+                <option 
+                  v-for="sub in subCategoriesForDropdown" 
+                  :key="sub.id" 
+                  :value="sub.name"
+                >
+                  {{ sub.name }}
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Products Table -->
+          <div class="overflow-x-auto bg-white">
+            <table class="w-full">
+              <!-- Table Header -->
+              <thead class="bg-gray-50">
+                <tr class="border-b border-gray-100">
+                  <th class="px-6 py-4 text-left">
+                    <div class="text-color-azure-34 text-xs font-semibold font-inter uppercase tracking-wider">Products Name</div>
+                  </th>
+                  <th class="px-6 py-4 text-center">
+                    <div class="text-color-azure-34 text-xs font-semibold font-inter uppercase tracking-wider">Category</div>
+                  </th>
+                  <th class="px-6 py-4 text-center">
+                    <div class="text-color-azure-34 text-xs font-semibold font-inter uppercase tracking-wider">Status</div>
+                  </th>
+                  <th class="px-6 py-4 text-right">
+                    <div class="text-color-azure-34 text-xs font-semibold font-inter uppercase tracking-wider">Price</div>
+                  </th>
+                  <th class="px-6 py-4 text-center">
+                    <div class="text-color-azure-34 text-xs font-semibold font-inter uppercase tracking-wider">Actions</div>
+                  </th>
+                </tr>
+              </thead>
+
+              <!-- Table Body -->
+              <tbody class="bg-white divide-y divide-gray-100">
+                <template v-if="filteredProducts.length === 0">
+                  <tr>
+                    <td colspan="5" class="p-12 text-center">
+                      <div class="flex flex-col items-center gap-3">
+                        <svg class="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                        </svg>
+                        <div class="text-color-grey-46 text-sm font-medium">No products found</div>
+                        <div class="text-gray-400 text-xs">{{ searchQuery ? 'Try different search keywords' : 'Start by adding your first product' }}</div>
+                      </div>
+                    </td>
+                  </tr>
+                </template>
+
+                <template v-else>
+                  <tr
+                    v-for="product in filteredProducts"
+                    :key="product.id"
+                    class="hover:bg-gray-50 transition-colors duration-150"
                   >
-                </td>
+                    <!-- Product Name -->
+                    <td class="px-6 py-4">
+                      <div class="text-color-azure-11 text-sm font-semibold font-inter">{{ product.name }}</div>
+                    </td>
 
-                <!-- Product Name -->
-                <td class="px-6 py-4 text-sm font-medium text-gray-900">
-                  {{ product.name }}
-                </td>
+                    <!-- Category -->
+                    <td class="px-6 py-4 text-center">
+                      <div class="text-color-grey-46 text-sm font-normal font-inter">{{ product.sub_category?.name || product.category?.name || '-' }}</div>
+                    </td>
 
-                <!-- Category -->
-                <td class="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">
-                  {{ product.sub_category?.name || product.category?.name || '-' }}
-                </td>
+                    <!-- Status -->
+                    <td class="px-6 py-4">
+                      <div class="flex justify-center items-center gap-2">
+                        <div :class="product.status === 'available' ? 'bg-green-500' : 'bg-red-500'" class="w-2 h-2 rounded-full shadow-sm"></div>
+                        <div :class="product.status === 'available' ? 'text-green-600' : 'text-red-600'" class="text-sm font-semibold font-inter capitalize">
+                          {{ product.status === 'available' ? 'Available' : 'Unavailable' }}
+                        </div>
+                      </div>
+                    </td>
 
-                <!-- Status -->
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <span 
-                    :class="[
-                      'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium',
-                      getStatusClasses(product.status)
-                    ]"
-                  >
-                    <span 
-                      :class="[
-                        'w-1.5 h-1.5 rounded-full mr-1.5',
-                        product.status === 'available' ? 'bg-green-600' : 'bg-red-600'
-                      ]"
-                    ></span>
-                    {{ getStatusText(product.status) }}
-                  </span>
-                </td>
+                    <!-- Price -->
+                    <td class="px-6 py-4 text-right">
+                      <div class="text-color-grey-46 text-sm font-normal font-inter">{{ formatCurrency(product.price) }}</div>
+                    </td>
 
-                <!-- Price -->
-                <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
-                  {{ formatCurrency(product.price) }}
-                </td>
+                    <!-- Actions -->
+                    <td class="px-6 py-4">
+                      <div class="flex justify-center items-center gap-1">
+                        <!-- Edit Button -->
+                        <button
+                          @click="editProduct(product.id)"
+                          class="p-2 text-gray-500 hover:text-color-brown hover:bg-orange-50 rounded-lg transition-all duration-200 active:scale-95"
+                          title="Edit product"
+                        >
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
 
-                <!-- Toggle Status -->
-                <td class="px-6 py-4 whitespace-nowrap text-center">
-                  <button
-                    @click="toggleProductStatus(product)"
-                    :disabled="togglingStatus[product.id]"
-                    :class="[
-                      'relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2',
-                      product.status === 'available' ? 'bg-green-600' : 'bg-gray-300',
-                      togglingStatus[product.id] ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-                    ]"
-                    :title="product.status === 'available' ? 'Set to Unavailable' : 'Set to Available'"
-                  >
-                    <span
-                      :class="[
-                        'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
-                        product.status === 'available' ? 'translate-x-6' : 'translate-x-1'
-                      ]"
-                    />
-                  </button>
-                </td>
-
-                <!-- Actions -->
-                <td class="px-6 py-4 whitespace-nowrap text-right">
-                  <div class="flex justify-end gap-2">
-                    <button 
-                      @click="editProduct(product.id)"
-                      class="p-2 text-gray-600 hover:text-amber-700 hover:bg-amber-50 rounded transition-colors"
-                      title="Edit"
-                    >
-                      <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                      </svg>
-                    </button>
-                    <button 
-                      @click="deleteProduct(product)"
-                      class="p-2 text-gray-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
-                      title="Delete"
-                    >
-                      <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
-                      </svg>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                        <!-- Delete Button -->
+                        <button
+                          @click="deleteProduct(product)"
+                          class="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 active:scale-95"
+                          title="Delete product"
+                        >
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
@@ -456,28 +357,28 @@ const toggleProductStatus = async (product) => {
 </template>
 
 <style scoped>
-/* Custom scrollbar untuk table jika diperlukan */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+.font-inter {
+  font-family: 'Inter', sans-serif;
+}
+
+/* Custom scrollbar */
 .overflow-x-auto::-webkit-scrollbar {
   height: 8px;
 }
 
 .overflow-x-auto::-webkit-scrollbar-track {
   background: #f1f1f1;
+  border-radius: 10px;
 }
 
 .overflow-x-auto::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 4px;
+  background: #d1d5db;
+  border-radius: 10px;
 }
 
 .overflow-x-auto::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: #9ca3af;
 }
-
-/* Penyesuaian lebar kolom agar tabel lebih rapi */
-.w-30 { width: 120px; }
-.w-20 { width: 80px; }
-.w-32 { width: 130px; }
-.w-24 { width: 100px; }
-.w-28 { width: 110px; }
 </style>
