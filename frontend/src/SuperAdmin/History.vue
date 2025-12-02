@@ -22,37 +22,46 @@ const fetchOrders = async () => {
   try {
     loading.value = true;
     error.value = null;
-    
+
     const token = localStorage.getItem('token');
     const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
-    
-    const res = await axios.get(`${API_BASE}/orders/board`, config);
-    
-    if (res.data.success) {
-      const orders = res.data.data;
-      
-      // Combine all orders and sort by created_at (newest first)
-      const combined = [
-        ...(orders.waiting || []),
-        ...(orders.processing || []),
-        ...(orders.finished || []),
-        ...(orders.cancelled || [])
-      ];
-      
-      // Map to display format
-      allOrders.value = combined
-        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+
+    // Panggil endpoint history (authenticated)
+    const res = await axios.get(`${API_BASE}/orders/history`, config);
+
+    // Jika backend mengembalikan non-JSON (mis. HTML) axios akan error; tapi tangani status juga
+    if (res.status === 200 && res.data && res.data.success) {
+      const orders = res.data.data || [];
+
+      allOrders.value = orders
         .map(order => ({
           id: order.id,
           date: formatDate(order.created_at),
-          customer: order.customer_name,
-          total: order.total_price,
-          status: mapStatus(order.status)
-        }));
+          customer: order.customer_name || '-',
+          total: order.total_price || 0,
+          status: mapStatus(order.status),
+          processedBy: order.processed_by || order.processedBy || '-'   // dukung kedua key
+        }))
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
+    } else {
+      // tampilkan pesan dari server jika ada
+      const msg = (res.data && res.data.message) ? res.data.message : `Unexpected response (${res.status})`;
+      throw new Error(msg);
     }
   } catch (err) {
     console.error('Error fetching orders:', err);
-    error.value = 'Gagal memuat data. Silakan refresh halaman.';
+    // jika axios error dan ada response, gunakan pesan dari server
+    if (err.response) {
+      if (err.response.status === 403) {
+        error.value = 'Akses ditolak. Pastikan Anda login dengan akun yang memiliki hak akses.';
+      } else if (err.response.data && err.response.data.message) {
+        error.value = err.response.data.message;
+      } else {
+        error.value = `Server error (${err.response.status})`;
+      }
+    } else {
+      error.value = 'Gagal memuat data. Silakan cek koneksi atau backend.';
+    }
   } finally {
     loading.value = false;
   }
@@ -266,39 +275,25 @@ onMounted(() => {
                 <th class="py-3 px-4">CUSTOMER</th>
                 <th class="py-3 px-4">TOTAL AMOUNT</th>
                 <th class="py-3 px-4">STATUS</th>
+                <th class="py-3 px-4">PROCESSED BY</th> <!-- kolom baru -->
                 <th class="py-3 px-4">ACTIONS</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
               <template v-if="filteredOrders.length > 0">
                 <tr v-for="order in filteredOrders" :key="order.id" class="hover:bg-gray-50">
-                  <td class="py-3 px-4 text-sm text-gray-900 font-medium">
-                    {{ order.id }}
-                  </td>
-                  <td class="py-3 px-4 text-sm text-gray-700">
-                    {{ order.date }}
-                  </td>
-                  <td class="py-3 px-4 text-sm text-gray-700">
-                    {{ order.customer }}
-                  </td>
-                  <td class="py-3 px-4 text-sm text-gray-700">
-                    {{ formatCurrency(order.total) }}
-                  </td>
+                  <td class="py-3 px-4 text-sm text-gray-900 font-medium">{{ order.id }}</td>
+                  <td class="py-3 px-4 text-sm text-gray-700">{{ order.date }}</td>
+                  <td class="py-3 px-4 text-sm text-gray-700">{{ order.customer }}</td>
+                  <td class="py-3 px-4 text-sm text-gray-700">{{ formatCurrency(order.total) }}</td>
                   <td class="py-3 px-4">
-                    <span
-                      class="inline-block px-3 py-1 text-xs rounded-full font-medium"
-                      :class="getStatusClasses(order.status)"
-                    >
+                    <span class="inline-block px-3 py-1 text-xs rounded-full font-medium" :class="getStatusClasses(order.status)">
                       {{ order.status }}
                     </span>
                   </td>
+                  <td class="py-3 px-4 text-sm text-gray-700">{{ order.processedBy }}</td> <!-- tampilkan nama -->
                   <td class="py-3 px-4 text-sm">
-                    <button
-                      @click="viewOrderDetails(order.id)"
-                      class="text-blue-600 hover:text-blue-800 font-medium"
-                    >
-                      View Details
-                    </button>
+                    <button @click="viewOrderDetails(order.id)" class="text-blue-600 hover:text-blue-800 font-medium">View Details</button>
                   </td>
                 </tr>
               </template>

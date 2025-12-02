@@ -57,11 +57,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('logout', [AuthController::class, 'logout']);
     Route::get('me', [AuthController::class, 'me']);
 
+    // Tambahkan route history di sini (authenticated, filter ditangani di controller)
+    Route::get('orders/history', [ProcessOrderController::class, 'getOrderHistory']);
+
     // =============================================
     // 👑 SUPERADMIN ROUTES (Role: RL001)
     // =============================================
     Route::middleware('role:RL001')->group(function () {
         Route::get('/superadmin/dashboard', [DashboardSuperController::class, 'index']);
+        Route::get('/superadmin/sales-data', [DashboardSuperController::class, 'getSalesData']);
         Route::apiResource('categories', CategoryController::class);
         Route::apiResource('products', ProductController::class);
         Route::patch('products/{id}/toggle-status', [ProductController::class, 'toggleStatus']);

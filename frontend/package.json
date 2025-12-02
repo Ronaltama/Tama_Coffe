@@ -12,6 +12,7 @@
     "@fortawesome/fontawesome-free": "^7.1.0",
     "@tailwindcss/vite": "^4.1.14",
     "axios": "^1.13.2",
+    "chart.js": "^4.5.1",
     "html2pdf.js": "^0.12.1",
     "sweetalert2": "^11.26.3",
     "tailwindcss": "^4.1.14",

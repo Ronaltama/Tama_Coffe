@@ -235,9 +235,7 @@ onMounted(() => {
   <div class="min-h-screen flex flex-col bg-[#F7F7F7]">
     <!-- Loading -->
     <div v-if="loading" class="flex-1 flex items-center justify-center">
-      <div
-        class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#854D0E]"
-      ></div>
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#854D0E]"></div>
     </div>
 
     <!-- Content -->
@@ -249,19 +247,13 @@ onMounted(() => {
             Waiting
           </h2>
 
-          <div
-            v-if="orders.waiting.length === 0"
-            class="text-center text-gray-500 py-8 text-sm"
-          >
+          <div v-if="orders.waiting.length === 0" class="text-center text-gray-500 py-8 text-sm">
             Tidak ada pesanan
           </div>
 
-          <div
-            v-for="item in orders.waiting"
-            :key="item.id"
+          <div v-for="item in orders.waiting" :key="item.id"
             class="bg-white rounded-lg shadow-sm border border-[#E5E5E5] p-4 mb-4 hover:shadow-md transition cursor-pointer"
-            @click="viewDetail(item.id)"
-          >
+            @click="viewDetail(item.id)">
             <div class="flex justify-between items-start mb-2">
               <div class="font-bold text-[#1E293B] text-sm">{{ item.id }}</div>
               <div class="text-[#737373] text-sm">
@@ -280,14 +272,10 @@ onMounted(() => {
 
             <div class="flex items-center justify-between mb-3">
               <div class="flex items-center gap-2">
-                <span
-                  :class="
-                    item.payment_status === 'paid'
-                      ? 'bg-[#ECFDF5] text-[#059669]'
-                      : 'bg-[#F0F0F0] text-[#DC2626]'
-                  "
-                  class="text-xs px-2 py-0.5 rounded-full"
-                >
+                <span :class="item.payment_status === 'paid'
+                    ? 'bg-[#ECFDF5] text-[#059669]'
+                    : 'bg-[#F0F0F0] text-[#DC2626]'
+                  " class="text-xs px-2 py-0.5 rounded-full">
                   {{
                     item.payment_status === "paid"
                       ? "Sudah Bayar"
@@ -301,16 +289,12 @@ onMounted(() => {
             </div>
 
             <div class="flex gap-2">
-              <button
-                @click.stop="cancelOrder(item.id)"
-                class="flex-1 text-sm bg-[#E5E5E5] hover:bg-[#D4D4D4] text-[#1E293B] py-1 px-4 rounded font-bold"
-              >
+              <button @click.stop="cancelOrder(item.id)"
+                class="flex-1 text-sm bg-[#E5E5E5] hover:bg-[#D4D4D4] text-[#1E293B] py-1 px-4 rounded font-bold">
                 Cancel
               </button>
-              <button
-                @click.stop="openPaymentModal(item)"
-                class="flex-1 text-sm bg-[#E5E5E5] hover:bg-[#D4D4D4] text-[#1E293B] py-1 px-4 rounded font-bold"
-              >
+              <button @click.stop="openPaymentModal(item)"
+                class="flex-1 text-sm bg-[#E5E5E5] hover:bg-[#D4D4D4] text-[#1E293B] py-1 px-4 rounded font-bold">
                 Process
               </button>
             </div>
@@ -321,19 +305,13 @@ onMounted(() => {
         <div class="rounded-lg p-4 bg-blue-200/90 h-fit">
           <h2 class="font-bold text-[#EA580C] text-lg mb-4">Processing</h2>
 
-          <div
-            v-if="orders.processing.length === 0"
-            class="text-center text-gray-500 py-8 text-sm"
-          >
+          <div v-if="orders.processing.length === 0" class="text-center text-gray-500 py-8 text-sm">
             Tidak ada pesanan
           </div>
 
-          <div
-            v-for="item in orders.processing"
-            :key="item.id"
+          <div v-for="item in orders.processing" :key="item.id"
             class="bg-white rounded-lg shadow-sm border border-[#E5E5E5] p-4 mb-4 hover:shadow-md transition cursor-pointer"
-            @click="viewDetail(item.id)"
-          >
+            @click="viewDetail(item.id)">
             <div class="flex justify-between items-start mb-2">
               <div class="font-bold text-[#1E293B] text-sm">{{ item.id }}</div>
               <div class="text-[#737373] text-sm">
@@ -352,9 +330,7 @@ onMounted(() => {
 
             <div class="flex items-center justify-between mb-3">
               <div class="flex items-center gap-2">
-                <span
-                  class="bg-[#ECFDF5] text-[#059669] text-xs px-2 py-0.5 rounded-full"
-                >
+                <span class="bg-[#ECFDF5] text-[#059669] text-xs px-2 py-0.5 rounded-full">
                   Sudah Bayar
                 </span>
                 <span class="text-xs text-[#64748B]">{{
@@ -363,10 +339,8 @@ onMounted(() => {
               </div>
             </div>
 
-            <button
-              @click.stop="updateStatus(item.id, 'completed')"
-              class="w-full text-sm bg-[#E5E5E5] hover:bg-[#D4D4D4] text-[#1E293B] py-1 px-4 rounded font-bold"
-            >
+            <button @click.stop="updateStatus(item.id, 'completed')"
+              class="w-full text-sm bg-[#E5E5E5] hover:bg-[#D4D4D4] text-[#1E293B] py-1 px-4 rounded font-bold">
               Done
             </button>
           </div>
@@ -376,19 +350,13 @@ onMounted(() => {
         <div class="rounded-lg p-4 bg-green-100 h-fit">
           <h2 class="font-bold text-[#059669] text-lg mb-4">Completed</h2>
 
-          <div
-            v-if="orders.finished.length === 0"
-            class="text-center text-gray-500 py-8 text-sm"
-          >
+          <div v-if="orders.finished.length === 0" class="text-center text-gray-500 py-8 text-sm">
             Tidak ada pesanan
           </div>
 
-          <div
-            v-for="item in orders.finished"
-            :key="item.id"
+          <div v-for="item in orders.finished" :key="item.id"
             class="bg-white rounded-lg shadow-sm border border-[#E5E5E5] p-4 mb-4 hover:shadow-md transition cursor-pointer"
-            @click="viewDetail(item.id)"
-          >
+            @click="viewDetail(item.id)">
             <div class="flex justify-between items-start mb-2">
               <div class="font-bold text-[#1E293B] text-sm">{{ item.id }}</div>
               <div class="text-[#737373] text-sm">
@@ -406,9 +374,7 @@ onMounted(() => {
             </div>
 
             <div class="flex items-center gap-2">
-              <span
-                class="bg-[#ECFDF5] text-[#059669] text-xs px-2 py-0.5 rounded-full"
-              >
+              <span class="bg-[#ECFDF5] text-[#059669] text-xs px-2 py-0.5 rounded-full">
                 Sudah Bayar
               </span>
               <span class="text-xs text-[#64748B]">{{
@@ -422,19 +388,13 @@ onMounted(() => {
         <div class="rounded-lg p-4 bg-red-100 h-fit">
           <h2 class="font-bold text-[#DC2626] text-lg mb-4">Cancelled</h2>
 
-          <div
-            v-if="orders.cancelled.length === 0"
-            class="text-center text-gray-500 py-8 text-sm"
-          >
+          <div v-if="orders.cancelled.length === 0" class="text-center text-gray-500 py-8 text-sm">
             Tidak ada pesanan
           </div>
 
-          <div
-            v-for="item in orders.cancelled"
-            :key="item.id"
+          <div v-for="item in orders.cancelled" :key="item.id"
             class="bg-white rounded-lg shadow-sm border border-[#E5E5E5] p-4 mb-4 hover:shadow-md transition cursor-pointer"
-            @click="viewDetail(item.id)"
-          >
+            @click="viewDetail(item.id)">
             <div class="flex justify-between items-start mb-2">
               <div class="font-bold text-[#1E293B] text-sm">{{ item.id }}</div>
               <div class="text-[#737373] text-sm">
@@ -452,9 +412,7 @@ onMounted(() => {
             </div>
 
             <div class="flex items-center gap-2">
-              <span
-                class="bg-[#FEF3C7] text-[#EA580C] text-xs px-2 py-0.5 rounded-full"
-              >
+              <span class="bg-[#FEF3C7] text-[#EA580C] text-xs px-2 py-0.5 rounded-full">
                 Pending
               </span>
               <span class="text-xs text-[#64748B]">{{
@@ -467,12 +425,10 @@ onMounted(() => {
     </div>
 
     <!-- Payment Modal -->
-    <div
-      v-if="showPaymentModal"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-      @click.self="showPaymentModal = false"
-    >
-      <div class="bg-white rounded-xl p-6 w-96 shadow-2xl">
+    <div v-if="showPaymentModal"
+      class="fixed inset-0 flex items-center justify-center z-50 bg-white/20 backdrop-blur-md"
+      @click.self="showPaymentModal = false">
+      <div class="bg-white rounded-xl p-6 w-96 border border-gray-200 shadow-lg">
         <h3 class="text-xl font-bold mb-4">Proses Pembayaran</h3>
 
         <div class="space-y-3 mb-6">
@@ -482,55 +438,44 @@ onMounted(() => {
           </div>
           <div class="flex justify-between">
             <span class="text-gray-600">Customer:</span>
-            <span class="font-semibold">{{
-              selectedOrder?.customer_name
-            }}</span>
+            <span class="font-semibold">{{ selectedOrder?.customer_name }}</span>
           </div>
           <div class="flex justify-between text-lg">
             <span class="font-semibold">Total:</span>
-            <span class="font-bold text-orange-600"
-              >Rp{{ formatCurrency(selectedOrder?.total_price) }}</span
-            >
+            <span class="font-bold text-orange-600">
+              Rp{{ formatCurrency(selectedOrder?.total_price) }}
+            </span>
           </div>
         </div>
 
         <div class="mb-4">
           <label class="block text-sm font-medium mb-2">Jumlah Dibayar</label>
-          <input
-            v-model.number="amountPaid"
-            type="number"
+          <input v-model.number="amountPaid" type="number"
             class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none"
-            placeholder="Masukkan jumlah"
-          />
+            placeholder="Masukkan jumlah" />
         </div>
 
         <div class="bg-gray-50 p-3 rounded-lg mb-6">
           <div class="flex justify-between text-lg">
             <span class="font-semibold">Kembalian:</span>
-            <span
-              :class="changeAmount >= 0 ? 'text-green-600' : 'text-red-600'"
-              class="font-bold"
-            >
+            <span :class="changeAmount >= 0 ? 'text-green-600' : 'text-red-600'" class="font-bold">
               Rp{{ formatCurrency(Math.abs(changeAmount)) }}
             </span>
           </div>
         </div>
 
         <div class="grid grid-cols-2 gap-3">
-          <button
-            @click="showPaymentModal = false"
-            class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg font-medium"
-          >
+          <button @click="showPaymentModal = false"
+            class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg font-medium">
             Batal
           </button>
-          <button
-            @click="processPayment"
-            class="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium"
-          >
+          <button @click="processPayment"
+            class="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium">
             Bayar
           </button>
         </div>
       </div>
     </div>
+
   </div>
 </template>
