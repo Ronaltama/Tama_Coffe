@@ -65,6 +65,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // =============================================
     Route::middleware('role:RL001')->group(function () {
         Route::get('/superadmin/dashboard', [DashboardSuperController::class, 'index']);
+        Route::get('/superadmin/sales-data', [DashboardSuperController::class, 'getSalesData']);
         Route::apiResource('categories', CategoryController::class);
         Route::apiResource('products', ProductController::class);
         Route::patch('products/{id}/toggle-status', [ProductController::class, 'toggleStatus']);
