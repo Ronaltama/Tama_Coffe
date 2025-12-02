@@ -57,6 +57,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('logout', [AuthController::class, 'logout']);
     Route::get('me', [AuthController::class, 'me']);
 
+    // Tambahkan route history di sini (authenticated, filter ditangani di controller)
+    Route::get('orders/history', [ProcessOrderController::class, 'getOrderHistory']);
+
     // =============================================
     // 👑 SUPERADMIN ROUTES (Role: RL001)
     // =============================================

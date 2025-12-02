@@ -116,30 +116,30 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // === Seed Table ===
-        Table::updateOrCreate(
-            ['id' => 'TB001'],
-            [
-                'id' => 'TB001',
-                'table_number' => 'A1',
-                'capacity' => 4,
-                'type' => 'indoor',
-                'status' => 'available',
-            ]
-        );
+        // // === Seed Table ===
+        // Table::updateOrCreate(
+        //     ['id' => 'TB001'],
+        //     [
+        //         'id' => 'TB001',
+        //         'table_number' => 'A1',
+        //         'capacity' => 4,
+        //         'type' => 'indoor',
+        //         'status' => 'available',
+        //     ]
+        // );
 
-        // === Seed Product ===
-        Product::updateOrCreate(
-            ['id' => 'PR001'],
-            [
-                'id' => 'PR001',
-                'category_id' => 'CT001', // Drink category
-                'name' => 'Espresso',
-                'description' => 'Classic Italian espresso',
-                'price' => 25000,
-                'status' => 'available',
-                'image' => null,
-            ]
-        );
+        // // === Seed Product ===
+        // Product::updateOrCreate(
+        //     ['id' => 'PR001'],
+        //     [
+        //         'id' => 'PR001',
+        //         'category_id' => 'CT001', // Drink category
+        //         'name' => 'Espresso',
+        //         'description' => 'Classic Italian espresso',
+        //         'price' => 25000,
+        //         'status' => 'available',
+        //         'image' => null,
+        //     ]
+        // );
     }
 }

@@ -1,6 +1,9 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import axios from "axios";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
 
 // === API BASE URL ===
 const API_BASE = "http://localhost:8000/api";
@@ -100,6 +103,11 @@ const getStatusClasses = (status) => {
     default:
       return "bg-gray-100 text-gray-700";
   }
+};
+
+// Navigate to order detail (admin)
+const viewOrder = (orderId) => {
+  router.push({ name: "AdminOrderDetail", params: { id: orderId } });
 };
 
 // === LIFECYCLE ===
@@ -210,9 +218,12 @@ onMounted(() => {
                     {{ formatCurrency(order.total) }}
                   </td>
                   <td class="py-3 px-4 text-sm">
-                    <a href="#" class="text-blue-600 hover:text-blue-800 mr-2"
-                      >View</a
+                    <button
+                      @click="viewOrder(order.id)"
+                      class="text-blue-600 hover:text-blue-800 mr-2"
                     >
+                      View
+                    </button>
                   </td>
                 </tr>
               </template>
