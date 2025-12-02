@@ -58,7 +58,7 @@
             <h2 class="text-lg font-bold text-gray-900 mb-3">Variants</h2>
             <div class="flex gap-3">
               <button @click="selectedTemperature = 'iced'" :class="[
-                'flex-1 py-3 px-4 rounded-lg font-medium transition-colors border-2',
+                'flex-1 py-2.5 px-4 rounded-lg font-medium transition-colors border-2',
                 selectedTemperature === 'iced'
                   ? 'text-white border-transparent'
                   : 'bg-white text-gray-700 border-gray-300'
@@ -69,7 +69,7 @@
                 Iced
               </button>
               <button @click="selectedTemperature = 'hot'" :class="[
-                'flex-1 py-3 px-4 rounded-lg font-medium transition-colors border-2',
+                'flex-1 py-2.5 px-4 rounded-lg font-medium transition-colors border-2',
                 selectedTemperature === 'hot'
                   ? 'text-white border-transparent'
                   : 'bg-white text-gray-700 border-gray-300'
@@ -85,11 +85,11 @@
           <!-- Order Controls -->
           <div class="bg-white border-t border-gray-200 pt-6 pb-6">
             <div class="flex items-center justify-between mb-4">
-              <span class="text-lg font-bold text-gray-900">Total Order</span>
+              <span class="text-base font-bold text-gray-900">Total Order</span>
               <div class="flex items-center space-x-3">
                 <!-- Decrement Button -->
                 <button @click="decrementTotal" :disabled="totalQuantity <= 1" :class="[
-                  'w-10 h-10 rounded-full border-2 flex items-center justify-center transition-colors',
+                  'w-9 h-9 rounded-full border-2 flex items-center justify-center transition-colors',
                   totalQuantity <= 1
                     ? 'border-gray-300 text-gray-300 cursor-not-allowed'
                     : 'text-gray-700'
@@ -97,7 +97,7 @@
                   :onmouseover="totalQuantity > 1 ? 'this.style.backgroundColor=\'#FFF7ED\'' : ''"
                   :onmouseout="totalQuantity > 1 ? 'this.style.backgroundColor=\'transparent\'' : ''"
                   aria-label="Decrease quantity">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
                       clip-rule="evenodd" />
                   </svg>
@@ -110,11 +110,11 @@
 
                 <!-- Increment Button -->
                 <button @click="incrementTotal" :disabled="totalQuantity >= 99"
-                  class="w-10 h-10 rounded-full text-white flex items-center justify-center transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                  class="w-9 h-9 rounded-full text-white flex items-center justify-center transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
                   style="background-color: #B85814;"
                   onmouseover="if(!this.disabled) this.style.backgroundColor='#A04D12'"
                   onmouseout="if(!this.disabled) this.style.backgroundColor='#B85814'" aria-label="Increase quantity">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd"
                       d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
                       clip-rule="evenodd" />
@@ -125,7 +125,7 @@
 
             <!-- Add to Cart Button -->
             <button @click="handleAddToCart"
-              class="w-full py-4 text-white text-lg font-bold rounded-xl transition-colors shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
+              class="w-full py-3 text-white text-base font-bold rounded-xl transition-colors shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed mt-6"
               style="background-color: #B85814;" onmouseover="if(!this.disabled) this.style.backgroundColor='#A04D12'"
               onmouseout="if(!this.disabled) this.style.backgroundColor='#B85814'" :disabled="isAddingToCart">
               {{ isAddingToCart ? 'Adding...' : `Add Orders - Rp ${totalPrice}` }}
