@@ -16,6 +16,25 @@ class DashboardSuperController extends Controller
      */
     public function index()
     {
+        // Calculate total revenue from completed/processing orders
+        $totalRevenue = Order::whereIn('status', ['completed', 'processing', 'confirmed', 'paid'])
+            ->sum('total_price');
+
+        // Get top 3 selling products
+        $topProducts = DB::table('order_details')
+            ->join('orders', 'order_details.order_id', '=', 'orders.id')
+            ->join('products', 'order_details.product_id', '=', 'products.id')
+            ->whereIn('orders.status', ['completed', 'processing', 'confirmed', 'paid'])
+            ->selectRaw('
+                products.name, 
+                SUM(order_details.quantity) as units_sold,
+                SUM(order_details.subtotal) as revenue
+            ')
+            ->groupBy('products.id', 'products.name')
+            ->orderBy('revenue', 'desc')
+            ->limit(3)
+            ->get();
+
         return response()->json([
             'total_users' => User::count(),
             'total_admins' => User::whereHas('role', fn($q) => $q->where('name', 'admin'))->count(),
@@ -23,6 +42,8 @@ class DashboardSuperController extends Controller
             'total_products' => Product::count(),
             'total_tables' => Table::count(),
             'total_orders' => Order::count(),
+            'total_revenue' => $totalRevenue,
+            'top_products' => $topProducts,
         ]);
     }
 

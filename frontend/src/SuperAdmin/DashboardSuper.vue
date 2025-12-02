@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, watch, nextTick } from 'vue'
+import { ref, onMounted, watch, nextTick, computed } from 'vue'
 import axios from 'axios'
 import {
   Chart,
@@ -49,6 +49,29 @@ const salesChart = ref(null)
 const chartCanvas = ref(null)
 const salesData = ref([])
 
+// Computed properties for chart
+const chartTotalRevenue = computed(() => {
+  return salesData.value.reduce((sum, item) => sum + (parseFloat(item.value) || 0), 0)
+})
+
+const chartTitle = computed(() => {
+  switch (activeTab.value) {
+    case 'daily': return 'Daily Sales'
+    case 'weekly': return 'Weekly Sales'
+    case 'monthly': return 'Monthly Sales'
+    case 'product': return 'Product Sales'
+    default: return 'Sales Reports'
+  }
+})
+
+const chartSubtitle = computed(() => {
+  return new Date().toLocaleDateString('id-ID', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  })
+})
+
 // Format currency
 const formatCurrency = (value) => {
   return new Intl.NumberFormat('id-ID', {
@@ -65,7 +88,7 @@ const fetchDashboard = async () => {
     const token = localStorage.getItem('token')
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
 
-    // Fetch stats
+    // Fetch stats including revenue and top products
     const dashRes = await axios.get('http://127.0.0.1:8000/api/superadmin/dashboard')
     stats.value.totalOrders = dashRes.data.total_orders || 0
     stats.value.totalProducts = dashRes.data.total_products || 0
@@ -73,9 +96,16 @@ const fetchDashboard = async () => {
     stats.value.totalTables = dashRes.data.total_tables || 0
     stats.value.totalAdmins = dashRes.data.total_admins || 0
     stats.value.totalSuperadmin = dashRes.data.total_superadmin || 0
-    stats.value.totalRevenue = 0
+    stats.value.totalRevenue = dashRes.data.total_revenue || 0
 
-    // Fetch users
+    // Set top products from backend
+    topProducts.value = (dashRes.data.top_products || []).map((p) => ({
+      name: p.name,
+      units_sold: p.units_sold || 0,
+      revenue: p.revenue || 0,
+    }))
+
+    // Fetch users for user management table
     const userRes = await axios.get('http://127.0.0.1:8000/api/users')
     const userList = userRes.data ?? []
     recentAdmins.value = userList.map((u) => ({
@@ -83,15 +113,6 @@ const fetchDashboard = async () => {
       email: u.email,
       role: 'Admin',
       status: 'Active',
-    }))
-
-    // Fetch products
-    const productRes = await axios.get('http://127.0.0.1:8000/api/products')
-    const productList = productRes.data.data ?? []
-    topProducts.value = productList.slice(0, 3).map((p) => ({
-      name: p.name,
-      units_sold: 0,
-      revenue: 0,
     }))
 
   } catch (error) {
@@ -221,353 +242,188 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6 lg:p-8">
-    <div class="max-w-7xl mx-auto space-y-8">
-      <!-- Header -->
-      <div class="flex items-center justify-between">
-        <div>
-          <h1 class="text-4xl font-bold text-gray-900 mb-2">
-            Superadmin Dashboard
-          </h1>
-          <p class="text-gray-600">
-            Welcome back! Here's what's happening today.
-          </p>
-        </div>
-        <div class="hidden lg:flex items-center gap-3">
-          <div class="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
-            <p class="text-xs text-gray-500">Today</p>
-            <p class="text-sm font-semibold text-gray-900">
-              {{
-                new Date().toLocaleDateString('id-ID', {
-                  weekday: 'long',
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                })
-              }}
-            </p>
-          </div>
-        </div>
+  <div class="flex-1 p-8 overflow-auto">
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-4xl font-bold text-gray-900 mb-2">Dashboard</h1>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <!-- Total Orders -->
+      <router-link
+        to="/superadmin/history"
+        class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+      >
+        <p class="text-lg font-semibold text-gray-700 mb-2">Total Orders</p>
+        <h3 class="text-4xl font-bold text-gray-900">{{ stats.totalOrders.toLocaleString() }}</h3>
+      </router-link>
+
+      <!-- Active Users -->
+      <router-link
+        to="/superadmin/users"
+        class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+      >
+        <p class="text-lg font-semibold text-gray-700 mb-2">Active Users</p>
+        <h3 class="text-4xl font-bold text-gray-900">{{ stats.totalUsers.toLocaleString() }}</h3>
+      </router-link>
+
+      <!-- Revenue -->
+      <div class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+        <p class="text-lg font-semibold text-gray-700 mb-2">Revenue</p>
+        <h3 class="text-4xl font-bold text-gray-900">{{ formatCurrency(stats.totalRevenue) }}</h3>
       </div>
 
-      <!-- Stats Cards Grid -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <!-- Total Orders -->
-        <router-link
-          to="/superadmin/history"
-          class="block group bg-gradient-to-br from-amber-700 to-amber-900 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer"
-        >
-          <div class="flex items-start justify-between">
-            <div class="flex-1">
-              <p class="text-amber-100 text-sm font-medium mb-1">
-                Total Orders
-              </p>
-              <h3 class="text-4xl font-bold text-white mb-2">
-                {{ stats.totalOrders }}
-              </h3>
-              <p class="text-amber-100 text-xs">All time orders</p>
-            </div>
-            <div class="bg-white/20 backdrop-blur-sm p-3 rounded-xl group-hover:bg-white/30 transition-all">
-              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
-              </svg>
-            </div>
-          </div>
-        </router-link>
+      <!-- Admin Accounts -->
+      <router-link
+        to="/superadmin/users"
+        class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+      >
+        <p class="text-lg font-semibold text-gray-700 mb-2">Admin Accounts</p>
+        <h3 class="text-4xl font-bold text-gray-900">{{ stats.totalAdmins.toLocaleString() }}</h3>
+      </router-link>
 
-        <!-- Total Products -->
-        <router-link
-          to="/superadmin/products"
-          class="block group bg-gradient-to-br from-yellow-600 to-yellow-800 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer"
-        >
-          <div class="flex items-start justify-between">
-            <div class="flex-1">
-              <p class="text-yellow-100 text-sm font-medium mb-1">
-                Total Products
-              </p>
-              <h3 class="text-4xl font-bold text-white mb-2">
-                {{ stats.totalProducts }}
-              </h3>
-              <p class="text-yellow-100 text-xs">Menu items</p>
-            </div>
-            <div class="bg-white/20 backdrop-blur-sm p-3 rounded-xl group-hover:bg-white/30 transition-all">
-              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-              </svg>
-            </div>
-          </div>
-        </router-link>
+      <!-- Superadmin -->
+      <router-link
+        to="/superadmin/users"
+        class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+      >
+        <p class="text-lg font-semibold text-gray-700 mb-2">Superadmin</p>
+        <h3 class="text-4xl font-bold text-gray-900">{{ stats.totalSuperadmin.toLocaleString() }}</h3>
+      </router-link>
 
-        <!-- Total Users -->
-        <router-link
-          to="/superadmin/users"
-          class="block group bg-gradient-to-br from-orange-700 to-orange-900 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer"
-        >
-          <div class="flex items-start justify-between">
-            <div class="flex-1">
-              <p class="text-orange-100 text-sm font-medium mb-1">
-                Total Users
-              </p>
-              <h3 class="text-4xl font-bold text-white mb-2">
-                {{ stats.totalUsers }}
-              </h3>
-              <p class="text-orange-100 text-xs">Registered users</p>
-            </div>
-            <div class="bg-white/20 backdrop-blur-sm p-3 rounded-xl group-hover:bg-white/30 transition-all">
-              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-              </svg>
-            </div>
-          </div>
-        </router-link>
+      <!-- Tables -->
+      <router-link
+        to="/superadmin/tables"
+        class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+      >
+        <p class="text-lg font-semibold text-gray-700 mb-2">Tables</p>
+        <h3 class="text-4xl font-bold text-gray-900">{{ stats.totalTables.toLocaleString() }}</h3>
+      </router-link>
+    </div>
 
-        <!-- Admin Accounts -->
-        <router-link
-          to="/superadmin/users"
-          class="block group bg-gradient-to-br from-amber-600 to-amber-800 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer"
-        >
-          <div class="flex items-start justify-between">
-            <div class="flex-1">
-              <p class="text-amber-100 text-sm font-medium mb-1">
-                Admin Accounts
-              </p>
-              <h3 class="text-4xl font-bold text-white mb-2">
-                {{ stats.totalAdmins }}
-              </h3>
-              <p class="text-amber-100 text-xs">Active admins</p>
-            </div>
-            <div class="bg-white/20 backdrop-blur-sm p-3 rounded-xl group-hover:bg-white/30 transition-all">
-              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-              </svg>
-            </div>
-          </div>
-        </router-link>
-
-        <!-- Superadmin -->
-        <router-link
-          to="/superadmin/users"
-          class="block group bg-gradient-to-br from-red-800 to-red-950 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer"
-        >
-          <div class="flex items-start justify-between">
-            <div class="flex-1">
-              <p class="text-red-100 text-sm font-medium mb-1">Superadmin</p>
-              <h3 class="text-4xl font-bold text-white mb-2">
-                {{ stats.totalSuperadmin }}
-              </h3>
-              <p class="text-red-100 text-xs">Super accounts</p>
-            </div>
-            <div class="bg-white/20 backdrop-blur-sm p-3 rounded-xl group-hover:bg-white/30 transition-all">
-              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
-              </svg>
-            </div>
-          </div>
-        </router-link>
-
-        <!-- Tables -->
-        <router-link
-          to="/superadmin/tables"
-          class="block group bg-gradient-to-br from-stone-700 to-stone-900 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer"
-        >
-          <div class="flex items-start justify-between">
-            <div class="flex-1">
-              <p class="text-stone-100 text-sm font-medium mb-1">Tables</p>
-              <h3 class="text-4xl font-bold text-white mb-2">
-                {{ stats.totalTables }}
-              </h3>
-              <p class="text-stone-100 text-xs">Available tables</p>
-            </div>
-            <div class="bg-white/20 backdrop-blur-sm p-3 rounded-xl group-hover:bg-white/30 transition-all">
-              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-              </svg>
-            </div>
-          </div>
-        </router-link>
-      </div>
-
-      <!-- Sales Report Section -->
-      <div class="bg-white rounded-2xl shadow-lg border border-gray-100">
-        <div class="p-6 border-b border-gray-100">
-          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-              <h2 class="text-2xl font-bold text-gray-900">Sales Reports</h2>
-              <p class="text-sm text-gray-500 mt-1">
-                Track your sales performance
-              </p>
-            </div>
-
-            <div class="flex gap-1 bg-gray-100 rounded-xl p-1.5">
-              <button
-                @click="activeTab = 'daily'"
-                :class="
-                  activeTab === 'daily'
-                    ? 'bg-white text-amber-700 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                "
-                class="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200"
-              >
-                Daily
-              </button>
-              <button
-                @click="activeTab = 'weekly'"
-                :class="
-                  activeTab === 'weekly'
-                    ? 'bg-white text-amber-700 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                "
-                class="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200"
-              >
-                Weekly
-              </button>
-              <button
-                @click="activeTab = 'monthly'"
-                :class="
-                  activeTab === 'monthly'
-                    ? 'bg-white text-amber-700 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                "
-                class="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200"
-              >
-                Monthly
-              </button>
-              <button
-                @click="activeTab = 'product'"
-                :class="
-                  activeTab === 'product'
-                    ? 'bg-white text-amber-700 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                "
-                class="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200"
-              >
-                Per Product
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div class="p-6">
-          <!-- Sales Chart -->
-          <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 mb-8" style="height: 320px">
-            <canvas ref="chartCanvas"></canvas>
-          </div>
-
-          <!-- Top Products -->
-          <div>
-            <div class="flex items-center justify-between mb-4">
-              <h3 class="text-lg font-bold text-gray-900">
-                🔥 Top Selling Products Today
-              </h3>
-              <span class="text-sm text-gray-500">Last updated: now</span>
-            </div>
-
-            <div class="overflow-x-auto rounded-xl border border-gray-200">
-              <table class="w-full min-w-[640px]">
-                <thead class="bg-gray-50">
-                  <tr class="text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    <th class="py-4 px-6">Product</th>
-                    <th class="py-4 px-6">Units Sold</th>
-                    <th class="py-4 px-6">Revenue</th>
-                  </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-100">
-                  <tr
-                    v-for="(p, idx) in topProducts"
-                    :key="p.name"
-                    class="hover:bg-gray-50 transition-colors"
-                  >
-                    <td class="py-4 px-6">
-                      <div class="flex items-center gap-3">
-                        <div class="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 text-white font-bold text-sm">
-                          {{ idx + 1 }}
-                        </div>
-                        <span class="font-medium text-gray-900">{{ p.name }}</span>
-                      </div>
-                    </td>
-                    <td class="py-4 px-6">
-                      <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-700">
-                        {{ p.units_sold }}
-                      </span>
-                    </td>
-                    <td class="py-4 px-6">
-                      <span class="font-semibold text-green-600">{{ formatCurrency(p.revenue) }}</span>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Admin List -->
-      <div class="bg-white rounded-2xl shadow-lg border border-gray-100">
-        <div class="p-6 border-b border-gray-100">
-          <div class="flex items-center justify-between">
-            <div>
-              <h2 class="text-2xl font-bold text-gray-900">Admin Users</h2>
-              <p class="text-sm text-gray-500 mt-1">
-                Manage admin accounts and permissions
-              </p>
-            </div>
-            <router-link
-              to="/superadmin/users/add"
-              class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium text-sm transition-colors duration-200 flex items-center gap-2"
+    <!-- Sales Reports Section -->
+    <div class="bg-white rounded-xl shadow-sm mb-8">
+      <!-- Header with Tabs -->
+      <div class="px-6 py-4 border-b border-gray-200">
+        <div class="flex items-center justify-between">
+          <h2 class="text-2xl font-bold text-gray-900">Sales Reports</h2>
+          <div class="flex gap-2">
+            <button
+              @click="activeTab = 'daily'"
+              :class="
+                activeTab === 'daily'
+                  ? 'bg-amber-700 text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-50'
+              "
+              class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
             >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-              </svg>
-              Add Admin
-            </router-link>
+              Daily
+            </button>
+            <button
+              @click="activeTab = 'weekly'"
+              :class="
+                activeTab === 'weekly'
+                  ? 'bg-amber-700 text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-50'
+              "
+              class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            >
+              Weekly
+            </button>
+            <button
+              @click="activeTab = 'monthly'"
+              :class="
+                activeTab === 'monthly'
+                  ? 'bg-amber-700 text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-50'
+              "
+              class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            >
+              Monthly
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chart Area -->
+      <div class="p-6">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900">{{ chartTitle }}</h3>
+            <p class="text-sm text-gray-500">{{ chartSubtitle }}</p>
+          </div>
+          <div class="text-right">
+            <p class="text-sm text-gray-500">Total Revenue</p>
+            <h3 class="text-2xl font-bold text-gray-900">{{ formatCurrency(chartTotalRevenue) }}</h3>
           </div>
         </div>
 
-        <div class="p-6">
-          <div class="overflow-x-auto rounded-xl border border-gray-200">
-            <table class="w-full min-w-[640px]">
-              <thead class="bg-gray-50">
-                <tr class="text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  <th class="py-4 px-6">Name</th>
-                  <th class="py-4 px-6">Email</th>
-                  <th class="py-4 px-6">Role</th>
-                  <th class="py-4 px-6">Status</th>
+        <!-- Chart Canvas -->
+        <div class="bg-gray-50 rounded-lg p-4 mb-6" style="height: 300px">
+          <canvas ref="chartCanvas"></canvas>
+        </div>
+
+        <!-- Top Selling Products -->
+        <div class="pt-4 border-t border-gray-200">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">Top Selling Products Today</h3>
+          
+          <div class="overflow-hidden rounded-lg border border-gray-200">
+            <table class="w-full">
+              <thead class="bg-white border-b border-gray-200">
+                <tr>
+                  <th class="px-6 py-3 text-left text-base font-semibold text-gray-800">Product</th>
+                  <th class="px-6 py-3 text-center text-base font-semibold text-gray-800">Units Sold</th>
+                  <th class="px-6 py-3 text-center text-base font-semibold text-gray-800">Revenue</th>
                 </tr>
               </thead>
-              <tbody class="bg-white divide-y divide-gray-100">
-                <tr
-                  v-for="admin in recentAdmins"
-                  :key="admin.email"
-                  class="hover:bg-gray-50 transition-colors"
-                >
-                  <td class="py-4 px-6">
-                    <div class="flex items-center gap-3">
-                      <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white font-semibold text-sm">
-                        {{ admin.name.charAt(0).toUpperCase() }}
-                      </div>
-                      <span class="font-medium text-gray-900">{{ admin.name }}</span>
-                    </div>
-                  </td>
-                  <td class="py-4 px-6 text-gray-600">{{ admin.email }}</td>
-                  <td class="py-4 px-6">
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-pink-100 text-pink-700">
-                      <svg class="w-3 h-3 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
-                      </svg>
-                      Admin
-                    </span>
-                  </td>
-                  <td class="py-4 px-6">
-                    <span class="inline-flex items-center text-sm font-medium text-green-600">
-                      <span class="h-2 w-2 rounded-full bg-green-500 mr-2 animate-pulse"></span>
-                      Active
-                    </span>
-                  </td>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <tr v-for="(p, idx) in topProducts" :key="p.name" class="hover:bg-gray-50">
+                  <td class="px-6 py-3 text-base text-gray-800">{{ p.name }}</td>
+                  <td class="px-6 py-3 text-center text-base text-gray-800">{{ p.units_sold }}</td>
+                  <td class="px-6 py-3 text-center text-base text-gray-800">{{ formatCurrency(p.revenue) }}</td>
                 </tr>
               </tbody>
             </table>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- User Management -->
+    <div class="bg-white rounded-xl shadow-sm">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h2 class="text-2xl font-bold text-gray-900">User Management</h2>
+      </div>
+
+      <div class="overflow-hidden">
+        <table class="w-full">
+          <thead class="bg-white border-b border-gray-200">
+            <tr>
+              <th class="px-6 py-4 text-left text-base font-semibold text-gray-800">Name</th>
+              <th class="px-6 py-4 text-center text-base font-semibold text-gray-800">Email</th>
+              <th class="px-6 py-4 text-center text-base font-semibold text-gray-800">Role</th>
+              <th class="px-6 py-4 text-center text-base font-semibold text-gray-800">Status</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr v-for="admin in recentAdmins.slice(0, 2)" :key="admin.email" class="hover:bg-gray-50">
+              <td class="px-6 py-4 text-base text-gray-800">{{ admin.name }}</td>
+              <td class="px-6 py-4 text-center text-base text-gray-800">{{ admin.email }}</td>
+              <td class="px-6 py-4 text-center">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-blue-700">
+                  Admin
+                </span>
+              </td>
+              <td class="px-6 py-4 text-center">
+                <span class="inline-flex items-center gap-2 text-base font-semibold" :class="admin.status === 'Active' ? 'text-green-600' : 'text-red-500'">
+                  <span class="h-2 w-2 rounded-full" :class="admin.status === 'Active' ? 'bg-green-500' : 'bg-red-500'"></span>
+                  {{ admin.status }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
