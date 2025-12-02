@@ -14,7 +14,7 @@ use App\Http\Controllers\Api\MidtransController;
 use Illuminate\Support\Facades\Route;
 
 // =============================================
-// 🔓 GUEST ROUTES (Untuk User/Customer)
+// 🔓 GUEST ROUTES  (Untuk User/Customer)
 // =============================================
 Route::prefix('guest')->group(function () {
     Route::get('products', [UserMenuController::class, 'getProducts']);
