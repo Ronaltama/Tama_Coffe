@@ -67,7 +67,8 @@ class ManualOrderController extends Controller
                 'customer_phone' => $request->customer_phone,
                 'total_price' => $totalPrice,
                 'note' => $request->note,
-                'status' => 'pending', // Mulai dari pending agar masuk ke Confirm Order board
+                // Ubah dari 'pending' menjadi 'processing'
+                'status' => 'processing',
             ]);
 
             // 4. Buat Order Details
@@ -112,6 +113,11 @@ class ManualOrderController extends Controller
 
             // 6. JANGAN update status meja dulu, biarkan sampai order di-process di Confirm Order
             // Meja akan di-update saat admin klik "Process" di Confirm Order board
+
+            // Tandai meja terpakai (opsional)
+            if ($request->order_type === 'dine-in' && $request->table_id) {
+                Table::where('id', $request->table_id)->update(['status' => 'occupied']);
+            }
 
             DB::commit();
 

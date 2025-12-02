@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Order;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class ProcessOrderController extends Controller
@@ -364,62 +366,60 @@ class ProcessOrderController extends Controller
     }
 
     /**
-     * Get all orders history with stats
-     * GET /api/orders/history
+     * Get order history.
+     * If user is superadmin (role id RL001) return all orders.
+     * If user is admin (role id RL002) return only orders created by that admin (user_id).
      */
-    public function getOrderHistory()
+    public function getOrderHistory(Request $request)
     {
-        try {
-            // Count orders by status (ALL TIME - no date filter)
-            $waiting = DB::table('orders')
-                ->where('status', 'pending')
-                ->count();
+        $user = Auth::user();
 
-            $processing = DB::table('orders')
-                ->where('status', 'processing')
-                ->count();
+        // Pastikan user punya role yang diizinkan (opsional)
+        $roleId = $user->role_id ?? $user->role ?? null;
 
-            $completed = DB::table('orders')
-                ->where('status', 'completed')
-                ->count();
-
-            // Calculate total revenue from completed orders (ALL TIME)
-            $finishedRevenue = DB::table('orders')
-                ->where('status', 'completed')
-                ->sum('total_price');
-
-            // Get ALL orders (no date filter)
-            $allOrders = DB::table('orders')
-                ->leftJoin('tables', 'orders.table_id', '=', 'tables.id')
-                ->select(
-                    'orders.id',
-                    'orders.customer_name',
-                    'orders.created_at',
-                    'orders.status',
-                    'orders.total_price',
-                    'tables.table_number'
-                )
-                ->orderBy('orders.created_at', 'desc')
-                ->get();
-
-            return response()->json([
-                'success' => true,
-                'data' => [
-                    'stats' => [
-                        'waiting' => $waiting,
-                        'processing' => $processing,
-                        'completed' => $completed,
-                        'finishedRevenue' => (float) $finishedRevenue
-                    ],
-                    'orders' => $allOrders
-                ]
-            ], 200);
-        } catch (\Exception $e) {
+        // Jika bukan admin/superadmin, tolak akses
+        if (!in_array($roleId, ['RL001', 'RL002'])) {
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal mengambil data history',
-                'error' => $e->getMessage()
-            ], 500);
+                'message' => 'Unauthorized'
+            ], 403);
         }
+
+        // Query orders: jika superadmin ambil semua, jika admin filter by user_id
+        $query = Order::query();
+
+        if ($roleId === 'RL002') {
+            $query->where('user_id', $user->id);
+        }
+
+        // Ambil orders terbaru dulu
+        $orders = $query->orderBy('created_at', 'desc')->get();
+
+        // Hitung stats berdasarkan hasil query (bisa disesuaikan)
+        $stats = [
+            'waiting' => $orders->where('status', 'pending')->count(),
+            'processing' => $orders->where('status', 'processing')->count(),
+            'completed' => $orders->where('status', 'completed')->count(),
+            'finishedRevenue' => $orders->where('status', 'completed')->sum('total_price'),
+        ];
+
+        // Format orders untuk frontend (sesuaikan fields jika model beda)
+        $ordersArr = $orders->map(function ($o) {
+            return [
+                'id' => $o->id,
+                'customer_name' => $o->customer_name,
+                'created_at' => $o->created_at,
+                'status' => $o->status,
+                'total_price' => $o->total_price,
+            ];
+        })->values();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'stats' => $stats,
+                'orders' => $ordersArr,
+            ],
+        ]);
     }
 }
