@@ -17,16 +17,31 @@ class ProcessOrderController extends Controller
     public function getOrderBoard()
     {
         try {
+            $today = now()->toDateString();
+
             $orders = DB::table('orders')
                 ->leftJoin('tables', 'orders.table_id', '=', 'tables.id')
                 ->leftJoin('payments', 'orders.id', '=', 'payments.order_id')
+                ->leftJoin('reservations', 'orders.id', '=', 'reservations.order_id')
                 ->select(
                     'orders.*',
                     'tables.table_number',
                     'payments.method as payment_method',
                     'payments.payment_type',
-                    'payments.status as payment_status'
+                    'payments.status as payment_status',
+                    'reservations.date as reservation_date'
                 )
+                ->where(function ($query) use ($today) {
+                    // Include non-reservation orders created today
+                    $query->whereNull('reservations.id')
+                        ->whereDate('orders.created_at', $today);
+
+                    // OR include reservation orders only on their reservation date
+                    $query->orWhere(function ($subQuery) use ($today) {
+                        $subQuery->whereNotNull('reservations.id')
+                            ->whereDate('reservations.date', $today);
+                    });
+                })
                 ->orderBy('orders.created_at', 'desc')
                 ->get();
 

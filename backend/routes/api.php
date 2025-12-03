@@ -28,6 +28,7 @@ Route::prefix('guest')->group(function () {
     Route::post('midtrans/create-snap-token', [MidtransController::class, 'createSnapToken']);
     Route::post('midtrans/notification', [MidtransController::class, 'notification']);
     Route::get('midtrans/check-status', [MidtransController::class, 'checkStatus']);
+    Route::delete('orders/{orderId}/cancel', [OrderController::class, 'cancelOrder']);
 });
 
 // =============================================

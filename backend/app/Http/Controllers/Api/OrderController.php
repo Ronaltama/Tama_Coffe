@@ -263,4 +263,59 @@ class OrderController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Cancel order and rollback all related data
+     * Used when payment is cancelled/failed
+     * Endpoint: DELETE /api/guest/orders/{orderId}/cancel
+     */
+    public function cancelOrder($orderId)
+    {
+        try {
+            DB::beginTransaction();
+
+            // Find order
+            $order = DB::table('orders')->where('id', $orderId)->first();
+
+            if (!$order) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Order tidak ditemukan'
+                ], 404);
+            }
+
+            // Delete payment record
+            DB::table('payments')->where('order_id', $orderId)->delete();
+
+            // Delete order details
+            DB::table('order_details')->where('order_id', $orderId)->delete();
+
+            // Delete reservation if exists
+            DB::table('reservations')->where('order_id', $orderId)->delete();
+
+            // Delete order
+            DB::table('orders')->where('id', $orderId)->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Order berhasil dibatalkan dan data telah dihapus'
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Order cancellation failed:', [
+                'order_id' => $orderId,
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal membatalkan order',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

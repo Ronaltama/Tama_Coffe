@@ -226,7 +226,7 @@
                         <span
                           class="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700"
                         >
-                          {{ reservation.order.payment_method || "Cash" }}
+                          {{ formatPaymentMethod(reservation.order.payments?.[0]?.payment_type || reservation.order.payments?.[0]?.method) }}
                         </span>
                       </div>
 
@@ -249,7 +249,7 @@
                           </span>
                           <span class="text-gray-600"
                             >Rp{{
-                              formatPrice(item.price * item.quantity)
+                              formatPrice(item.subtotal)
                             }}</span
                           >
                         </li>
@@ -363,6 +363,14 @@ const formatDateShort = (dateString) => {
     year: "numeric",
   };
   return new Date(dateString).toLocaleDateString("id-ID", options);
+};
+
+const formatPaymentMethod = (method) => {
+  if (!method) return "Cash";
+  if (method.toLowerCase() === "qris") return "QRIS";
+  if (method.toLowerCase() === "cash") return "Cash";
+  if (method.toLowerCase() === "midtrans") return "QRIS";
+  return method;
 };
 
 const formatPrice = (price) => {
