@@ -381,4 +381,64 @@ const deleteProduct = async (product) => {
 .overflow-x-auto::-webkit-scrollbar-thumb:hover {
   background: #9ca3af;
 }
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+  /* Reduce padding on mobile */
+  .p-8 {
+    padding: 1rem !important;
+  }
+  
+  /* Smaller title on mobile */
+  .text-4xl {
+    font-size: 1.5rem !important;
+    line-height: 2rem !important;
+  }
+  
+  /* Stack search and filter vertically on mobile */
+  .flex.gap-4 {
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+  }
+  
+  /* Make category dropdown full width on mobile */
+  .flex.gap-4 .relative {
+    width: 100%;
+  }
+  
+  /* Smaller button text and padding on mobile */
+  button {
+    padding: 0.5rem 1rem !important;
+    font-size: 0.875rem !important;
+  }
+  
+  /* Make tabs scrollable on mobile */
+  nav.flex.space-x-8 {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 0.5rem;
+  }
+  
+  /* Ensure tab buttons don't wrap */
+  nav.flex.space-x-8 button {
+    white-space: nowrap;
+  }
+  
+  /* Reduce table cell padding on mobile */
+  table th,
+  table td {
+    padding: 0.75rem 0.5rem !important;
+    font-size: 0.813rem !important;
+  }
+  
+  /* Smaller action buttons on mobile */
+  table button {
+    padding: 0.375rem !important;
+  }
+  
+  /* Make table scrollable horizontally */
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+}
 </style>

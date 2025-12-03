@@ -6,6 +6,7 @@ import Swal from "sweetalert2";
 import logo from "../assets/img/logo.png";
 
 const router = useRouter();
+const isSidebarOpen = ref(false);
 
 defineProps({
   role: {
@@ -13,6 +14,14 @@ defineProps({
     required: true,
   },
 });
+
+const toggleSidebar = () => {
+  isSidebarOpen.value = !isSidebarOpen.value;
+};
+
+const closeSidebar = () => {
+  isSidebarOpen.value = false;
+};
 
 const handleLogout = async () => {
   const result = await Swal.fire({
@@ -55,18 +64,50 @@ const handleLogout = async () => {
 </script>
 
 <template>
-  <div class="flex h-screen">
+  <div class="flex h-screen relative">
+    <!-- MOBILE HEADER (HAMBURGER) -->
+    <div class="md:hidden fixed top-0 left-0 right-0 bg-[#FBE8D9] p-4 flex items-center justify-between z-30 border-b border-orange-200 shadow-sm">
+      <div class="flex items-center gap-3">
+        <img :src="logo" alt="Logo" class="w-8 h-8 object-contain" />
+        <span class="font-bold text-color-brown">Tama Coffee</span>
+      </div>
+      <button @click="toggleSidebar" class="text-color-brown p-2 rounded-lg hover:bg-orange-200 transition">
+        <i class="fas fa-bars fa-lg"></i>
+      </button>
+    </div>
+
+    <!-- OVERLAY (MOBILE ONLY) -->
+    <div 
+      v-if="isSidebarOpen" 
+      @click="closeSidebar"
+      class="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden transition-opacity"
+    ></div>
+
     <!-- SIDEBAR -->
-    <aside class="w-64 flex-shrink-0 bg-[#FBE8D9] flex flex-col">
-      <!-- HEADER LOGO -->
+    <aside 
+      :class="[
+        'w-64 flex-shrink-0 bg-[#FBE8D9] flex flex-col transition-transform duration-300 ease-in-out z-50',
+        'fixed inset-y-0 left-0 md:relative md:translate-x-0',
+        isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+      ]"
+    >
+      <!-- HEADER LOGO (DESKTOP) -->
       <div
-        class="py-5 px-6 border-b border-orange-200 flex items-center justify-center gap-3"
+        class="py-5 px-6 border-b border-orange-200 flex items-center justify-center gap-3 hidden md:flex"
       >
         <img
           :src="logo"
           alt="Logo Tama Coffee"
           class="w-20 h-20 object-contain"
         />
+      </div>
+
+      <!-- MOBILE SIDEBAR HEADER (CLOSE BUTTON) -->
+      <div class="md:hidden p-4 flex items-center justify-between border-b border-orange-200">
+        <span class="font-bold text-lg text-color-brown">Menu</span>
+        <button @click="closeSidebar" class="text-gray-500 hover:text-gray-700">
+          <i class="fas fa-times fa-lg"></i>
+        </button>
       </div>
 
       <!-- NAVIGATION -->
@@ -77,6 +118,7 @@ const handleLogout = async () => {
             to="/superadmin/dashboard"
             class="nav-link"
             active-class="sidebar-active"
+            @click="closeSidebar"
           >
             <i class="fas fa-chart-line fa-fw"></i>
             <span>Dashboard</span>
@@ -86,6 +128,7 @@ const handleLogout = async () => {
             to="/superadmin/users"
             class="nav-link"
             active-class="sidebar-active"
+            @click="closeSidebar"
           >
             <i class="fas fa-users fa-fw"></i>
             <span>Users</span>
@@ -95,6 +138,7 @@ const handleLogout = async () => {
             to="/superadmin/products"
             class="nav-link"
             active-class="sidebar-active"
+            @click="closeSidebar"
           >
             <i class="fas fa-box fa-fw"></i>
             <span>Products</span>
@@ -104,6 +148,7 @@ const handleLogout = async () => {
             to="/superadmin/tables"
             class="nav-link"
             active-class="sidebar-active"
+            @click="closeSidebar"
           >
             <i class="fas fa-table fa-fw"></i>
             <span>Tables</span>
@@ -113,6 +158,7 @@ const handleLogout = async () => {
             to="/superadmin/history"
             class="nav-link"
             active-class="sidebar-active"
+            @click="closeSidebar"
           >
             <i class="fas fa-receipt fa-fw"></i>
             <span>Order History</span>
@@ -125,6 +171,7 @@ const handleLogout = async () => {
             to="/admin/dashboard"
             class="nav-link"
             active-class="sidebar-active"
+            @click="closeSidebar"
           >
             <i class="fas fa-chart-line fa-fw"></i>
             <span>Dashboard</span>
@@ -134,6 +181,7 @@ const handleLogout = async () => {
             to="/admin/history"
             class="nav-link"
             active-class="sidebar-active"
+            @click="closeSidebar"
           >
             <i class="fas fa-receipt fa-fw"></i>
             <span>Order History</span>
@@ -143,6 +191,7 @@ const handleLogout = async () => {
             to="/admin/add-order"
             class="nav-link"
             active-class="sidebar-active"
+            @click="closeSidebar"
           >
             <i class="fas fa-plus-circle fa-fw"></i>
             <span>Add Order</span>
@@ -152,6 +201,7 @@ const handleLogout = async () => {
             to="/admin/confirm-order"
             class="nav-link"
             active-class="sidebar-active"
+            @click="closeSidebar"
           >
             <i class="fas fa-check-circle fa-fw"></i>
             <span>Confirm Order</span>
@@ -161,6 +211,7 @@ const handleLogout = async () => {
             to="/admin/reservations"
             class="nav-link"
             active-class="sidebar-active"
+            @click="closeSidebar"
           >
             <i class="fas fa-calendar-check fa-fw"></i>
             <span>Reservasi</span>
@@ -181,7 +232,7 @@ const handleLogout = async () => {
     </aside>
 
     <!-- MAIN CONTENT -->
-    <main class="flex-1 p-8 overflow-y-auto bg-[#FFF5EE]">
+    <main class="flex-1 p-8 overflow-y-auto bg-[#FFF5EE] pt-20 md:pt-8">
       <RouterView />
     </main>
   </div>

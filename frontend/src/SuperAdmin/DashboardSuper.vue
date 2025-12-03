@@ -428,3 +428,79 @@ onMounted(() => {
     </div>
   </div>
 </template>
+
+<style scoped>
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+  /* Reduce padding on mobile */
+  .flex-1.p-8 {
+    padding: 1rem !important;
+  }
+  
+  /* Smaller title on mobile */
+  .text-4xl {
+    font-size: 1.5rem !important;
+    line-height: 2rem !important;
+  }
+  
+  /* Stack stats cards vertically on mobile */
+  .grid-cols-1.md\:grid-cols-3 {
+    grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+  }
+  
+  /* Smaller stats numbers on mobile */
+  .grid-cols-1.md\:grid-cols-3 h3 {
+    font-size: 2rem !important;
+  }
+  
+  /* Reduce sales report title size */
+  .text-2xl {
+    font-size: 1.25rem !important;
+  }
+  
+  /* Reduce chart info text */
+  .text-lg {
+    font-size: 1rem !important;
+  }
+  
+  /* Stack chart header info vertically on mobile */
+  .flex.items-center.justify-between.mb-4 {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 1rem;
+  }
+  
+  /* Adjust chart container height for mobile */
+  div[style*="height: 300px"] {
+    height: 250px !important;
+  }
+  
+  /* Make tabs scrollable on mobile */
+  .flex.gap-2 {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Smaller tab buttons on mobile */
+  .flex.gap-2 button {
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.813rem !important;
+    white-space: nowrap;
+  }
+  
+  /* Reduce table padding on mobile */
+  table th,
+  table td {
+    padding: 0.75rem 0.5rem !important;
+    font-size: 0.813rem !important;
+  }
+}
+
+/* Tablet responsive (between mobile and desktop) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  /* 2 columns for stats on tablets */
+  .grid-cols-1.md\:grid-cols-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+</style>

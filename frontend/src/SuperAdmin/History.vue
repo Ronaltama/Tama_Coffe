@@ -411,4 +411,48 @@ onMounted(() => {
 
 <style scoped>
 /* Tailwind CSS seharusnya cukup untuk styling ini */
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+  /* Reduce padding on mobile */
+  .p-6, .p-8 {
+    padding: 1rem !important;
+  }
+  
+  /* Smaller title on mobile */
+  .text-3xl {
+    font-size: 1.5rem !important;
+    line-height: 2rem !important;
+  }
+  
+  /* Stack filters vertically on mobile */
+  .flex.items-center.gap-4.flex-wrap {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.75rem !important;
+  }
+  
+  /* Make filters full width on mobile */
+  .flex.items-center.gap-4.flex-wrap > div {
+    width: 100% !important;
+    max-width: none !important;
+  }
+  
+  /* Reduce table cell padding on mobile */
+  table th,
+  table td {
+    padding: 0.75rem 0.5rem !important;
+    font-size: 0.813rem !important;
+  }
+  
+  /* Smaller action buttons on mobile */
+  table button {
+    font-size: 0.75rem !important;
+  }
+  
+  /* Make table scrollable horizontally */
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+}
 </style>

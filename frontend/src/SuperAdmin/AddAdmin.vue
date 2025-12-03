@@ -108,7 +108,7 @@ const handleCancel = () => {
             <input
               v-model="name"
               type="text"
-              placeholder="e.g., Rijal Bin Boss"
+              placeholder="e.g., Iqbal Mio Mirza"
               class="w-full px-4 py-2.5 bg-white rounded-xl border border-gray-200 text-sm font-normal font-inter text-gray-700 placeholder-gray-400 outline-none focus:border-color-brown focus:ring-2 focus:ring-orange-100 transition-all duration-200"
             />
           </div>
@@ -121,7 +121,7 @@ const handleCancel = () => {
             <input
               v-model="username"
               type="text"
-              placeholder="e.g., Rijal Cilacap"
+              placeholder="e.g., Iqbal Joki Balap Karung"
               class="w-full px-4 py-2.5 bg-white rounded-xl border border-gray-200 text-sm font-normal font-inter text-gray-700 placeholder-gray-400 outline-none focus:border-color-brown focus:ring-2 focus:ring-orange-100 transition-all duration-200"
             />
           </div>
@@ -134,7 +134,7 @@ const handleCancel = () => {
             <input
               v-model="email"
               type="email"
-              placeholder="e.g., rijalcilany@yahoo.com"
+              placeholder="e.g., iqbalboyolali@yahoo.com"
               class="w-full px-4 py-2.5 bg-white rounded-xl border border-gray-200 text-sm font-normal font-inter text-gray-700 placeholder-gray-400 outline-none focus:border-color-brown focus:ring-2 focus:ring-orange-100 transition-all duration-200"
             />
           </div>
