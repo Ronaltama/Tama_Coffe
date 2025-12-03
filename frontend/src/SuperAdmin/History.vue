@@ -14,7 +14,6 @@ const allOrders = ref([]);
 // --- FILTER & SEARCH STATE ---
 const searchTerm = ref("");
 const selectedDateRange = ref("All"); // 'All', 'Today', 'Last 7 Days', 'This Month'
-const selectedCustomer = ref("All"); // 'All', atau nama customer
 const selectedStatus = ref("All"); // 'All', 'Completed', 'Pending', 'Shipped'
 
 // === FETCH DATA FROM API ===
@@ -96,12 +95,6 @@ const mapStatus = (status) => {
   return statusMap[status] || status;
 };
 
-// List unik customer untuk dropdown
-const uniqueCustomers = computed(() => {
-  const customers = new Set(allOrders.value.map((order) => order.customer));
-  return ["All", ...Array.from(customers).sort()];
-});
-
 // Filter order berdasarkan semua kriteria
 const filteredOrders = computed(() => {
   let result = allOrders.value;
@@ -143,14 +136,7 @@ const filteredOrders = computed(() => {
     });
   }
 
-  // 3. Filter by Customer
-  if (selectedCustomer.value !== "All") {
-    result = result.filter(
-      (order) => order.customer === selectedCustomer.value
-    );
-  }
-
-  // 4. Filter by Status
+  // 3. Filter by Status
   if (selectedStatus.value !== "All") {
     result = result.filter((order) => order.status === selectedStatus.value);
   }
@@ -279,35 +265,6 @@ onMounted(() => {
 
         <div class="relative">
           <select
-            v-model="selectedCustomer"
-            class="block appearance-none w-full bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded-lg leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-          >
-            <option value="All">Customer</option>
-            <option
-              v-for="customer in uniqueCustomers"
-              :key="customer"
-              :value="customer"
-            >
-              {{ customer }}
-            </option>
-          </select>
-          <div
-            class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700"
-          >
-            <svg
-              class="fill-current h-4 w-4"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-            >
-              <path
-                d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"
-              />
-            </svg>
-          </div>
-        </div>
-
-        <div class="relative">
-          <select
             v-model="selectedStatus"
             class="block appearance-none w-full bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded-lg leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
           >
@@ -345,8 +302,6 @@ onMounted(() => {
                 <th class="py-3 px-4">CUSTOMER</th>
                 <th class="py-3 px-4">TOTAL AMOUNT</th>
                 <th class="py-3 px-4">STATUS</th>
-                <th class="py-3 px-4">PROCESSED BY</th>
-                <!-- kolom baru -->
                 <th class="py-3 px-4">ACTIONS</th>
               </tr>
             </thead>
@@ -377,16 +332,12 @@ onMounted(() => {
                       {{ order.status }}
                     </span>
                   </td>
-                  <td class="py-3 px-4 text-sm text-gray-700">
-                    {{ order.processedBy }}
-                  </td>
-                  <!-- tampilkan nama -->
                   <td class="py-3 px-4 text-sm">
                     <button
                       @click="viewOrderDetails(order.id)"
                       class="text-blue-600 hover:text-blue-800 font-medium"
                     >
-                      View Details
+                      Detail
                     </button>
                   </td>
                 </tr>
