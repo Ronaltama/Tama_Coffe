@@ -127,8 +127,8 @@ class ReservationController extends Controller
     public function index()
     {
         try {
-            // Fix eager loading: use orderDetails instead of items, or just load order
-            $reservations = Reservation::with(['order', 'order.orderDetails', 'order.orderDetails.product'])
+            // Fix eager loading: load table, order, order details, products, and payments
+            $reservations = Reservation::with(['table', 'order', 'order.orderDetails', 'order.orderDetails.product', 'order.payments'])
                 ->orderBy('created_at', 'desc')
                 ->get();
 

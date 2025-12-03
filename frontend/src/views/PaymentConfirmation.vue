@@ -130,12 +130,12 @@
       </main>
 
       <footer class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-gray-200 pb-4 pt-3 px-4">
-        <button @click="processFinalOrder" :disabled="isSubmitting"
+        <button @click="processFinalOrder" :disabled="isSubmitting || orderSubmitted"
           class="w-full py-3 text-white text-sm font-bold rounded-xl transition-all shadow-lg active:scale-[0.98] disabled:bg-gray-400 disabled:cursor-not-allowed"
           style="background-color: #B85814;"
-          @mouseover="!isSubmitting ? ($event.target.style.backgroundColor = '#A04D12') : null"
-          @mouseout="!isSubmitting ? ($event.target.style.backgroundColor = '#B85814') : null">
-          {{ isSubmitting ? "Processing..." : "Submit Order" }}
+          @mouseover="!isSubmitting && !orderSubmitted ? ($event.target.style.backgroundColor = '#A04D12') : null"
+          @mouseout="!isSubmitting && !orderSubmitted ? ($event.target.style.backgroundColor = '#B85814') : null">
+          {{ isSubmitting ? "Processing..." : orderSubmitted ? "Order Submitted" : "Submit Order" }}
         </button>
       </footer>
     </div>
@@ -160,6 +160,7 @@ const props = defineProps({
 
 const orderData = ref(null);
 const isSubmitting = ref(false);
+const orderSubmitted = ref(false); // Track if order has been submitted
 const errorMessage = ref("");
 
 const API_URL = "http://localhost:8000/api/guest";
@@ -209,6 +210,12 @@ const handlePaymentSuccess = (responseData) => {
 };
 
 const processFinalOrder = async () => {
+  // Prevent duplicate submission
+  if (orderSubmitted.value) {
+    errorMessage.value = "Pesanan sudah diproses. Silakan tunggu atau refresh halaman.";
+    return;
+  }
+
   try {
     isSubmitting.value = true;
     errorMessage.value = "";
@@ -261,6 +268,9 @@ const processFinalOrder = async () => {
 
     if (response.data.success) {
       console.log("Order berhasil:", response.data);
+      
+      // Mark order as submitted to prevent duplicate submissions
+      orderSubmitted.value = true;
 
       // Jika payment method = qris (online), redirect ke Midtrans
       if (orderData.value.payment === "qris") {
@@ -330,7 +340,31 @@ const processFinalOrder = async () => {
               onError: function (result) {
                 console.log("Payment error:", result);
                 errorMessage.value = "Pembayaran gagal. Silakan coba lagi.";
+                orderSubmitted.value = false; // Reset flag on error
                 isSubmitting.value = false;
+              },
+              onClose: function () {
+                console.log("Payment modal closed without completion");
+                errorMessage.value = "Pembayaran dibatalkan. Menghapus data order...";
+                
+                // Call backend to cancel/delete the order
+                axios.delete(`${API_URL}/orders/${response.data.data.order_id}/cancel`)
+                  .then((cancelResponse) => {
+                    console.log("Order cancelled successfully:", cancelResponse.data);
+                    errorMessage.value = "Pembayaran dibatalkan. Silakan kembali ke halaman pembayaran untuk mencoba lagi.";
+                  })
+                  .catch((cancelError) => {
+                    console.error("Failed to cancel order:", cancelError);
+                    errorMessage.value = "Pembayaran dibatalkan. Terjadi kesalahan saat menghapus data.";
+                  })
+                  .finally(() => {
+                    orderSubmitted.value = false; // Reset flag when modal closed
+                    isSubmitting.value = false;
+                    // Redirect back to payment page after 2 seconds
+                    setTimeout(() => {
+                      router.push(`/order/${props.tableId}/payment`);
+                    }, 2000);
+                  });
               },
             });
 
@@ -339,6 +373,7 @@ const processFinalOrder = async () => {
           console.error("Error creating snap token:", error);
           errorMessage.value =
             "Gagal membuat token pembayaran. Silakan coba lagi.";
+          orderSubmitted.value = false; // Reset flag on error
           isSubmitting.value = false;
         }
       } else {
