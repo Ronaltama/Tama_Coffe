@@ -245,4 +245,42 @@ onMounted(() => {
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+  /* Reduce padding/spacing on mobile */
+  .space-y-8 {
+    space-y: 1.5rem !important;
+    margin-bottom: 2rem;
+  }
+  
+  /* Smaller title on mobile */
+  .text-3xl {
+    font-size: 1.5rem !important;
+    line-height: 2rem !important;
+  }
+  
+  /* Stack stats cards vertically on mobile */
+  .grid-cols-1.md\:grid-cols-4 {
+    grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+    gap: 1rem !important;
+  }
+  
+  /* Smaller stats numbers on mobile */
+  .text-3xl.font-bold {
+    font-size: 1.75rem !important;
+  }
+  
+  /* Reduce table padding on mobile */
+  table th,
+  table td {
+    padding: 0.75rem 0.5rem !important;
+    font-size: 0.813rem !important;
+  }
+
+  /* Ensure table container handles overflow gracefully */
+  .overflow-x-auto {
+    margin-right: -1rem; 
+  }
+}
+</style>

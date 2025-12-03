@@ -169,7 +169,7 @@ class ReservationController extends Controller
 
             // Filter available tables
             $availableTables = $tables->filter(function ($table) use ($reservedTableIds) {
-                return !in_array($table->id, $reservedTableIds) && $table->status === 'available';
+                return !in_array($table->id, $reservedTableIds) && $table->status !== 'maintenance';
             })->values();
 
             return response()->json([

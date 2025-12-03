@@ -169,7 +169,7 @@ class MidtransController extends Controller
 
         // Update order status based on payment status
         if ($status === 'paid') {
-            $order->update(['status' => 'confirmed']);
+            $order->update(['status' => 'processing']);
 
             // Update table status to occupied if there's a table
             if ($order->table_id && $order->order_type === 'Dine In') {

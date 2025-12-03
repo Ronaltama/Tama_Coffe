@@ -280,7 +280,10 @@ onMounted(() => {
                 </button>
 
                 <button v-if="orderData.order.status === 'completed'" @click="printReceipt"
-                    class="flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium">
+                    class="flex items-center gap-2 px-4 py-2 text-white rounded-lg font-medium transition-colors"
+                    style="background-color: #B85814;"
+                    onmouseover="this.style.backgroundColor='#A04D12'"
+                    onmouseout="this.style.backgroundColor='#B85814'">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
                         stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -585,6 +588,33 @@ onMounted(() => {
 </template>
 
 <style scoped>
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+    .p-6 {
+        padding: 1rem !important;
+    }
+    
+    .p-8 {
+        padding: 1.5rem !important;
+    }
+    
+    .text-3xl {
+        font-size: 1.5rem !important;
+        line-height: 2rem !important;
+    }
+    
+    /* Stack customer info on mobile */
+    .grid-cols-2 {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Adjust item list spacing */
+    .space-y-4 > div {
+        padding-bottom: 1rem !important;
+        margin-bottom: 1rem !important;
+    }
+}
+
 /* Hide receipt content in normal view */
 #receipt-content {
     display: none;

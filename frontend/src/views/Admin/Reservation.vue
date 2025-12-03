@@ -55,7 +55,10 @@
         <div class="flex gap-2 items-end">
           <button
             @click="applyFilter"
-            class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium"
+            class="px-4 py-2 text-white rounded-lg font-medium transition-colors"
+            style="background-color: #B85814;"
+            onmouseover="this.style.backgroundColor='#A04D12'"
+            onmouseout="this.style.backgroundColor='#B85814'"
           >
             Filter
           </button>
