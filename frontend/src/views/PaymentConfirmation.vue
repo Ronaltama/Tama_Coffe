@@ -1,61 +1,32 @@
 <template>
   <div class="bg-neutral-100 min-h-screen">
     <div class="max-w-md mx-auto bg-white min-h-screen font-sans flex flex-col">
-      <header
-        class="bg-white border-b border-gray-200 px-4 py-4 flex items-center justify-between"
-      >
-        <router-link
-          :to="`/order/${tableId}/payment`"
-          class="p-1 -ml-2 text-gray-800 hover:text-orange-600 transition-colors"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M15 19l-7-7 7-7"
-            />
+      <header class="bg-white border-b border-gray-200 px-4 py-4 flex items-center justify-between">
+        <router-link :to="`/order/${tableId}/payment`"
+          class="p-1 -ml-2 text-gray-800 hover:text-orange-600 transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+            stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
         </router-link>
         <h1 class="text-lg font-bold text-gray-900">Order Summary</h1>
         <div class="w-6"></div>
       </header>
 
-      <main
-        class="flex-1 pb-24 px-4 overflow-y-auto bg-white"
-        v-if="orderData && !isSubmitting"
-      >
+      <main class="flex-1 pb-24 px-4 overflow-y-auto bg-white" v-if="orderData && !isSubmitting">
         <section class="my-4">
-          <div
-            class="border-2 rounded-xl px-4 py-3 flex items-center justify-between"
-            style="border-color: #B85814;"
-          >
+          <div class="border-2 rounded-xl px-4 py-3 flex items-center justify-between" style="border-color: #B85814;">
             <p class="text-sm text-gray-600">Order Type</p>
             <div class="flex items-center gap-2">
               <p class="font-bold text-base text-gray-900">
                 {{ orderData.orderType }}
               </p>
-              <div
-                class="w-7 h-7 rounded-full flex items-center justify-center"
-                style="background-color: #B85814;"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-4 w-4 text-white"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fill-rule="evenodd"
+              <div class="w-7 h-7 rounded-full flex items-center justify-center" style="background-color: #B85814;">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" viewBox="0 0 20 20"
+                  fill="currentColor">
+                  <path fill-rule="evenodd"
                     d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                    clip-rule="evenodd"
-                  />
+                    clip-rule="evenodd" />
                 </svg>
               </div>
             </div>
@@ -101,9 +72,8 @@
                     {{ item.quantity }}x {{ item.name }}
                   </h3>
                 </div>
-                <span class="text-sm font-bold text-gray-900 ml-2"
-                  >Rp{{ formatPrice(item.price * item.quantity) }}</span
-                >
+                <span class="text-sm font-bold text-gray-900 ml-2">Rp{{ formatPrice(item.price * item.quantity)
+                  }}</span>
               </div>
 
               <div class="ml-4 space-y-0.5">
@@ -119,41 +89,27 @@
 
         <section class="mb-6">
           <div class="space-y-2 mb-3">
-            <div
-              class="flex justify-between items-center text-sm text-gray-600"
-            >
+            <div class="flex justify-between items-center text-sm text-gray-600">
               <span>Subtotal ({{ orderData.items.length }} menu)</span>
               <span>Rp{{ formatPrice(orderData.totals.subTotal) }}</span>
             </div>
           </div>
 
-          <div
-            class="flex justify-between items-center font-bold text-base text-gray-900"
-          >
+          <div class="flex justify-between items-center font-bold text-base text-gray-900">
             <span>Total</span>
-            <span style="color: #B85814;"
-              >Rp{{ formatPrice(orderData.totals.total) }}</span
-            >
+            <span style="color: #B85814;">Rp{{ formatPrice(orderData.totals.total) }}</span>
           </div>
         </section>
 
         <!-- Error Message -->
-        <div
-          v-if="errorMessage"
-          class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg"
-        >
+        <div v-if="errorMessage" class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
           <p class="text-sm text-red-600">{{ errorMessage }}</p>
         </div>
       </main>
 
       <!-- Loading State -->
-      <main
-        v-else-if="isSubmitting"
-        class="flex-1 flex flex-col items-center justify-center bg-white"
-      >
-        <div
-          class="animate-spin rounded-full h-16 w-16 border-b-4 border-orange-600 mb-4"
-        ></div>
+      <main v-else-if="isSubmitting" class="flex-1 flex flex-col items-center justify-center bg-white">
+        <div class="animate-spin rounded-full h-16 w-16 border-b-4 border-orange-600 mb-4"></div>
         <p class="text-gray-600 font-medium">Memproses pesanan...</p>
         <p class="text-sm text-gray-500 mt-2">Mohon tunggu sebentar</p>
       </main>
@@ -161,41 +117,24 @@
       <!-- No Data -->
       <main v-else class="flex-1 flex items-center justify-center bg-white">
         <div class="text-center">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-20 w-20 mx-auto text-gray-300 mb-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-            />
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-20 w-20 mx-auto text-gray-300 mb-4" fill="none"
+            viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
           <p class="text-gray-500 mb-4">Tidak ada data pesanan.</p>
-          <router-link
-            :to="`/order/${tableId}/menu`"
-            class="text-orange-600 hover:underline"
-          >
+          <router-link :to="`/order/${tableId}/menu`" class="text-orange-600 hover:underline">
             Kembali ke Menu
           </router-link>
         </div>
       </main>
 
-      <footer
-        class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-gray-200 pb-4 pt-3 px-4"
-      >
-        <button
-          @click="processFinalOrder"
-          :disabled="isSubmitting"
+      <footer class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-gray-200 pb-4 pt-3 px-4">
+        <button @click="processFinalOrder" :disabled="isSubmitting"
           class="w-full py-3 text-white text-sm font-bold rounded-xl transition-all shadow-lg active:scale-[0.98] disabled:bg-gray-400 disabled:cursor-not-allowed"
           style="background-color: #B85814;"
-          @mouseover="!isSubmitting ? ($event.target.style.backgroundColor='#A04D12') : null"
-          @mouseout="!isSubmitting ? ($event.target.style.backgroundColor='#B85814') : null"
-        >
+          @mouseover="!isSubmitting ? ($event.target.style.backgroundColor = '#A04D12') : null"
+          @mouseout="!isSubmitting ? ($event.target.style.backgroundColor = '#B85814') : null">
           {{ isSubmitting ? "Processing..." : "Submit Order" }}
         </button>
       </footer>
@@ -250,10 +189,10 @@ const handlePaymentSuccess = (responseData) => {
     // Tambahkan booking code dan reservation ID untuk reservasi
     reservationMeta: responseData.booking_code
       ? {
-          bookingCode: responseData.booking_code,
-          reservationId: responseData.reservation_id,
-          reservationStatus: responseData.reservation_status,
-        }
+        bookingCode: responseData.booking_code,
+        reservationId: responseData.reservation_id,
+        reservationStatus: responseData.reservation_status,
+      }
       : orderData.value.reservationMeta, // Keep existing meta if not from backend
   };
 
@@ -304,14 +243,14 @@ const processFinalOrder = async () => {
       // Untuk reservasi, kirim data reservasi lengkap (akan dibuat di backend bersamaan dengan order)
       reservation_data:
         orderData.value.orderType === "Reservasi" &&
-        orderData.value.reservationMeta
+          orderData.value.reservationMeta
           ? {
-              customer_name: orderData.value.customer.name,
-              customer_phone: orderData.value.customer.phone,
-              table_id: tableId,
-              reservation_date: orderData.value.reservationDate,
-              reservation_time: orderData.value.reservationTime,
-            }
+            customer_name: orderData.value.customer.name,
+            customer_phone: orderData.value.customer.phone,
+            table_id: tableId,
+            reservation_date: orderData.value.reservationDate,
+            reservation_time: orderData.value.reservationTime,
+          }
           : null,
     };
 
@@ -339,23 +278,62 @@ const processFinalOrder = async () => {
             // Load Midtrans Snap
             window.snap.pay(snapToken, {
               onSuccess: function (result) {
-                console.log("Payment success:", result);
-                handlePaymentSuccess(response.data.data);
+                console.log("Payment success (snap):", result);
+                // request quick check to backend — but trust webhook for final state
+                try {
+                  const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000/api/guest';
+                  // short delay to give webhook a chance to arrive
+                  setTimeout(async () => {
+                    try {
+                      const resp = await axios.get(`${API_BASE}/midtrans/check-status`, {
+                        params: { order_id: response.data.data.order_id }
+                      });
+                      if (resp.data.success) {
+                        // update local UI / store with resp.data.data.status
+                        // still call existing handler for UX
+                        handlePaymentSuccess({
+                          ...response.data.data,
+                          status: resp.data.data.status
+                        });
+                      } else {
+                        // fallback: still redirect & rely on webhook
+                        handlePaymentSuccess(response.data.data);
+                      }
+                    } catch (err) {
+                      // couldn't check status — still proceed to success page but inform user
+                      console.warn('Could not verify payment status immediately:', err);
+                      handlePaymentSuccess(response.data.data);
+                    }
+                  }, 1500); // 1.5s delay
+                } catch (err) {
+                  handlePaymentSuccess(response.data.data);
+                }
               },
               onPending: function (result) {
-                console.log("Payment pending:", result);
-                handlePaymentSuccess(response.data.data);
+                console.log("Payment pending (snap):", result);
+                // pending also check once
+                setTimeout(async () => {
+                  try {
+                    const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000/api/guest';
+                    const resp = await axios.get(`${API_BASE}/midtrans/check-status`, {
+                      params: { order_id: response.data.data.order_id }
+                    });
+                    handlePaymentSuccess({
+                      ...response.data.data,
+                      status: resp.data.success ? resp.data.data.status : 'pending'
+                    });
+                  } catch (err) {
+                    handlePaymentSuccess(response.data.data);
+                  }
+                }, 1500);
               },
               onError: function (result) {
                 console.log("Payment error:", result);
                 errorMessage.value = "Pembayaran gagal. Silakan coba lagi.";
                 isSubmitting.value = false;
               },
-              onClose: function () {
-                console.log("Payment popup closed");
-                isSubmitting.value = false;
-              },
             });
+
           }
         } catch (error) {
           console.error("Error creating snap token:", error);

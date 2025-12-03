@@ -15,130 +15,130 @@ class MidtransController extends Controller
 {
     public function __construct()
     {
-        // Set Midtrans configuration
         Config::$serverKey = config('midtrans.server_key');
-        Config::$isProduction = config('midtrans.is_production');
-        Config::$isSanitized = config('midtrans.is_sanitized');
-        Config::$is3ds = config('midtrans.is_3ds');
+        Config::$isProduction = filter_var(config('midtrans.is_production'), FILTER_VALIDATE_BOOLEAN);
+        Config::$isSanitized = filter_var(config('midtrans.is_sanitized'), FILTER_VALIDATE_BOOLEAN);
+        Config::$is3ds = filter_var(config('midtrans.is_3ds'), FILTER_VALIDATE_BOOLEAN);
 
-        // Validate configuration
-        if (empty(Config::$serverKey) || Config::$serverKey === 'SB-Mid-server-YOUR_SERVER_KEY') {
-            Log::error('Midtrans Server Key not configured properly. Please update .env file.');
+        if (empty(Config::$serverKey)) {
+            Log::error('Midtrans server key is not configured. Please check .env');
         }
     }
 
     /**
-     * Create Midtrans Snap Token
+     * Create Snap Token and save midtrans_order_id on payment record
      */
     public function createSnapToken(Request $request)
     {
         try {
-            // Check if Midtrans is configured
-            if (empty(Config::$serverKey) || Config::$serverKey === 'SB-Mid-server-YOUR_SERVER_KEY') {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Midtrans belum dikonfigurasi. Silakan hubungi administrator.',
-                    'error' => 'MIDTRANS_NOT_CONFIGURED',
-                ], 500);
-            }
+            $request->validate(['order_id' => 'required|string|exists:orders,id']);
 
-            Log::info('Creating Midtrans Snap Token', ['request' => $request->all()]);
+            $order = Order::with('orderDetails.product')->findOrFail($request->order_id);
 
-            $request->validate([
-                'order_id' => 'required|string|exists:orders,id',
-            ]);
-
-            $order = Order::with(['orderDetails.product'])->findOrFail($request->order_id);
-            Log::info('Order found', ['order_id' => $order->id, 'total' => $order->total_price]);
-
-            // Prepare item details
             $itemDetails = [];
             foreach ($order->orderDetails as $detail) {
                 $itemDetails[] = [
                     'id' => $detail->product_id,
                     'price' => (int) $detail->unit_price,
-                    'quantity' => $detail->quantity,
+                    'quantity' => (int) $detail->quantity,
                     'name' => $detail->product->name . ($detail->variant ? ' (' . $detail->variant . ')' : ''),
                 ];
             }
 
-            // Prepare transaction details
-            $transactionDetails = [
-                'order_id' => $order->id . '-' . time(), // Append timestamp untuk unique order_id
-                'gross_amount' => (int) $order->total_price,
-            ];
+            // Unique midtrans order id (so we can match later)
+            $midtransOrderId = $order->id . '-' . time();
 
-            // Prepare customer details
-            $customerDetails = [
-                'first_name' => $order->customer_name ?? 'Guest',
-                'phone' => $order->customer_phone ?? '',
-            ];
-
-            // Prepare transaction params
             $params = [
-                'transaction_details' => $transactionDetails,
+                'transaction_details' => [
+                    'order_id' => $midtransOrderId,
+                    'gross_amount' => (int) $order->total_price,
+                ],
                 'item_details' => $itemDetails,
-                'customer_details' => $customerDetails,
+                'customer_details' => [
+                    'first_name' => $order->customer_name ?? 'Guest',
+                    'phone' => $order->customer_phone ?? '',
+                ],
             ];
 
-            // Get Snap Token
             $snapToken = Snap::getSnapToken($params);
 
-            Log::info('Snap token created successfully', ['snap_token' => substr($snapToken, 0, 20) . '...']);
+            // Save midtrans_order_id on Payment so webhook can match
+            $payment = Payment::where('order_id', $order->id)->first();
+            if ($payment) {
+                $payment->update([
+                    'midtrans_order_id' => $midtransOrderId,
+                    'status' => 'pending',
+                ]);
+            } else {
+                // If payment row not exist, create minimal
+                Payment::create([
+                    'id' => 'PM' . str_pad((int) (Payment::count() + 1), 4, '0', STR_PAD_LEFT),
+                    'order_id' => $order->id,
+                    'amount' => $order->total_price,
+                    'method' => 'midtrans',
+                    'midtrans_order_id' => $midtransOrderId,
+                    'status' => 'pending',
+                    'date' => now(),
+                ]);
+            }
+
+            Log::info('Snap token created', ['order_id' => $order->id, 'midtrans_order_id' => $midtransOrderId]);
 
             return response()->json([
                 'success' => true,
                 'snap_token' => $snapToken,
+                'midtrans_order_id' => $midtransOrderId,
                 'order_id' => $order->id,
             ]);
         } catch (\Exception $e) {
-            Log::error('Failed to create snap token', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal membuat token pembayaran',
-                'error' => $e->getMessage(),
-            ], 500);
+            Log::error('createSnapToken error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return response()->json(['success' => false, 'message' => 'Gagal membuat token pembayaran', 'error' => $e->getMessage()], 500);
         }
     }
 
     /**
-     * Handle Midtrans Notification/Callback
+     * Midtrans webhook (notification)
      */
     public function notification(Request $request)
     {
         try {
+            // Log raw payload (useful for debugging)
+            Log::info('Midtrans Webhook Raw Payload', ['payload' => $request->all(), 'headers' => $request->headers->all()]);
+
+            // Parse using Midtrans Notification helper (will verify with server key)
             $notification = new \Midtrans\Notification();
 
-            $transactionStatus = $notification->transaction_status;
-            $fraudStatus = $notification->fraud_status;
-            $orderId = $notification->order_id;
+            $transactionStatus = $notification->transaction_status ?? null;
+            $fraudStatus = $notification->fraud_status ?? null;
+            $orderId = $notification->order_id ?? null; // this is the midtrans_order_id we created earlier
+            $paymentType = $notification->payment_type ?? null;
 
-            // Extract original order_id (remove timestamp)
-            $originalOrderId = explode('-', $orderId)[0];
+            // Extract original order id (before appended timestamp)
+            $originalOrderId = null;
+            if ($orderId) {
+                $parts = explode('-', $orderId);
+                $originalOrderId = $parts[0] ?? null;
+            }
 
-            $order = Order::findOrFail($originalOrderId);
-            $payment = Payment::where('order_id', $originalOrderId)->first();
+            $order = $originalOrderId ? Order::find($originalOrderId) : null;
+            $payment = $originalOrderId ? Payment::where('order_id', $originalOrderId)->first() : null;
 
             DB::beginTransaction();
 
-            if ($transactionStatus == 'capture') {
-                if ($fraudStatus == 'accept') {
-                    // Payment success
+            if ($transactionStatus === 'capture') {
+                if ($fraudStatus === 'accept') {
                     $this->updatePaymentStatus($payment, $order, 'paid', $notification);
+                } else {
+                    $this->updatePaymentStatus($payment, $order, 'pending', $notification);
                 }
-            } elseif ($transactionStatus == 'settlement') {
-                // Payment success
+            } elseif ($transactionStatus === 'settlement') {
                 $this->updatePaymentStatus($payment, $order, 'paid', $notification);
-            } elseif ($transactionStatus == 'pending') {
-                // Payment pending
+            } elseif ($transactionStatus === 'pending') {
                 $this->updatePaymentStatus($payment, $order, 'pending', $notification);
-            } elseif ($transactionStatus == 'deny' || $transactionStatus == 'expire' || $transactionStatus == 'cancel') {
-                // Payment failed
+            } elseif (in_array($transactionStatus, ['deny', 'expire', 'cancel'])) {
                 $this->updatePaymentStatus($payment, $order, 'failed', $notification);
+            } else {
+                Log::warning('Unhandled Midtrans transaction status', ['status' => $transactionStatus, 'notification' => $notification]);
             }
 
             DB::commit();
@@ -146,62 +146,72 @@ class MidtransController extends Controller
             return response()->json(['success' => true]);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 500);
+            Log::error('Midtrans notification error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString(), 'payload' => $request->all()]);
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
 
     /**
-     * Update payment and order status
+     * Update payment + order based on notification
      */
     private function updatePaymentStatus($payment, $order, $status, $notification)
     {
+        Log::info('Updating Payment Status', ['order_id' => $order->id ?? null, 'status' => $status, 'notification' => $notification]);
+
         if ($payment) {
+            // va_numbers may be object/array — convert if present
+            $vaNumbers = null;
+            if (!empty($notification->va_numbers)) {
+                $vaNumbers = json_encode($notification->va_numbers);
+            } elseif (!empty($notification->permata_va_number)) {
+                $vaNumbers = json_encode(['permata_va_number' => $notification->permata_va_number]);
+            }
+
             $payment->update([
                 'status' => $status,
-                'payment_type' => $notification->payment_type ?? 'online',
-                'transaction_id' => $notification->transaction_id ?? null,
+                'payment_type' => $notification->payment_type ?? $payment->payment_type,
+                'midtrans_transaction_id' => $notification->transaction_id ?? $payment->midtrans_transaction_id,
+                'midtrans_order_id' => $notification->order_id ?? $payment->midtrans_order_id,
+                'transaction_status' => $notification->transaction_status ?? $payment->transaction_status,
+                'va_numbers' => $vaNumbers,
+                'callback_payload' => json_encode($notification),
                 'date' => now(),
             ]);
+        } else {
+            Log::warning('Payment record not found for notification', ['notification' => $notification]);
         }
 
-        // Update order status based on payment status
-        if ($status === 'paid') {
-            $order->update(['status' => 'processing']);
-
-            // Update table status to occupied if there's a table
-            if ($order->table_id && $order->order_type === 'Dine In') {
-                DB::table('tables')
-                    ->where('id', $order->table_id)
-                    ->update([
+        if ($order) {
+            if ($status === 'paid') {
+                $order->update(['status' => 'processing']);
+                // If dine in, mark table occupied
+                if ($order->table_id && $order->order_type === 'Dine In') {
+                    DB::table('tables')->where('id', $order->table_id)->update([
                         'status' => 'occupied',
                         'updated_at' => now()
                     ]);
+                }
+            } elseif ($status === 'failed') {
+                $order->update(['status' => 'cancelled']);
+            } elseif ($status === 'pending') {
+                $order->update(['status' => 'pending']);
             }
-        } elseif ($status === 'failed') {
-            $order->update(['status' => 'cancelled']);
+        } else {
+            Log::warning('Order not found for notification', ['notification' => $notification]);
         }
     }
 
     /**
-     * Check payment status
+     * API - check payment status (used by frontend for UX)
      */
     public function checkStatus(Request $request)
     {
         try {
-            $request->validate([
-                'order_id' => 'required|string|exists:orders,id',
-            ]);
+            $request->validate(['order_id' => 'required|string|exists:orders,id']);
 
             $payment = Payment::where('order_id', $request->order_id)->first();
-
             if (!$payment) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Payment not found',
-                ], 404);
+                return response()->json(['success' => false, 'message' => 'Payment not found'], 404);
             }
 
             return response()->json([
@@ -209,14 +219,13 @@ class MidtransController extends Controller
                 'data' => [
                     'status' => $payment->status,
                     'payment_type' => $payment->payment_type,
-                    'transaction_id' => $payment->transaction_id,
+                    'midtrans_transaction_id' => $payment->midtrans_transaction_id,
+                    'midtrans_order_id' => $payment->midtrans_order_id,
                 ],
             ]);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 500);
+            Log::error('checkStatus error: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
 }
