@@ -8,11 +8,41 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * @OA\Tag(
+ *     name="Guest Orders",
+ *     description="API untuk customer membuat dan mengelola order"
+ * )
+ */
 class OrderController extends Controller
 {
     /**
-     * Get table info by ID (untuk scan QR atau simulasi)
-     * Endpoint: GET /api/guest/table-info/{tableId}
+     * @OA\Get(
+     *     path="/api/guest/table-info/{tableId}",
+     *     tags={"Guest Orders"},
+     *     summary="Dapatkan info meja (untuk scan QR atau simulasi)",
+     *     @OA\Parameter(
+     *         name="tableId",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="string", example="TB001")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Info meja berhasil diambil",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean"),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="id", type="string"),
+     *                 @OA\Property(property="table_number", type="string"),
+     *                 @OA\Property(property="capacity", type="integer"),
+     *                 @OA\Property(property="status", type="string", enum={"available", "occupied", "reserved", "maintenance"})
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=404, description="Meja tidak ditemukan"),
+     *     @OA\Response(response=400, description="Meja sedang dalam perbaikan")
+     * )
      */
     public function getTableInfo($tableId)
     {
@@ -26,7 +56,6 @@ class OrderController extends Controller
                 ], 404);
             }
 
-            // Cek status meja
             if ($table->status === 'maintenance') {
                 return response()->json([
                     'success' => false,
@@ -59,15 +88,59 @@ class OrderController extends Controller
     }
 
     /**
-     * Submit order dari customer (guest)
-     * Endpoint: POST /api/guest/orders
+     * @OA\Post(
+     *     path="/api/guest/orders",
+     *     tags={"Guest Orders"},
+     *     summary="Submit order baru dari customer (Dine In atau Reservasi)",
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"customer_name", "order_type", "payment_method", "items"},
+     *             @OA\Property(property="customer_name", type="string", example="John Doe"),
+     *             @OA\Property(property="customer_phone", type="string", example="08123456789"),
+     *             @OA\Property(property="table_id", type="string", example="TB001"),
+     *             @OA\Property(property="order_type", type="string", enum={"Dine In", "Reservasi"}, example="Dine In"),
+     *             @OA\Property(property="payment_method", type="string", enum={"cash", "qris"}, example="qris"),
+     *             @OA\Property(property="notes", type="string", example="Tanpa gula"),
+     *             @OA\Property(property="items", type="array",
+     *                 @OA\Items(
+     *                     @OA\Property(property="product_id", type="string", example="PR001"),
+     *                     @OA\Property(property="quantity", type="integer", example=2),
+     *                     @OA\Property(property="variant", type="string", example="iced"),
+     *                     @OA\Property(property="price", type="number", example=25000)
+     *                 )
+     *             ),
+     *             @OA\Property(property="reservation_data", type="object",
+     *                 @OA\Property(property="customer_name", type="string"),
+     *                 @OA\Property(property="customer_phone", type="string"),
+     *                 @OA\Property(property="table_id", type="string"),
+     *                 @OA\Property(property="reservation_date", type="string", format="date"),
+     *                 @OA\Property(property="reservation_time", type="string", example="19:00")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Order berhasil dibuat",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="order_id", type="string", example="OR001"),
+     *                 @OA\Property(property="payment_id", type="string", example="PM001"),
+     *                 @OA\Property(property="total_price", type="number"),
+     *                 @OA\Property(property="booking_code", type="string", example="BOOK1234AB")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=422, description="Validasi gagal atau meja sudah direservasi"),
+     *     @OA\Response(response=500, description="Gagal membuat order")
+     * )
      */
     public function submitOrder(Request $request)
     {
         try {
             Log::info('Order Request Received:', $request->all());
 
-            // Validasi input
             $validated = $request->validate([
                 'customer_name' => 'required|string|max:255',
                 'customer_phone' => 'nullable|string|max:20',
@@ -82,7 +155,6 @@ class OrderController extends Controller
                 'items.*.quantity' => 'required|integer|min:1',
                 'items.*.variant' => 'nullable|string',
                 'items.*.price' => 'required|numeric|min:0',
-                // reservation_data untuk create reservasi baru bersamaan dengan order
                 'reservation_data' => 'nullable|array',
                 'reservation_data.customer_name' => 'required_with:reservation_data|string|max:255',
                 'reservation_data.customer_phone' => 'required_with:reservation_data|string|max:20',
@@ -93,10 +165,8 @@ class OrderController extends Controller
 
             DB::beginTransaction();
 
-            // Check if this is a reservation order - create reservation first
             $reservationId = null;
             if ($validated['order_type'] === 'Reservasi' && !empty($validated['reservation_data'])) {
-                // Validasi meja belum direservasi (cukup cek tanggal dan table_id)
                 $isReserved = \App\Models\Reservation::where('date', $validated['reservation_data']['reservation_date'])
                     ->where('table_id', $validated['reservation_data']['table_id'])
                     ->exists();
@@ -108,20 +178,12 @@ class OrderController extends Controller
                     ], 422);
                 }
 
-                // Generate Reservation ID & Booking Code
                 $reservationId = 'RES' . time() . rand(100, 999);
                 $bookingCode = 'BOOK' . strtoupper(substr(md5($reservationId), 0, 6));
 
-                Log::info('Creating reservation:', [
-                    'id' => $reservationId,
-                    'booking_code' => $bookingCode,
-                    'data' => $validated['reservation_data']
-                ]);
-
-                // Create reservation
                 \App\Models\Reservation::create([
                     'id' => $reservationId,
-                    'order_id' => null, // Will be updated after order created
+                    'order_id' => null,
                     'name' => $validated['reservation_data']['customer_name'],
                     'phone' => $validated['reservation_data']['customer_phone'],
                     'table_id' => $validated['reservation_data']['table_id'],
@@ -129,29 +191,19 @@ class OrderController extends Controller
                     'time' => $validated['reservation_data']['reservation_time'],
                     'booking_code' => $bookingCode,
                 ]);
-
-                Log::info('Reservation created successfully', ['id' => $reservationId]);
             }
 
-            // For guest orders, no need for user_id
-            $defaultUserId = null;
-
-            // --- LOGIKA CREATE ORDER (untuk Dine In atau Reservasi) ---
-
-            // Generate Order ID
             $orderCount = DB::table('orders')->count();
             $orderId = 'OR' . str_pad($orderCount + 1, 4, '0', STR_PAD_LEFT);
 
-            // Hitung total price
             $totalPrice = 0;
             foreach ($validated['items'] as $item) {
                 $totalPrice += $item['price'] * $item['quantity'];
             }
 
-            // Buat Order
             DB::table('orders')->insert([
                 'id' => $orderId,
-                'user_id' => $defaultUserId,
+                'user_id' => null,
                 'table_id' => $validated['table_id'] ?? null,
                 'customer_name' => $validated['customer_name'],
                 'customer_phone' => $validated['customer_phone'] ?? '',
@@ -162,14 +214,12 @@ class OrderController extends Controller
                 'updated_at' => now(),
             ]);
 
-            // Update reservation dengan order_id jika ini dari reservasi
             if (!empty($reservationId)) {
                 DB::table('reservations')
                     ->where('id', $reservationId)
                     ->update(['order_id' => $orderId, 'updated_at' => now()]);
             }
 
-            // Buat Order Details
             foreach ($validated['items'] as $item) {
                 $detailCount = DB::table('order_details')->count();
                 $detailId = 'OD' . str_pad($detailCount + 1, 4, '0', STR_PAD_LEFT);
@@ -188,7 +238,6 @@ class OrderController extends Controller
                 ]);
             }
 
-            // Buat Payment Record
             $paymentCount = DB::table('payments')->count();
             $paymentId = 'PM' . str_pad($paymentCount + 1, 4, '0', STR_PAD_LEFT);
 
@@ -204,8 +253,6 @@ class OrderController extends Controller
                 'updated_at' => now(),
             ]);
 
-            // Update status meja HANYA untuk Dine In (bukan Reservasi)
-            // Untuk Reservasi, meja tetap available sampai hari H
             if ($validated['table_id'] && $validated['order_type'] === 'Dine In') {
                 DB::table('tables')
                     ->where('id', $validated['table_id'])
@@ -217,7 +264,6 @@ class OrderController extends Controller
 
             DB::commit();
 
-            // Prepare response data
             $responseData = [
                 'order_id' => $orderId,
                 'payment_id' => $paymentId,
@@ -226,7 +272,6 @@ class OrderController extends Controller
                 'payment_method' => $validated['payment_method'],
             ];
 
-            // Add booking code for reservations
             if ($validated['order_type'] === 'Reservasi' && !empty($reservationId)) {
                 $reservation = \App\Models\Reservation::find($reservationId);
                 $responseData['reservation_id'] = $reservationId;
@@ -257,24 +302,32 @@ class OrderController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal membuat order',
-                'error' => $e->getMessage(),
-                'line' => $e->getLine(),
-                'file' => $e->getFile()
+                'error' => $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Cancel order and rollback all related data
-     * Used when payment is cancelled/failed
-     * Endpoint: DELETE /api/guest/orders/{orderId}/cancel
+     * @OA\Delete(
+     *     path="/api/guest/orders/{orderId}/cancel",
+     *     tags={"Guest Orders"},
+     *     summary="Batalkan order (rollback semua data)",
+     *     @OA\Parameter(
+     *         name="orderId",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="string", example="OR001")
+     *     ),
+     *     @OA\Response(response=200, description="Order berhasil dibatalkan"),
+     *     @OA\Response(response=404, description="Order tidak ditemukan"),
+     *     @OA\Response(response=500, description="Gagal membatalkan order")
+     * )
      */
     public function cancelOrder($orderId)
     {
         try {
             DB::beginTransaction();
 
-            // Find order
             $order = DB::table('orders')->where('id', $orderId)->first();
 
             if (!$order) {
@@ -284,16 +337,9 @@ class OrderController extends Controller
                 ], 404);
             }
 
-            // Delete payment record
             DB::table('payments')->where('order_id', $orderId)->delete();
-
-            // Delete order details
             DB::table('order_details')->where('order_id', $orderId)->delete();
-
-            // Delete reservation if exists
             DB::table('reservations')->where('order_id', $orderId)->delete();
-
-            // Delete order
             DB::table('orders')->where('id', $orderId)->delete();
 
             DB::commit();
@@ -307,8 +353,7 @@ class OrderController extends Controller
             DB::rollBack();
             Log::error('Order cancellation failed:', [
                 'order_id' => $orderId,
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'message' => $e->getMessage()
             ]);
 
             return response()->json([

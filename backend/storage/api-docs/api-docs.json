@@ -176,6 +176,2695 @@
                     }
                 ]
             }
+        },
+        "/api/categories": {
+            "get": {
+                "tags": [
+                    "Categories"
+                ],
+                "summary": "Dapatkan semua kategori",
+                "operationId": "ac9c4d978ea4e5b72915ca9728e5b8b1",
+                "responses": {
+                    "200": {
+                        "description": "List kategori berhasil diambil",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "List of categories retrieved successfully"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string",
+                                                        "example": "CT001"
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Coffee"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Categories"
+                ],
+                "summary": "Buat kategori baru",
+                "operationId": "cca49a87d9b0ebb9a98ad7c154b71737",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Coffee"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Kategori berhasil dibuat"
+                    },
+                    "422": {
+                        "description": "Validasi gagal"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/categories/{id}": {
+            "get": {
+                "tags": [
+                    "Categories"
+                ],
+                "summary": "Dapatkan detail kategori",
+                "operationId": "09767bb2e47dde77dd1e2591428b0ae1",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "CT001"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detail kategori berhasil diambil"
+                    },
+                    "404": {
+                        "description": "Kategori tidak ditemukan"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Categories"
+                ],
+                "summary": "Update kategori",
+                "operationId": "7dcf71887e585de7f881e9eb98d86126",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Coffee Updated"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Kategori berhasil diupdate"
+                    },
+                    "404": {
+                        "description": "Kategori tidak ditemukan"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Categories"
+                ],
+                "summary": "Hapus kategori",
+                "operationId": "9b61b65823f4a21f182506b34ddf805c",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Kategori berhasil dihapus"
+                    },
+                    "404": {
+                        "description": "Kategori tidak ditemukan"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/superadmin/dashboard": {
+            "get": {
+                "tags": [
+                    "Dashboard SuperAdmin"
+                ],
+                "summary": "Dapatkan statistik dashboard SuperAdmin",
+                "operationId": "8140b238c82d2b7acf8a6ae05103d7a0",
+                "responses": {
+                    "200": {
+                        "description": "Data dashboard berhasil diambil",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "total_users": {
+                                            "type": "integer",
+                                            "example": 10
+                                        },
+                                        "total_admins": {
+                                            "type": "integer",
+                                            "example": 3
+                                        },
+                                        "total_superadmin": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "total_products": {
+                                            "type": "integer",
+                                            "example": 50
+                                        },
+                                        "total_tables": {
+                                            "type": "integer",
+                                            "example": 20
+                                        },
+                                        "total_orders": {
+                                            "type": "integer",
+                                            "example": 150
+                                        },
+                                        "total_revenue": {
+                                            "type": "number",
+                                            "format": "float",
+                                            "example": 5000000
+                                        },
+                                        "top_products": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "units_sold": {
+                                                        "type": "integer"
+                                                    },
+                                                    "revenue": {
+                                                        "type": "number"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden - bukan SuperAdmin"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/superadmin/sales-data": {
+            "get": {
+                "tags": [
+                    "Dashboard SuperAdmin"
+                ],
+                "summary": "Dapatkan data penjualan berdasarkan periode",
+                "operationId": "8cd5a28ba01422bf202e22bb7062b39c",
+                "parameters": [
+                    {
+                        "name": "period",
+                        "in": "query",
+                        "description": "Periode: daily, weekly, monthly, product",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "daily",
+                            "enum": [
+                                "daily",
+                                "weekly",
+                                "monthly",
+                                "product"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Data penjualan berhasil diambil",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "label": {
+                                                "type": "string",
+                                                "example": "01 Jan"
+                                            },
+                                            "value": {
+                                                "type": "number",
+                                                "format": "float",
+                                                "example": 500000
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid period parameter"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/superadmin/orders/history": {
+            "get": {
+                "tags": [
+                    "Dashboard SuperAdmin"
+                ],
+                "summary": "Dapatkan riwayat semua order untuk SuperAdmin",
+                "operationId": "128863e7b44448a5c2e5864bc58acbba",
+                "responses": {
+                    "200": {
+                        "description": "Riwayat order berhasil diambil",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string",
+                                                        "example": "OR0001"
+                                                    },
+                                                    "customer_name": {
+                                                        "type": "string"
+                                                    },
+                                                    "total_price": {
+                                                        "type": "number"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "processed_by": {
+                                                        "type": "string"
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "stats": {
+                                            "properties": {
+                                                "waiting": {
+                                                    "type": "integer"
+                                                },
+                                                "processing": {
+                                                    "type": "integer"
+                                                },
+                                                "completed": {
+                                                    "type": "integer"
+                                                },
+                                                "finishedRevenue": {
+                                                    "type": "number"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/orders/manual": {
+            "post": {
+                "tags": [
+                    "Manual Orders"
+                ],
+                "summary": "Buat order manual by admin",
+                "operationId": "f3eb33bc0fda35f5f1ccf323bc205941",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "order_type",
+                                    "customer_name",
+                                    "items",
+                                    "payment"
+                                ],
+                                "properties": {
+                                    "order_type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "dine-in",
+                                            "take-away"
+                                        ],
+                                        "example": "dine-in"
+                                    },
+                                    "table_id": {
+                                        "type": "string",
+                                        "example": "TB001"
+                                    },
+                                    "customer_name": {
+                                        "type": "string",
+                                        "example": "John Doe"
+                                    },
+                                    "customer_phone": {
+                                        "type": "string",
+                                        "example": "08123456789"
+                                    },
+                                    "note": {
+                                        "type": "string"
+                                    },
+                                    "items": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "product_id": {
+                                                    "type": "string"
+                                                },
+                                                "quantity": {
+                                                    "type": "integer"
+                                                },
+                                                "variant": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "Ice",
+                                                        "Hot"
+                                                    ]
+                                                },
+                                                "unit_price": {
+                                                    "type": "number"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "payment": {
+                                        "properties": {
+                                            "method": {
+                                                "type": "string",
+                                                "enum": [
+                                                    "cash",
+                                                    "qris"
+                                                ]
+                                            },
+                                            "amount": {
+                                                "type": "number"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Order berhasil dibuat",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "order_id": {
+                                                    "type": "string"
+                                                },
+                                                "payment_id": {
+                                                    "type": "string"
+                                                },
+                                                "total": {
+                                                    "type": "number"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validasi gagal"
+                    },
+                    "500": {
+                        "description": "Gagal membuat order"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/orders/manual/available-tables": {
+            "get": {
+                "tags": [
+                    "Manual Orders"
+                ],
+                "summary": "Dapatkan daftar meja yang tersedia",
+                "operationId": "6989f41dfcf877057ffb22f36ebb0f56",
+                "responses": {
+                    "200": {
+                        "description": "List meja tersedia",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string"
+                                                    },
+                                                    "table_number": {
+                                                        "type": "string"
+                                                    },
+                                                    "capacity": {
+                                                        "type": "integer"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/guest/midtrans/create-snap-token": {
+            "post": {
+                "tags": [
+                    "Payments (Midtrans)"
+                ],
+                "summary": "Buat Snap Token untuk pembayaran",
+                "description": "Generate token untuk Midtrans Snap payment gateway",
+                "operationId": "f06cf76d0c2c824722b2d831fcdfdc43",
+                "requestBody": {
+                    "description": "Order ID yang akan dibayar",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "order_id"
+                                ],
+                                "properties": {
+                                    "order_id": {
+                                        "description": "ID order dari database",
+                                        "type": "string",
+                                        "example": "OR0001"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Snap token berhasil dibuat",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "snap_token": {
+                                            "description": "Token untuk Midtrans Snap",
+                                            "type": "string"
+                                        },
+                                        "order_id": {
+                                            "type": "string",
+                                            "example": "OR0001"
+                                        },
+                                        "midtrans_order_id": {
+                                            "type": "string",
+                                            "example": "OR0001-1234567890"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validasi gagal - order tidak ditemukan",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error saat membuat token",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Gagal membuat token pembayaran"
+                                        },
+                                        "error": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/guest/midtrans/notification": {
+            "post": {
+                "tags": [
+                    "Payments (Midtrans)"
+                ],
+                "summary": "Webhook notification dari Midtrans",
+                "description": "Endpoint untuk menerima notifikasi pembayaran dari Midtrans. Dipanggil otomatis oleh Midtrans ketika ada perubahan status transaksi.",
+                "operationId": "f1d13411d2dcedf4aafe68910f5e1b0b",
+                "requestBody": {
+                    "description": "Payload notifikasi dari Midtrans",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "order_id": {
+                                        "description": "Unique order ID dari Midtrans",
+                                        "type": "string"
+                                    },
+                                    "transaction_id": {
+                                        "description": "Transaction ID dari Midtrans",
+                                        "type": "string"
+                                    },
+                                    "transaction_status": {
+                                        "description": "Status transaksi",
+                                        "type": "string",
+                                        "enum": [
+                                            "settlement",
+                                            "capture",
+                                            "pending",
+                                            "deny",
+                                            "cancel",
+                                            "expire",
+                                            "refund"
+                                        ]
+                                    },
+                                    "payment_type": {
+                                        "description": "Tipe pembayaran",
+                                        "type": "string",
+                                        "enum": [
+                                            "qris",
+                                            "bank_transfer",
+                                            "gopay",
+                                            "credit_card"
+                                        ]
+                                    },
+                                    "fraud_status": {
+                                        "description": "Status fraud detection",
+                                        "type": "string",
+                                        "enum": [
+                                            "accept",
+                                            "challenge",
+                                            "deny"
+                                        ]
+                                    },
+                                    "gross_amount": {
+                                        "description": "Jumlah transaksi",
+                                        "type": "number"
+                                    },
+                                    "va_numbers": {
+                                        "description": "Virtual Account numbers (untuk bank_transfer)",
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "bank": {
+                                                    "type": "string"
+                                                },
+                                                "va_number": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "permata_va_number": {
+                                        "description": "Permata VA number (untuk bank_transfer)",
+                                        "type": "string"
+                                    },
+                                    "signature_key": {
+                                        "description": "Hash signature untuk verifikasi",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Notifikasi berhasil diproses",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Gagal memproses notifikasi",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/guest/midtrans/check-status": {
+            "get": {
+                "tags": [
+                    "Payments (Midtrans)"
+                ],
+                "summary": "Cek status pembayaran",
+                "description": "Endpoint untuk frontend mengecek status pembayaran secara real-time",
+                "operationId": "f31a2b88769f24ad090439e86f2ffd68",
+                "parameters": [
+                    {
+                        "name": "order_id",
+                        "in": "query",
+                        "description": "Order ID yang ingin dicek statusnya",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "OR0001"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Status pembayaran berhasil diambil",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "status": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "pending",
+                                                        "paid",
+                                                        "failed",
+                                                        "expired"
+                                                    ],
+                                                    "example": "paid"
+                                                },
+                                                "payment_type": {
+                                                    "type": "string",
+                                                    "example": "qris"
+                                                },
+                                                "midtrans_transaction_id": {
+                                                    "type": "string"
+                                                },
+                                                "midtrans_order_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Payment record tidak ditemukan",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Payment not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error internal server",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/guest/table-info/{tableId}": {
+            "get": {
+                "tags": [
+                    "Guest Orders"
+                ],
+                "summary": "Dapatkan info meja (untuk scan QR atau simulasi)",
+                "operationId": "4be5280e6f1ef89340f0108ad5d7ff4c",
+                "parameters": [
+                    {
+                        "name": "tableId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "TB001"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Info meja berhasil diambil",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "table_number": {
+                                                    "type": "string"
+                                                },
+                                                "capacity": {
+                                                    "type": "integer"
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "available",
+                                                        "occupied",
+                                                        "reserved",
+                                                        "maintenance"
+                                                    ]
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Meja tidak ditemukan"
+                    },
+                    "400": {
+                        "description": "Meja sedang dalam perbaikan"
+                    }
+                }
+            }
+        },
+        "/api/guest/orders": {
+            "post": {
+                "tags": [
+                    "Guest Orders"
+                ],
+                "summary": "Submit order baru dari customer (Dine In atau Reservasi)",
+                "operationId": "8ccfced9a2e8bdcac109b6e447c7e6fe",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "customer_name",
+                                    "order_type",
+                                    "payment_method",
+                                    "items"
+                                ],
+                                "properties": {
+                                    "customer_name": {
+                                        "type": "string",
+                                        "example": "John Doe"
+                                    },
+                                    "customer_phone": {
+                                        "type": "string",
+                                        "example": "08123456789"
+                                    },
+                                    "table_id": {
+                                        "type": "string",
+                                        "example": "TB001"
+                                    },
+                                    "order_type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "Dine In",
+                                            "Reservasi"
+                                        ],
+                                        "example": "Dine In"
+                                    },
+                                    "payment_method": {
+                                        "type": "string",
+                                        "enum": [
+                                            "cash",
+                                            "qris"
+                                        ],
+                                        "example": "qris"
+                                    },
+                                    "notes": {
+                                        "type": "string",
+                                        "example": "Tanpa gula"
+                                    },
+                                    "items": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "product_id": {
+                                                    "type": "string",
+                                                    "example": "PR001"
+                                                },
+                                                "quantity": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                },
+                                                "variant": {
+                                                    "type": "string",
+                                                    "example": "iced"
+                                                },
+                                                "price": {
+                                                    "type": "number",
+                                                    "example": 25000
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "reservation_data": {
+                                        "properties": {
+                                            "customer_name": {
+                                                "type": "string"
+                                            },
+                                            "customer_phone": {
+                                                "type": "string"
+                                            },
+                                            "table_id": {
+                                                "type": "string"
+                                            },
+                                            "reservation_date": {
+                                                "type": "string",
+                                                "format": "date"
+                                            },
+                                            "reservation_time": {
+                                                "type": "string",
+                                                "example": "19:00"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Order berhasil dibuat",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "order_id": {
+                                                    "type": "string",
+                                                    "example": "OR001"
+                                                },
+                                                "payment_id": {
+                                                    "type": "string",
+                                                    "example": "PM001"
+                                                },
+                                                "total_price": {
+                                                    "type": "number"
+                                                },
+                                                "booking_code": {
+                                                    "type": "string",
+                                                    "example": "BOOK1234AB"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validasi gagal atau meja sudah direservasi"
+                    },
+                    "500": {
+                        "description": "Gagal membuat order"
+                    }
+                }
+            }
+        },
+        "/api/guest/orders/{orderId}/cancel": {
+            "delete": {
+                "tags": [
+                    "Guest Orders"
+                ],
+                "summary": "Batalkan order (rollback semua data)",
+                "operationId": "13480c19d5e59f8f364ca87cc5fb6336",
+                "parameters": [
+                    {
+                        "name": "orderId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "OR001"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Order berhasil dibatalkan"
+                    },
+                    "404": {
+                        "description": "Order tidak ditemukan"
+                    },
+                    "500": {
+                        "description": "Gagal membatalkan order"
+                    }
+                }
+            }
+        },
+        "/api/orders/board": {
+            "get": {
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "Get all orders grouped by status (Kanban board)",
+                "operationId": "b1c1ace05add50a3700ba3a7ace847fe",
+                "responses": {
+                    "200": {
+                        "description": "Order board berhasil diambil",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "waiting": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "processing": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "finished": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "cancelled": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Gagal mengambil data order"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/orders/{id}/detail": {
+            "get": {
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "Get order detail by ID",
+                "operationId": "d4f742eb3640e916a5d8727969021bf5",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Order ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "OR001"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detail order berhasil diambil",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "order": {
+                                                    "type": "object"
+                                                },
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "payment": {
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Order tidak ditemukan"
+                    },
+                    "500": {
+                        "description": "Gagal mengambil detail order"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/orders/{id}/process-payment": {
+            "post": {
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "Process payment for cash orders",
+                "operationId": "46c1207a35c58529d3c25d4978d8601c",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Order ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "OR001"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "amount_paid"
+                                ],
+                                "properties": {
+                                    "amount_paid": {
+                                        "description": "Jumlah uang yang dibayarkan",
+                                        "type": "number",
+                                        "example": 100000
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Pembayaran berhasil diproses",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "total": {
+                                                    "type": "number"
+                                                },
+                                                "paid": {
+                                                    "type": "number"
+                                                },
+                                                "change": {
+                                                    "type": "number"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Order tidak ditemukan"
+                    },
+                    "400": {
+                        "description": "Jumlah pembayaran kurang"
+                    },
+                    "500": {
+                        "description": "Gagal memproses pembayaran"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/orders/{id}/status": {
+            "patch": {
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "Update order status",
+                "operationId": "8fcad31c59b64e126afedbc0f50181cf",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Order ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "OR001"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "status"
+                                ],
+                                "properties": {
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "pending",
+                                            "processing",
+                                            "completed",
+                                            "cancelled"
+                                        ],
+                                        "example": "processing"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Status order berhasil diupdate",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "order_id": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Order tidak ditemukan"
+                    },
+                    "500": {
+                        "description": "Gagal mengupdate status"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/orders/{id}": {
+            "delete": {
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "Delete cancelled order",
+                "operationId": "72b82f258132d39cfa6eda70e2270495",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Order ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "OR001"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Order berhasil dihapus",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Order tidak ditemukan"
+                    },
+                    "400": {
+                        "description": "Hanya order yang dibatalkan yang bisa dihapus"
+                    },
+                    "500": {
+                        "description": "Gagal menghapus order"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/dashboard/stats": {
+            "get": {
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "Get dashboard statistics (today's data)",
+                "operationId": "ffc4d3c14d26cb67e306a6b49389e194",
+                "responses": {
+                    "200": {
+                        "description": "Data dashboard berhasil diambil",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "stats": {
+                                                    "properties": {
+                                                        "waiting": {
+                                                            "type": "integer",
+                                                            "example": 5
+                                                        },
+                                                        "processing": {
+                                                            "type": "integer",
+                                                            "example": 3
+                                                        },
+                                                        "completed": {
+                                                            "type": "integer",
+                                                            "example": 15
+                                                        },
+                                                        "finishedRevenue": {
+                                                            "type": "number",
+                                                            "example": 750000
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "recentOrders": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Gagal mengambil data dashboard"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/orders/history": {
+            "get": {
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "Get order history",
+                "description": "SuperAdmin (RL001) mendapat semua order. Admin (RL002) hanya order yang dibuat oleh mereka.",
+                "operationId": "1cbe0e945e6a75b9bb4db9abad03fbde",
+                "responses": {
+                    "200": {
+                        "description": "History order berhasil diambil",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "stats": {
+                                                    "properties": {
+                                                        "waiting": {
+                                                            "type": "integer"
+                                                        },
+                                                        "processing": {
+                                                            "type": "integer"
+                                                        },
+                                                        "completed": {
+                                                            "type": "integer"
+                                                        },
+                                                        "finishedRevenue": {
+                                                            "type": "number"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "orders": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string"
+                                                            },
+                                                            "customer_name": {
+                                                                "type": "string"
+                                                            },
+                                                            "created_at": {
+                                                                "type": "string",
+                                                                "format": "date-time"
+                                                            },
+                                                            "status": {
+                                                                "type": "string"
+                                                            },
+                                                            "total_price": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Gagal mengambil history"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/products": {
+            "get": {
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Dapatkan semua produk",
+                "operationId": "d97d1c3727cbac49708b85f7d11f7d58",
+                "responses": {
+                    "200": {
+                        "description": "List produk berhasil diambil",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "price": {
+                                                        "type": "number"
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                            "available",
+                                                            "unavailable"
+                                                        ]
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Buat produk baru",
+                "operationId": "785644b7d7dd38af4b51dafd0fbc1b6d",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "category_id",
+                                    "name",
+                                    "price"
+                                ],
+                                "properties": {
+                                    "category_id": {
+                                        "type": "string",
+                                        "example": "CT001"
+                                    },
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Espresso"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Kopi espresso premium"
+                                    },
+                                    "price": {
+                                        "type": "number",
+                                        "example": 25000
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "available",
+                                            "unavailable"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Produk berhasil dibuat"
+                    },
+                    "422": {
+                        "description": "Validasi gagal"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/products/{id}": {
+            "get": {
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Dapatkan detail produk",
+                "operationId": "c87fb2e4d617e7b36c712cad358acdb8",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detail produk"
+                    },
+                    "404": {
+                        "description": "Produk tidak ditemukan"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Update produk",
+                "operationId": "416e4959a3919547eb609d87e3db9135",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "price": {
+                                        "type": "number"
+                                    },
+                                    "status": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Produk berhasil diupdate"
+                    },
+                    "404": {
+                        "description": "Produk tidak ditemukan"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Hapus produk",
+                "operationId": "b49ce9f3cb168b233245548fb4ef36d3",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Produk berhasil dihapus"
+                    },
+                    "404": {
+                        "description": "Produk tidak ditemukan"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/products/{id}/toggle-status": {
+            "patch": {
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Toggle status produk (available/unavailable)",
+                "operationId": "a30ae2da4b71a22bd804600742e2fd8b",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Status produk berhasil diubah"
+                    },
+                    "404": {
+                        "description": "Produk tidak ditemukan"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/guest/reservations": {
+            "post": {
+                "tags": [
+                    "Reservations"
+                ],
+                "summary": "Buat reservasi meja baru",
+                "operationId": "46f78174368c39226dffd2fe55eda6c1",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "customer_name",
+                                    "customer_phone",
+                                    "table_id",
+                                    "reservation_date",
+                                    "reservation_time"
+                                ],
+                                "properties": {
+                                    "customer_name": {
+                                        "type": "string",
+                                        "example": "John Doe"
+                                    },
+                                    "customer_phone": {
+                                        "type": "string",
+                                        "example": "08123456789"
+                                    },
+                                    "table_id": {
+                                        "type": "string",
+                                        "example": "TB001"
+                                    },
+                                    "reservation_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2025-12-25"
+                                    },
+                                    "reservation_time": {
+                                        "type": "string",
+                                        "example": "19:00"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Reservasi berhasil dibuat",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "booking_code": {
+                                                    "type": "string"
+                                                },
+                                                "date": {
+                                                    "type": "string"
+                                                },
+                                                "time": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Meja sudah direservasi atau validasi gagal"
+                    }
+                }
+            }
+        },
+        "/api/guest/reservations/{id}/status": {
+            "get": {
+                "tags": [
+                    "Reservations"
+                ],
+                "summary": "Cek status reservasi",
+                "operationId": "e4d8150c1720144c0b4c4d023d022717",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "RSV001"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Status reservasi berhasil diambil"
+                    },
+                    "404": {
+                        "description": "Reservasi tidak ditemukan"
+                    }
+                }
+            }
+        },
+        "/api/admin/reservations": {
+            "get": {
+                "tags": [
+                    "Reservations"
+                ],
+                "summary": "Dapatkan semua reservasi (Admin)",
+                "operationId": "0f5e087981d650f9097959ee49a5c092",
+                "responses": {
+                    "200": {
+                        "description": "List semua reservasi"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reservations/availability": {
+            "get": {
+                "tags": [
+                    "Reservations"
+                ],
+                "summary": "Cek ketersediaan meja untuk tanggal & waktu tertentu",
+                "operationId": "571039890728b74a99a11c80574d8937",
+                "parameters": [
+                    {
+                        "name": "date",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "time",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List meja yang tersedia"
+                    }
+                }
+            }
+        },
+        "/api/tables": {
+            "get": {
+                "tags": [
+                    "Tables"
+                ],
+                "summary": "Dapatkan semua meja",
+                "operationId": "ff9d243a2aac0c783b0b20f5bd9d5913",
+                "responses": {
+                    "200": {
+                        "description": "List meja berhasil diambil"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Tables"
+                ],
+                "summary": "Buat meja baru dengan QR code",
+                "operationId": "ee3cdb4f76abd42e86f037b17e4d0206",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "table_number",
+                                    "capacity"
+                                ],
+                                "properties": {
+                                    "table_number": {
+                                        "type": "string",
+                                        "example": "1"
+                                    },
+                                    "capacity": {
+                                        "type": "integer",
+                                        "example": 4
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "Indoor",
+                                            "Outdoor",
+                                            "VIP"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Meja berhasil dibuat dengan QR code"
+                    },
+                    "422": {
+                        "description": "Validasi gagal"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/tables/{id}": {
+            "get": {
+                "tags": [
+                    "Tables"
+                ],
+                "summary": "Dapatkan detail meja",
+                "operationId": "465490c7477f4f985439a763800c841c",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detail meja"
+                    },
+                    "404": {
+                        "description": "Meja tidak ditemukan"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Tables"
+                ],
+                "summary": "Update meja",
+                "operationId": "1b0db842a021f0e5558f861a6dfc961a",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "table_number": {
+                                        "type": "string"
+                                    },
+                                    "capacity": {
+                                        "type": "integer"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "available",
+                                            "occupied",
+                                            "reserved"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Meja berhasil diupdate"
+                    },
+                    "404": {
+                        "description": "Meja tidak ditemukan"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Tables"
+                ],
+                "summary": "Hapus meja",
+                "operationId": "fe0835f1e615253c8ba068fad5293f97",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Meja berhasil dihapus"
+                    },
+                    "404": {
+                        "description": "Meja tidak ditemukan"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/users": {
+            "get": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Dapatkan semua user admin",
+                "operationId": "566aed8efb436ca506e0ef51a032ecd9",
+                "responses": {
+                    "200": {
+                        "description": "List user admin"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Buat user admin baru",
+                "operationId": "be551c1d694a01c164966f58bfa77013",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "role_id",
+                                    "name",
+                                    "username",
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "role_id": {
+                                        "type": "string",
+                                        "example": "RL002"
+                                    },
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Admin 1"
+                                    },
+                                    "username": {
+                                        "type": "string",
+                                        "example": "admin1"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "admin1@test.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "example": "password123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "User admin berhasil dibuat"
+                    },
+                    "422": {
+                        "description": "Validasi gagal"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/users/{id}": {
+            "get": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Dapatkan detail user",
+                "operationId": "6f51bd5fa2dddcd25e44cfa53dcbd10a",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detail user"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Update user",
+                "operationId": "070e37fc9aff78ae73860751bc990ed3",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string"
+                                    },
+                                    "password": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "User berhasil diupdate"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Hapus user",
+                "operationId": "0b4133ed462528a5e648b88ead11e929",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User berhasil dihapus"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/guest/products": {
+            "get": {
+                "tags": [
+                    "Guest Menu"
+                ],
+                "summary": "Dapatkan semua produk yang tersedia",
+                "operationId": "3d38034ce346672eee6f44ddd0fbc348",
+                "parameters": [
+                    {
+                        "name": "category_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "CAT001"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List produk berhasil diambil",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string",
+                                                        "example": "PR001"
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Espresso"
+                                                    },
+                                                    "price": {
+                                                        "type": "number",
+                                                        "example": 25000
+                                                    },
+                                                    "imageUrl": {
+                                                        "type": "string"
+                                                    },
+                                                    "type": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                            "drink",
+                                                            "food"
+                                                        ]
+                                                    },
+                                                    "category": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Gagal mengambil data produk"
+                    }
+                }
+            }
+        },
+        "/api/guest/products/{id}": {
+            "get": {
+                "tags": [
+                    "Guest Menu"
+                ],
+                "summary": "Dapatkan detail produk by ID",
+                "operationId": "aa7445f01e2275dd1d0f1aba8cb4f6ae",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "PR001"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detail produk berhasil diambil",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "price": {
+                                                    "type": "number"
+                                                },
+                                                "imageUrl": {
+                                                    "type": "string"
+                                                },
+                                                "category": {
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Produk tidak ditemukan"
+                    }
+                }
+            }
+        },
+        "/api/guest/categories": {
+            "get": {
+                "tags": [
+                    "Guest Menu"
+                ],
+                "summary": "Dapatkan semua kategori produk",
+                "operationId": "5e72aebe9fb89509ee233ae8e3419cb6",
+                "responses": {
+                    "200": {
+                        "description": "List kategori berhasil diambil",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/guest/table-info/{qrCode}": {
+            "get": {
+                "tags": [
+                    "Guest Menu"
+                ],
+                "summary": "Ambil info meja by QR code",
+                "operationId": "5ec619e9f585fe8d73f1e8490797ea65",
+                "parameters": [
+                    {
+                        "name": "qrCode",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "TB001"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Info meja berhasil diambil"
+                    },
+                    "404": {
+                        "description": "Meja tidak ditemukan"
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -188,6 +2877,50 @@
         }
     },
     "tags": [
+        {
+            "name": "Categories",
+            "description": "API untuk manajemen kategori produk"
+        },
+        {
+            "name": "Dashboard SuperAdmin",
+            "description": "API untuk dashboard dan statistik SuperAdmin"
+        },
+        {
+            "name": "Manual Orders",
+            "description": "API untuk admin membuat order manual di pos"
+        },
+        {
+            "name": "Payments (Midtrans)",
+            "description": "API untuk pembayaran menggunakan Midtrans"
+        },
+        {
+            "name": "Guest Orders",
+            "description": "API untuk customer membuat dan mengelola order"
+        },
+        {
+            "name": "Orders",
+            "description": "API untuk manajemen order"
+        },
+        {
+            "name": "Products",
+            "description": "API untuk manajemen produk"
+        },
+        {
+            "name": "Reservations",
+            "description": "API untuk manajemen reservasi meja"
+        },
+        {
+            "name": "Tables",
+            "description": "API untuk manajemen meja"
+        },
+        {
+            "name": "Users",
+            "description": "API untuk manajemen user/admin"
+        },
+        {
+            "name": "Guest Menu",
+            "description": "API untuk customer/guest mengakses menu dan detail produk"
+        },
         {
             "name": "Authentication",
             "description": "Authentication"

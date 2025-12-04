@@ -8,11 +8,43 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * @OA\Tag(
+ *     name="Orders",
+ *     description="API untuk manajemen order"
+ * )
+ */
 class ProcessOrderController extends Controller
 {
     /**
-     * Get all orders grouped by status (untuk Kanban board)
-     * GET /api/orders/board
+     * @OA\Get(
+     *     path="/api/orders/board",
+     *     tags={"Orders"},
+     *     summary="Get all orders grouped by status (Kanban board)",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Order board berhasil diambil",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean"),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="waiting", type="array",
+     *                     @OA\Items(type="object")
+     *                 ),
+     *                 @OA\Property(property="processing", type="array",
+     *                     @OA\Items(type="object")
+     *                 ),
+     *                 @OA\Property(property="finished", type="array",
+     *                     @OA\Items(type="object")
+     *                 ),
+     *                 @OA\Property(property="cancelled", type="array",
+     *                     @OA\Items(type="object")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=500, description="Gagal mengambil data order")
+     * )
      */
     public function getOrderBoard()
     {
@@ -67,8 +99,35 @@ class ProcessOrderController extends Controller
     }
 
     /**
-     * Get order detail by ID
-     * GET /api/orders/{id}/detail
+     * @OA\Get(
+     *     path="/api/orders/{id}/detail",
+     *     tags={"Orders"},
+     *     summary="Get order detail by ID",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="Order ID",
+     *         @OA\Schema(type="string", example="OR001")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Detail order berhasil diambil",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean"),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="order", type="object"),
+     *                 @OA\Property(property="items", type="array",
+     *                     @OA\Items(type="object")
+     *                 ),
+     *                 @OA\Property(property="payment", type="object")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=404, description="Order tidak ditemukan"),
+     *     @OA\Response(response=500, description="Gagal mengambil detail order")
+     * )
      */
     public function getOrderDetail($id)
     {
@@ -126,8 +185,42 @@ class ProcessOrderController extends Controller
     }
 
     /**
-     * Process payment for cash orders
-     * POST /api/orders/{id}/process-payment
+     * @OA\Post(
+     *     path="/api/orders/{id}/process-payment",
+     *     tags={"Orders"},
+     *     summary="Process payment for cash orders",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="Order ID",
+     *         @OA\Schema(type="string", example="OR001")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"amount_paid"},
+     *             @OA\Property(property="amount_paid", type="number", example=100000, description="Jumlah uang yang dibayarkan")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Pembayaran berhasil diproses",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean"),
+     *             @OA\Property(property="message", type="string"),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="total", type="number"),
+     *                 @OA\Property(property="paid", type="number"),
+     *                 @OA\Property(property="change", type="number")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=404, description="Order tidak ditemukan"),
+     *     @OA\Response(response=400, description="Jumlah pembayaran kurang"),
+     *     @OA\Response(response=500, description="Gagal memproses pembayaran")
+     * )
      */
     public function processPayment(Request $request, $id)
     {
@@ -204,8 +297,40 @@ class ProcessOrderController extends Controller
     }
 
     /**
-     * Update order status
-     * PATCH /api/orders/{id}/status
+     * @OA\Patch(
+     *     path="/api/orders/{id}/status",
+     *     tags={"Orders"},
+     *     summary="Update order status",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="Order ID",
+     *         @OA\Schema(type="string", example="OR001")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"status"},
+     *             @OA\Property(property="status", type="string", enum={"pending", "processing", "completed", "cancelled"}, example="processing")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Status order berhasil diupdate",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean"),
+     *             @OA\Property(property="message", type="string"),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="order_id", type="string"),
+     *                 @OA\Property(property="status", type="string")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=404, description="Order tidak ditemukan"),
+     *     @OA\Response(response=500, description="Gagal mengupdate status")
+     * )
      */
     public function updateStatus(Request $request, $id)
     {
@@ -268,8 +393,30 @@ class ProcessOrderController extends Controller
 
 
     /**
-     * Delete cancelled order
-     * DELETE /api/orders/{id}
+     * @OA\Delete(
+     *     path="/api/orders/{id}",
+     *     tags={"Orders"},
+     *     summary="Delete cancelled order",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="Order ID",
+     *         @OA\Schema(type="string", example="OR001")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Order berhasil dihapus",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean"),
+     *             @OA\Property(property="message", type="string")
+     *         )
+     *     ),
+     *     @OA\Response(response=404, description="Order tidak ditemukan"),
+     *     @OA\Response(response=400, description="Hanya order yang dibatalkan yang bisa dihapus"),
+     *     @OA\Response(response=500, description="Gagal menghapus order")
+     * )
      */
     public function deleteOrder($id)
     {
@@ -313,8 +460,31 @@ class ProcessOrderController extends Controller
     }
 
     /**
-     * Get dashboard statistics (today's data)
-     * GET /api/dashboard/stats
+     * @OA\Get(
+     *     path="/api/dashboard/stats",
+     *     tags={"Orders"},
+     *     summary="Get dashboard statistics (today's data)",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Data dashboard berhasil diambil",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean"),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="stats", type="object",
+     *                     @OA\Property(property="waiting", type="integer", example=5),
+     *                     @OA\Property(property="processing", type="integer", example=3),
+     *                     @OA\Property(property="completed", type="integer", example=15),
+     *                     @OA\Property(property="finishedRevenue", type="number", example=750000)
+     *                 ),
+     *                 @OA\Property(property="recentOrders", type="array",
+     *                     @OA\Items(type="object")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=500, description="Gagal mengambil data dashboard")
+     * )
      */
     public function getDashboardStats()
     {
@@ -381,9 +551,39 @@ class ProcessOrderController extends Controller
     }
 
     /**
-     * Get order history.
-     * If user is superadmin (role id RL001) return all orders.
-     * If user is admin (role id RL002) return only orders created by that admin (user_id).
+     * @OA\Get(
+     *     path="/api/orders/history",
+     *     tags={"Orders"},
+     *     summary="Get order history",
+     *     description="SuperAdmin (RL001) mendapat semua order. Admin (RL002) hanya order yang dibuat oleh mereka.",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="History order berhasil diambil",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean"),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="stats", type="object",
+     *                     @OA\Property(property="waiting", type="integer"),
+     *                     @OA\Property(property="processing", type="integer"),
+     *                     @OA\Property(property="completed", type="integer"),
+     *                     @OA\Property(property="finishedRevenue", type="number")
+     *                 ),
+     *                 @OA\Property(property="orders", type="array",
+     *                     @OA\Items(
+     *                         @OA\Property(property="id", type="string"),
+     *                         @OA\Property(property="customer_name", type="string"),
+     *                         @OA\Property(property="created_at", type="string", format="date-time"),
+     *                         @OA\Property(property="status", type="string"),
+     *                         @OA\Property(property="total_price", type="number")
+     *                     )
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=403, description="Unauthorized"),
+     *     @OA\Response(response=500, description="Gagal mengambil history")
+     * )
      */
     public function getOrderHistory(Request $request)
     {

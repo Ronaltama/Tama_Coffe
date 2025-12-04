@@ -12,10 +12,58 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
+/**
+ * @OA\Tag(
+ *     name="Manual Orders",
+ *     description="API untuk admin membuat order manual di pos"
+ * )
+ */
 class ManualOrderController extends Controller
 {
     /**
-     * Create manual order by admin
+     * @OA\Post(
+     *     path="/api/orders/manual",
+     *     tags={"Manual Orders"},
+     *     summary="Buat order manual by admin",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"order_type", "customer_name", "items", "payment"},
+     *             @OA\Property(property="order_type", type="string", enum={"dine-in", "take-away"}, example="dine-in"),
+     *             @OA\Property(property="table_id", type="string", example="TB001"),
+     *             @OA\Property(property="customer_name", type="string", example="John Doe"),
+     *             @OA\Property(property="customer_phone", type="string", example="08123456789"),
+     *             @OA\Property(property="note", type="string"),
+     *             @OA\Property(property="items", type="array",
+     *                 @OA\Items(
+     *                     @OA\Property(property="product_id", type="string"),
+     *                     @OA\Property(property="quantity", type="integer"),
+     *                     @OA\Property(property="variant", type="string", enum={"Ice", "Hot"}),
+     *                     @OA\Property(property="unit_price", type="number")
+     *                 )
+     *             ),
+     *             @OA\Property(property="payment", type="object",
+     *                 @OA\Property(property="method", type="string", enum={"cash", "qris"}),
+     *                 @OA\Property(property="amount", type="number")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Order berhasil dibuat",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean"),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="order_id", type="string"),
+     *                 @OA\Property(property="payment_id", type="string"),
+     *                 @OA\Property(property="total", type="number")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=422, description="Validasi gagal"),
+     *     @OA\Response(response=500, description="Gagal membuat order")
+     * )
      */
     public function createManualOrder(Request $request)
     {
@@ -141,7 +189,27 @@ class ManualOrderController extends Controller
     }
 
     /**
-     * Get available tables for manual order
+     * @OA\Get(
+     *     path="/api/orders/manual/available-tables",
+     *     tags={"Manual Orders"},
+     *     summary="Dapatkan daftar meja yang tersedia",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="List meja tersedia",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean"),
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                     @OA\Property(property="id", type="string"),
+     *                     @OA\Property(property="table_number", type="string"),
+     *                     @OA\Property(property="capacity", type="integer"),
+     *                     @OA\Property(property="status", type="string")
+     *                 )
+     *             )
+     *         )
+     *     )
+     * )
      */
     public function getAvailableTables()
     {

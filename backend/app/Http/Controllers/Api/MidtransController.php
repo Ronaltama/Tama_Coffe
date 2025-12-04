@@ -11,6 +11,12 @@ use Illuminate\Support\Facades\Log;
 use Midtrans\Config;
 use Midtrans\Snap;
 
+/**
+ * @OA\Tag(
+ *     name="Payments (Midtrans)",
+ *     description="API untuk pembayaran menggunakan Midtrans"
+ * )
+ */
 class MidtransController extends Controller
 {
     public function __construct()
@@ -26,7 +32,47 @@ class MidtransController extends Controller
     }
 
     /**
-     * Create Snap Token and save midtrans_order_id on payment record
+     * @OA\Post(
+     *     path="/api/guest/midtrans/create-snap-token",
+     *     tags={"Payments (Midtrans)"},
+     *     summary="Buat Snap Token untuk pembayaran",
+     *     description="Generate token untuk Midtrans Snap payment gateway",
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="Order ID yang akan dibayar",
+     *         @OA\JsonContent(
+     *             required={"order_id"},
+     *             @OA\Property(property="order_id", type="string", example="OR0001", description="ID order dari database")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Snap token berhasil dibuat",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="snap_token", type="string", description="Token untuk Midtrans Snap"),
+     *             @OA\Property(property="order_id", type="string", example="OR0001"),
+     *             @OA\Property(property="midtrans_order_id", type="string", example="OR0001-1234567890")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validasi gagal - order tidak ditemukan",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="The given data was invalid.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Error saat membuat token",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Gagal membuat token pembayaran"),
+     *             @OA\Property(property="error", type="string")
+     *         )
+     *     )
+     * )
      */
     public function createSnapToken(Request $request)
     {
@@ -97,7 +143,47 @@ class MidtransController extends Controller
     }
 
     /**
-     * Midtrans webhook (notification)
+     * @OA\Post(
+     *     path="/api/guest/midtrans/notification",
+     *     tags={"Payments (Midtrans)"},
+     *     summary="Webhook notification dari Midtrans",
+     *     description="Endpoint untuk menerima notifikasi pembayaran dari Midtrans. Dipanggil otomatis oleh Midtrans ketika ada perubahan status transaksi.",
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="Payload notifikasi dari Midtrans",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="order_id", type="string", description="Unique order ID dari Midtrans"),
+     *             @OA\Property(property="transaction_id", type="string", description="Transaction ID dari Midtrans"),
+     *             @OA\Property(property="transaction_status", type="string", enum={"settlement", "capture", "pending", "deny", "cancel", "expire", "refund"}, description="Status transaksi"),
+     *             @OA\Property(property="payment_type", type="string", enum={"qris", "bank_transfer", "gopay", "credit_card"}, description="Tipe pembayaran"),
+     *             @OA\Property(property="fraud_status", type="string", enum={"accept", "challenge", "deny"}, description="Status fraud detection"),
+     *             @OA\Property(property="gross_amount", type="number", description="Jumlah transaksi"),
+     *             @OA\Property(property="va_numbers", type="array", description="Virtual Account numbers (untuk bank_transfer)",
+     *                 @OA\Items(
+     *                     @OA\Property(property="bank", type="string"),
+     *                     @OA\Property(property="va_number", type="string")
+     *                 )
+     *             ),
+     *             @OA\Property(property="permata_va_number", type="string", description="Permata VA number (untuk bank_transfer)"),
+     *             @OA\Property(property="signature_key", type="string", description="Hash signature untuk verifikasi")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Notifikasi berhasil diproses",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Gagal memproses notifikasi",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string")
+     *         )
+     *     )
+     * )
      */
     public function notification(Request $request)
     {
@@ -152,6 +238,75 @@ class MidtransController extends Controller
     }
 
     /**
+     * @OA\Get(
+     *     path="/api/guest/midtrans/check-status",
+     *     tags={"Payments (Midtrans)"},
+     *     summary="Cek status pembayaran",
+     *     description="Endpoint untuk frontend mengecek status pembayaran secara real-time",
+     *     @OA\Parameter(
+     *         name="order_id",
+     *         in="query",
+     *         required=true,
+     *         description="Order ID yang ingin dicek statusnya",
+     *         @OA\Schema(type="string", example="OR0001")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Status pembayaran berhasil diambil",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="status", type="string", enum={"pending", "paid", "failed", "expired"}, example="paid"),
+     *                 @OA\Property(property="payment_type", type="string", example="qris"),
+     *                 @OA\Property(property="midtrans_transaction_id", type="string"),
+     *                 @OA\Property(property="midtrans_order_id", type="string")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Payment record tidak ditemukan",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Payment not found")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Error internal server",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string")
+     *         )
+     *     )
+     * )
+     */
+    public function checkStatus(Request $request)
+    {
+        try {
+            $request->validate(['order_id' => 'required|string|exists:orders,id']);
+
+            $payment = Payment::where('order_id', $request->order_id)->first();
+            if (!$payment) {
+                return response()->json(['success' => false, 'message' => 'Payment not found'], 404);
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'status' => $payment->status,
+                    'payment_type' => $payment->payment_type,
+                    'midtrans_transaction_id' => $payment->midtrans_transaction_id,
+                    'midtrans_order_id' => $payment->midtrans_order_id,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            Log::error('checkStatus error: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
      * Update payment + order based on notification
      */
     private function updatePaymentStatus($payment, $order, $status, $notification)
@@ -198,34 +353,6 @@ class MidtransController extends Controller
             }
         } else {
             Log::warning('Order not found for notification', ['notification' => $notification]);
-        }
-    }
-
-    /**
-     * API - check payment status (used by frontend for UX)
-     */
-    public function checkStatus(Request $request)
-    {
-        try {
-            $request->validate(['order_id' => 'required|string|exists:orders,id']);
-
-            $payment = Payment::where('order_id', $request->order_id)->first();
-            if (!$payment) {
-                return response()->json(['success' => false, 'message' => 'Payment not found'], 404);
-            }
-
-            return response()->json([
-                'success' => true,
-                'data' => [
-                    'status' => $payment->status,
-                    'payment_type' => $payment->payment_type,
-                    'midtrans_transaction_id' => $payment->midtrans_transaction_id,
-                    'midtrans_order_id' => $payment->midtrans_order_id,
-                ],
-            ]);
-        } catch (\Exception $e) {
-            Log::error('checkStatus error: ' . $e->getMessage());
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
 }
