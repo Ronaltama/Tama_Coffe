@@ -9,10 +9,43 @@ use App\Models\Table;
 use App\Models\Order;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * @OA\Tag(
+ *     name="Dashboard SuperAdmin",
+ *     description="API untuk dashboard dan statistik SuperAdmin"
+ * )
+ */
 class DashboardSuperController extends Controller
 {
     /**
-     * GET /api/superadmin/dashboard
+     * @OA\Get(
+     *     path="/api/superadmin/dashboard",
+     *     tags={"Dashboard SuperAdmin"},
+     *     summary="Dapatkan statistik dashboard SuperAdmin",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Data dashboard berhasil diambil",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="total_users", type="integer", example=10),
+     *             @OA\Property(property="total_admins", type="integer", example=3),
+     *             @OA\Property(property="total_superadmin", type="integer", example=1),
+     *             @OA\Property(property="total_products", type="integer", example=50),
+     *             @OA\Property(property="total_tables", type="integer", example=20),
+     *             @OA\Property(property="total_orders", type="integer", example=150),
+     *             @OA\Property(property="total_revenue", type="number", format="float", example=5000000),
+     *             @OA\Property(property="top_products", type="array",
+     *                 @OA\Items(
+     *                     @OA\Property(property="name", type="string"),
+     *                     @OA\Property(property="units_sold", type="integer"),
+     *                     @OA\Property(property="revenue", type="number")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Unauthorized"),
+     *     @OA\Response(response=403, description="Forbidden - bukan SuperAdmin")
+     * )
      */
     public function index()
     {
@@ -26,7 +59,7 @@ class DashboardSuperController extends Controller
             ->join('products', 'order_details.product_id', '=', 'products.id')
             ->whereIn('orders.status', ['completed', 'processing', 'confirmed', 'paid'])
             ->selectRaw('
-                products.name, 
+                products.name,
                 SUM(order_details.quantity) as units_sold,
                 SUM(order_details.subtotal) as revenue
             ')
@@ -48,7 +81,32 @@ class DashboardSuperController extends Controller
     }
 
     /**
-     * GET /api/superadmin/sales-data?period={daily|weekly|monthly|product}
+     * @OA\Get(
+     *     path="/api/superadmin/sales-data",
+     *     tags={"Dashboard SuperAdmin"},
+     *     summary="Dapatkan data penjualan berdasarkan periode",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="period",
+     *         in="query",
+     *         required=false,
+     *         description="Periode: daily, weekly, monthly, product",
+     *         @OA\Schema(type="string", enum={"daily", "weekly", "monthly", "product"}, default="daily")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Data penjualan berhasil diambil",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(
+     *                 @OA\Property(property="label", type="string", example="01 Jan"),
+     *                 @OA\Property(property="value", type="number", format="float", example=500000)
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=400, description="Invalid period parameter"),
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
      */
     public function getSalesData()
     {
@@ -155,7 +213,36 @@ class DashboardSuperController extends Controller
     }
 
     /**
-     * Get all order history for Superadmin with processed_by info
+     * @OA\Get(
+     *     path="/api/superadmin/orders/history",
+     *     tags={"Dashboard SuperAdmin"},
+     *     summary="Dapatkan riwayat semua order untuk SuperAdmin",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Riwayat order berhasil diambil",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean"),
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                     @OA\Property(property="id", type="string", example="OR0001"),
+     *                     @OA\Property(property="customer_name", type="string"),
+     *                     @OA\Property(property="total_price", type="number"),
+     *                     @OA\Property(property="status", type="string"),
+     *                     @OA\Property(property="processed_by", type="string"),
+     *                     @OA\Property(property="created_at", type="string", format="date-time")
+     *                 )
+     *             ),
+     *             @OA\Property(property="stats", type="object",
+     *                 @OA\Property(property="waiting", type="integer"),
+     *                 @OA\Property(property="processing", type="integer"),
+     *                 @OA\Property(property="completed", type="integer"),
+     *                 @OA\Property(property="finishedRevenue", type="number")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
      */
     public function getOrderHistory()
     {

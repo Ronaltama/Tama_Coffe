@@ -9,10 +9,44 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Helpers\IdGenerator;
 
+/**
+ * @OA\Tag(
+ *     name="Reservations",
+ *     description="API untuk manajemen reservasi meja"
+ * )
+ */
 class ReservationController extends Controller
 {
     /**
-     * Store new reservation (Guest)
+     * @OA\Post(
+     *     path="/api/guest/reservations",
+     *     tags={"Reservations"},
+     *     summary="Buat reservasi meja baru",
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"customer_name", "customer_phone", "table_id", "reservation_date", "reservation_time"},
+     *             @OA\Property(property="customer_name", type="string", example="John Doe"),
+     *             @OA\Property(property="customer_phone", type="string", example="08123456789"),
+     *             @OA\Property(property="table_id", type="string", example="TB001"),
+     *             @OA\Property(property="reservation_date", type="string", format="date", example="2025-12-25"),
+     *             @OA\Property(property="reservation_time", type="string", example="19:00")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Reservasi berhasil dibuat",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean"),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="booking_code", type="string"),
+     *                 @OA\Property(property="date", type="string"),
+     *                 @OA\Property(property="time", type="string")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=422, description="Meja sudah direservasi atau validasi gagal")
+     * )
      */
     public function store(Request $request)
     {
@@ -81,7 +115,22 @@ class ReservationController extends Controller
     }
 
     /**
-     * Get reservation status (Guest)
+     * @OA\Get(
+     *     path="/api/guest/reservations/{id}/status",
+     *     tags={"Reservations"},
+     *     summary="Cek status reservasi",
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="string", example="RSV001")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Status reservasi berhasil diambil"
+     *     ),
+     *     @OA\Response(response=404, description="Reservasi tidak ditemukan")
+     * )
      */
     public function getStatus($id)
     {
@@ -100,7 +149,6 @@ class ReservationController extends Controller
                     'table_id' => $reservation->table_id,
                     'order' => $reservation->order,
                     'created_at' => $reservation->created_at,
-                    'updated_at' => $reservation->updated_at
                 ]
             ]);
 
@@ -119,15 +167,20 @@ class ReservationController extends Controller
     }
 
     /**
-     * Get all reservations (Admin)
-     */
-    /**
-     * Get all reservations (Admin)
+     * @OA\Get(
+     *     path="/api/admin/reservations",
+     *     tags={"Reservations"},
+     *     summary="Dapatkan semua reservasi (Admin)",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="List semua reservasi"
+     *     )
+     * )
      */
     public function index()
     {
         try {
-            // Fix eager loading: load table, order, order details, products, and payments
             $reservations = Reservation::with(['table', 'order', 'order.orderDetails', 'order.orderDetails.product', 'order.payments'])
                 ->orderBy('created_at', 'desc')
                 ->get();
@@ -146,7 +199,27 @@ class ReservationController extends Controller
     }
 
     /**
-     * Check table availability
+     * @OA\Get(
+     *     path="/api/reservations/availability",
+     *     tags={"Reservations"},
+     *     summary="Cek ketersediaan meja untuk tanggal & waktu tertentu",
+     *     @OA\Parameter(
+     *         name="date",
+     *         in="query",
+     *         required=true,
+     *         @OA\Schema(type="string", format="date")
+     *     ),
+     *     @OA\Parameter(
+     *         name="time",
+     *         in="query",
+     *         required=true,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="List meja yang tersedia"
+     *     )
+     * )
      */
     public function checkAvailability(Request $request)
     {
@@ -157,17 +230,13 @@ class ReservationController extends Controller
             ]);
 
             $date = $request->date;
-            $time = $request->time;
 
-            // Get all tables
             $tables = Table::all();
 
-            // Get reserved tables for that date (no status filter karena semua reservasi dianggap valid)
             $reservedTableIds = Reservation::where('date', $date)
                 ->pluck('table_id')
                 ->toArray();
 
-            // Filter available tables
             $availableTables = $tables->filter(function ($table) use ($reservedTableIds) {
                 return !in_array($table->id, $reservedTableIds) && $table->status !== 'maintenance';
             })->values();

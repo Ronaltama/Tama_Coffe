@@ -8,12 +8,28 @@ use App\Helpers\IdGenerator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
+/**
+ * @OA\Tag(
+ *     name="Users",
+ *     description="API untuk manajemen user/admin"
+ * )
+ */
 class UserController extends Controller
 {
-    // GET /api/users
+    /**
+     * @OA\Get(
+     *     path="/api/users",
+     *     tags={"Users"},
+     *     summary="Dapatkan semua user admin",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="List user admin"
+     *     )
+     * )
+     */
     public function index()
     {
-        // 🔥 Ambil user + role
         $users = User::with('role')
             ->whereHas('role', function ($q) {
                 $q->where('name', 'admin');
@@ -23,7 +39,27 @@ class UserController extends Controller
         return response()->json($users);
     }
 
-    // POST /api/users
+    /**
+     * @OA\Post(
+     *     path="/api/users",
+     *     tags={"Users"},
+     *     summary="Buat user admin baru",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"role_id", "name", "username", "email", "password"},
+     *             @OA\Property(property="role_id", type="string", example="RL002"),
+     *             @OA\Property(property="name", type="string", example="Admin 1"),
+     *             @OA\Property(property="username", type="string", example="admin1"),
+     *             @OA\Property(property="email", type="string", format="email", example="admin1@test.com"),
+     *             @OA\Property(property="password", type="string", example="password123")
+     *         )
+     *     ),
+     *     @OA\Response(response=201, description="User admin berhasil dibuat"),
+     *     @OA\Response(response=422, description="Validasi gagal")
+     * )
+     */
     public function store(Request $request)
     {
         $request->validate([
@@ -51,14 +87,39 @@ class UserController extends Controller
         ], 201);
     }
 
-    // GET /api/users/{id}
+    /**
+     * @OA\Get(
+     *     path="/api/users/{id}",
+     *     tags={"Users"},
+     *     summary="Dapatkan detail user",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="string")),
+     *     @OA\Response(response=200, description="Detail user")
+     * )
+     */
     public function show($id)
     {
         $user = User::with('role')->findOrFail($id);
         return response()->json($user);
     }
 
-    // PUT /api/users/{id}
+    /**
+     * @OA\Put(
+     *     path="/api/users/{id}",
+     *     tags={"Users"},
+     *     summary="Update user",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="string")),
+     *     @OA\RequestBody(
+     *         @OA\JsonContent(
+     *             @OA\Property(property="name", type="string"),
+     *             @OA\Property(property="email", type="string"),
+     *             @OA\Property(property="password", type="string")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="User berhasil diupdate")
+     * )
+     */
     public function update(Request $request, $id)
     {
         $user = User::findOrFail($id);
@@ -83,7 +144,16 @@ class UserController extends Controller
         ]);
     }
 
-    // DELETE /api/users/{id}
+    /**
+     * @OA\Delete(
+     *     path="/api/users/{id}",
+     *     tags={"Users"},
+     *     summary="Hapus user",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="string")),
+     *     @OA\Response(response=200, description="User berhasil dihapus")
+     * )
+     */
     public function destroy($id)
     {
         $user = User::findOrFail($id);
